@@ -58,7 +58,7 @@ module exec #(parameter OPCODE_WIDTH    =  4,
         end
     end
     
-    // Decode 2nd instruction word
+    // JUMP / BRANCH
     always @(*)
     begin
         // Trigger jump after getting 2nd instruction word with immedate target address
