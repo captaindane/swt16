@@ -1,0 +1,63 @@
+[*]
+[*] GTKWave Analyzer v3.3.101 (w)1999-2019 BSI
+[*] Thu Nov  7 21:10:36 2019
+[*]
+[dumpfile] "/home/guenther/Dropbox/verilator/swt16/bench/swt16/Vswt16_top.vcd"
+[dumpfile_mtime] "Thu Nov  7 21:08:36 2019"
+[dumpfile_size] 10028
+[savefile] "/home/guenther/Dropbox/verilator/swt16/bench/gtkwave_views/swt16.view.gtkw"
+[timestart] 0
+[size] 1268 1022
+[pos] -1 0
+*-2.945638 13 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.swt16_top.
+[sst_width] 233
+[signals_width] 254
+[sst_expanded] 1
+[sst_vpaned_height] 298
+@200
+-Top Level
+@28
+TOP.swt16_top.clock
+TOP.reset
+@200
+-
+-PMEM
+@22
+TOP.swt16_top.pmem_sim_inst.in_addr[11:0]
+TOP.swt16_top.pmem_sim_inst.out_word[15:0]
+@200
+-
+-Fetch
+@28
+TOP.swt16_top.fetch_inst.in_set_pc
+@22
+TOP.swt16_top.fetch_inst.out_pc[11:0]
+TOP.swt16_top.fetch_inst.out_instr[15:0]
+@200
+-
+-Decoder
+@22
+TOP.swt16_top.decoder_inst.instr_sampled[15:0]
+TOP.swt16_top.decoder_inst.in_pc[11:0]
+TOP.swt16_top.decoder_inst.out_src1[15:0]
+TOP.swt16_top.decoder_inst.out_src2[15:0]
+@28
+TOP.swt16_top.decoder_inst.out_act_ialu_add
+@22
+TOP.swt16_top.decoder_inst.out_pc[11:0]
+@200
+-
+-Exec
+@22
+TOP.swt16_top.exec_inst.in_src1[15:0]
+TOP.swt16_top.exec_inst.in_src2[15:0]
+TOP.swt16_top.exec_inst.out_res[15:0]
+@28
+TOP.swt16_top.exec_inst.out_flush
+TOP.swt16_top.exec_inst.out_set_pc
+@22
+TOP.swt16_top.exec_inst.out_new_pc[11:0]
+[pattern_trace] 1
+[pattern_trace] 0
