@@ -1,14 +1,14 @@
 [*]
 [*] GTKWave Analyzer v3.3.101 (w)1999-2019 BSI
-[*] Thu Nov  7 21:10:36 2019
+[*] Fri Nov  8 21:20:51 2019
 [*]
 [dumpfile] "/home/guenther/Dropbox/verilator/swt16/bench/swt16/Vswt16_top.vcd"
-[dumpfile_mtime] "Thu Nov  7 21:08:36 2019"
-[dumpfile_size] 10028
+[dumpfile_mtime] "Fri Nov  8 21:19:58 2019"
+[dumpfile_size] 22996
 [savefile] "/home/guenther/Dropbox/verilator/swt16/bench/gtkwave_views/swt16.view.gtkw"
 [timestart] 0
-[size] 1268 1022
-[pos] -1 0
+[size] 1562 1022
+[pos] -1 -1
 *-2.945638 13 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.swt16_top.
@@ -45,11 +45,14 @@ TOP.swt16_top.decoder_inst.out_src1[15:0]
 TOP.swt16_top.decoder_inst.out_src2[15:0]
 @28
 TOP.swt16_top.decoder_inst.out_act_ialu_add
+TOP.swt16_top.decoder_inst.out_act_write_res_to_reg
 @22
 TOP.swt16_top.decoder_inst.out_pc[11:0]
 @200
 -
 -Exec
+@28
+TOP.swt16_top.exec_inst.in_act_write_res_to_reg
 @22
 TOP.swt16_top.exec_inst.in_src1[15:0]
 TOP.swt16_top.exec_inst.in_src2[15:0]
@@ -59,5 +62,29 @@ TOP.swt16_top.exec_inst.out_flush
 TOP.swt16_top.exec_inst.out_set_pc
 @22
 TOP.swt16_top.exec_inst.out_new_pc[11:0]
+@28
+TOP.swt16_top.exec_inst.out_act_write_res_to_reg
+@200
+-
+-Mem
+@28
+TOP.swt16_top.mem_inst.in_act_write_res_to_reg
+@22
+TOP.swt16_top.mem_inst.in_res[15:0]
+TOP.swt16_top.mem_inst.in_res_reg_idx[3:0]
+@28
+TOP.swt16_top.mem_inst.out_act_write_res_to_reg
+@22
+TOP.swt16_top.mem_inst.out_res[15:0]
+TOP.swt16_top.mem_inst.out_res_reg_idx[3:0]
+@200
+-
+-Writeback
+@28
+TOP.swt16_top.writeback_inst.in_act_write_res_to_reg
+@22
+TOP.swt16_top.writeback_inst.in_res[15:0]
+@23
+TOP.swt16_top.writeback_inst.in_res_reg_idx[3:0]
 [pattern_trace] 1
 [pattern_trace] 0
