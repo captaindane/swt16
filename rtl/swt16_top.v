@@ -165,7 +165,10 @@ module swt16_top  #(parameter PMEM_ADDR_WIDTH = 12,
        .reset                    ( reset ),
        .in_act_write_res_to_reg  ( act_write_res_to_reg_MEM_WB ),
        .in_res                   ( res_MEM_WB ),
-       .in_res_reg_idx           ( res_reg_idx_MEM_WB )
+       .in_res_reg_idx           ( res_reg_idx_MEM_WB ),
+       .out_act_write_res_to_reg ( reg_write ),
+       .out_res                  ( dst ),
+       .out_res_reg_idx          ( dst_idx )
    );
 
 endmodule

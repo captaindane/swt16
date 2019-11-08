@@ -9,15 +9,23 @@ module writeback #(parameter OPCODE_WIDTH    =  4,
            input                         reset,
            input                         in_act_write_res_to_reg,
            input  [IALU_WORD_WIDTH-1:0]  in_res,
-           input  [  REG_IDX_WIDTH-1:0]  in_res_reg_idx
-           // TODO: output to register file here
+           input  [  REG_IDX_WIDTH-1:0]  in_res_reg_idx,
+           output                        out_act_write_res_to_reg,
+           output [IALU_WORD_WIDTH-1:0]  out_res,
+           output [  REG_IDX_WIDTH-1:0]  out_res_reg_idx
            );
 
     reg                        act_write_res_to_reg_sampled;
     reg [IALU_WORD_WIDTH-1:0]  res_sampled;
     reg [  REG_IDX_WIDTH-1:0]  res_reg_idx_sampled;
 
-    // Register: sampled inputs
+
+    assign out_act_write_res_to_reg = in_act_write_res_to_reg;
+    assign out_res                  = in_res;
+    assign out_res_reg_idx          = in_res_reg_idx;
+
+    
+    // Register: sampled inputs (TODO: do we need this?)
     always @(posedge clock or posedge reset) begin
         if (!reset) begin
             act_write_res_to_reg_sampled <= in_act_write_res_to_reg;
