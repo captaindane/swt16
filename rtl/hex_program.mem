@@ -2,7 +2,7 @@
 AAAA //              @0x0002
 BBBB //              @0x0004
 CCCC //              @0x0006
-0101 // jal          @0x0008
+0121 // jal r2       @0x0008
 FFF8 // offset -8    @0x000A
 EEEE //              @0x000C
 FFFF //              @0x000E
