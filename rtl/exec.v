@@ -9,13 +9,17 @@ module exec #(parameter OPCODE_WIDTH    =  4,
              input                         reset,
              input                         in_act_ialu_add,
              input                         in_act_jump_to_ialu_res,
+             input                         in_act_write_res_to_reg,
+             input  [       PC_WIDTH-1:0]  in_pc,
+             input  [  REG_IDX_WIDTH-1:0]  in_res_reg_idx,
              input  [IALU_WORD_WIDTH-1:0]  in_src1,
              input  [IALU_WORD_WIDTH-1:0]  in_src2,
-             input  [PC_WIDTH-1       :0]  in_pc,
-             output [IALU_WORD_WIDTH-1:0]  out_res,
+             output                        out_act_write_res_to_reg,
              output                        out_flush,
-             output                        out_set_pc,
-             output [PMEM_ADDR_WIDTH-1:0]  out_new_pc
+             output [PMEM_ADDR_WIDTH-1:0]  out_new_pc,
+             output [IALU_WORD_WIDTH-1:0]  out_res,
+             output [  REG_IDX_WIDTH-1:0]  out_res_reg_idx,
+             output                        out_set_pc
              );
 
     reg [IALU_WORD_WIDTH-1:0] src1_sampled;
@@ -39,6 +43,18 @@ module exec #(parameter OPCODE_WIDTH    =  4,
             src2_sampled                 <= 0;
             act_ialu_add_sampled         <= 0;
             act_jump_to_ialu_res_sampled <= 0;
+        end
+    end
+
+    // Register: pass through
+    always @(posedge clock or posedge reset) begin
+        if (!reset) begin
+            out_act_write_res_to_reg <= in_act_write_res_to_reg;
+            out_res_reg_idx          <= in_res_reg_idx;
+        end
+        else begin
+            out_act_write_res_to_reg <= 0;
+            out_res_reg_idx          <= 0;
         end
     end
 
