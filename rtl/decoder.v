@@ -37,24 +37,23 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     // R-Type instruction segments
     wire [REG_IDX_WIDTH-1:0]    src1_reg_idx;
     wire [REG_IDX_WIDTH-1:0]    src2_reg_idx;
-    wire [REG_IDX_WIDTH-1:0]    dst_reg_idx;
 
     // U-Type instruction segments
     wire [3:0]                  immA;
     wire [PMEM_WORD_WIDTH-1:0]  immB;
     wire [3:0]                  func2;
     
-    assign opcode       = instr_1st_word_sampled[OPCODE_WIDTH-1:0];
-    assign out_pc       = pc_sampled;
+    assign opcode           = instr_1st_word_sampled[OPCODE_WIDTH-1:0];
+    assign out_pc           = pc_sampled;
     
     // R-Type instruction segments
-    assign dst_reg_idx  = instr_1st_word_sampled[7:4];
-    assign src1_reg_idx = instr_1st_word_sampled[11:8];
-    assign src2_reg_idx = instr_1st_word_sampled[15:12];
+    assign out_res_reg_idx  = instr_1st_word_sampled[7:4];
+    assign src1_reg_idx     = instr_1st_word_sampled[11:8];
+    assign src2_reg_idx     = instr_1st_word_sampled[15:12];
 
     // U-Type instruction segments
-    assign func2        = instr_1st_word_sampled[11:8];
-    assign immB         = instr_sampled; // only valid in 2nd cycle of multi-cycle instruction
+    assign func2            = instr_1st_word_sampled[11:8];
+    assign immB             = instr_sampled; // only valid in 2nd cycle of multi-cycle instruction
 
 
     // Register: index of the current cycle within a multi-cycle instruction
