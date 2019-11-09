@@ -14,6 +14,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
        output [IALU_WORD_WIDTH-1:0]  out_src1,
        output [IALU_WORD_WIDTH-1:0]  out_src2,
        output                        out_act_ialu_add,
+       output                        out_act_incr_pc_is_res,
        output                        out_act_jump_to_ialu_res,
        output                        out_act_write_res_to_reg,
        output [       PC_WIDTH-1:0]  out_pc
@@ -107,11 +108,12 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
 
     // Helper function: set all output to zero
     task zero_outputs;
-        out_act_ialu_add         = 0;
-        out_act_jump_to_ialu_res = 0;
-        out_act_write_res_to_reg = 0;
-        out_src1                 = 0;
-        out_src2                 = 0;
+        out_act_ialu_add             = 0;
+        out_act_incr_pc_is_res       = 0;
+        out_act_jump_to_ialu_res     = 0;
+        out_act_write_res_to_reg     = 0;
+        out_src1                     = 0;
+        out_src2                     = 0;
     endtask;
 
     // Decode 1st instruction word
@@ -136,6 +138,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                     
                     if (cycle_in_instr_sampled == 1) begin
                         out_act_ialu_add                     = 1;
+                        out_act_incr_pc_is_res               = 0;
                         out_act_jump_to_ialu_res             = 1;
                         out_act_write_res_to_reg             = 0;
                         out_src1[PC_WIDTH-1:0]               = pc_sampled2;
@@ -155,6 +158,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                     
                     if (cycle_in_instr_sampled == 1) begin
                         out_act_ialu_add                     = 1;
+                        out_act_incr_pc_is_res               = 1;
                         out_act_jump_to_ialu_res             = 1;
                         out_act_write_res_to_reg             = 1;
                         out_src1[PC_WIDTH-1:0]               = pc_sampled2;

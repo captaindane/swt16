@@ -15,12 +15,16 @@ module swt16_top  #(parameter PMEM_ADDR_WIDTH = 12,
    wire                         set_pc;
    wire                         flush_pipeline;
    wire [PMEM_ADDR_WIDTH-1 : 0] new_pc;
-   wire [PMEM_ADDR_WIDTH-1 : 0] pc;
+   wire [PMEM_ADDR_WIDTH-1 : 0] pmem_addr;
    wire [PMEM_WORD_WIDTH-1 : 0] pmem_word;
+   
+   // Connections: IF stage -> DC stage
    wire [PMEM_WORD_WIDTH-1 : 0] instr_IF_DC;
+   wire [PMEM_ADDR_WIDTH-1 : 0] pc_IF_DC;
    
    // Connections: DC stage -> EX stage
    wire                         act_ialu_add_DC_EX;
+   wire                         act_incr_pc_is_res_DC_EX;
    wire                         act_jump_to_ialu_res_DC_EX;
    wire                         act_write_res_to_reg_DC_EX;
    wire [PMEM_ADDR_WIDTH-1 : 0] pc_DC_EX;
@@ -39,13 +43,13 @@ module swt16_top  #(parameter PMEM_ADDR_WIDTH = 12,
    wire [  REG_IDX_WIDTH-1 : 0] res_reg_idx_MEM_WB;
    
    // Register file
-   wire [REG_IDX_WIDTH-1   : 0] src1_idx;
-   wire [REG_IDX_WIDTH-1   : 0] src2_idx;
-   wire [REG_IDX_WIDTH-1   : 0] dst_idx;
-   wire [REG_WORD_WIDTH-1  : 0] src1;
-   wire [REG_WORD_WIDTH-1  : 0] src2;
-   wire [REG_WORD_WIDTH-1  : 0] dst;
+   wire [ REG_WORD_WIDTH-1 : 0] dst;
+   wire [  REG_IDX_WIDTH-1 : 0] dst_idx;
    wire                         reg_write;
+   wire [  REG_IDX_WIDTH-1 : 0] src1_idx;
+   wire [  REG_IDX_WIDTH-1 : 0] src2_idx;
+   wire [ REG_WORD_WIDTH-1 : 0] src1;
+   wire [ REG_WORD_WIDTH-1 : 0] src2;
    
    
    // Register file
@@ -69,7 +73,7 @@ module swt16_top  #(parameter PMEM_ADDR_WIDTH = 12,
               .PMEM_FILE  (PMEM_FILE      ) ) pmem_sim_inst
    (
       .clock       ( clock ),
-      .in_addr     ( pc ),
+      .in_addr     ( pmem_addr ),
       .out_word    ( pmem_word )
    );
 
@@ -78,14 +82,15 @@ module swt16_top  #(parameter PMEM_ADDR_WIDTH = 12,
            .PMEM_WIDTH  (PMEM_WORD_WIDTH),
            .PC_INCREMENT(PC_INCREMENT   )  ) fetch_inst
    (
-      .clock     ( clock ),
-      .reset     ( reset ),
-      .in_new_pc ( new_pc ),
-      .in_set_pc ( set_pc ),
-      .in_flush  ( flush_pipeline ),
-      .in_instr  ( pmem_word ),
-      .out_instr ( instr_IF_DC ),
-      .out_pc    ( pc )
+      .clock         ( clock ),
+      .reset         ( reset ),
+      .in_new_pc     ( new_pc ),
+      .in_set_pc     ( set_pc ),
+      .in_flush      ( flush_pipeline ),
+      .in_instr      ( pmem_word ),
+      .out_instr     ( instr_IF_DC ),
+      .out_pc        ( pc_IF_DC ),
+      .out_pmem_addr ( pmem_addr )
    );
 
    // Instruction decoder
@@ -99,12 +104,13 @@ module swt16_top  #(parameter PMEM_ADDR_WIDTH = 12,
       .clock                     ( clock ),
       .reset                     ( reset ),
       .in_instr                  ( instr_IF_DC ),
-      .in_pc                     ( pc ),
+      .in_pc                     ( pc_IF_DC ),
       .in_flush                  ( flush_pipeline ),
       .out_res_reg_idx           ( res_reg_idx_DC_EX ),
       .out_src1                  ( src1_DC_EX ),
       .out_src2                  ( src2_DC_EX ),
       .out_act_ialu_add          ( act_ialu_add_DC_EX ),
+      .out_act_incr_pc_is_res    ( act_incr_pc_is_res_DC_EX ),
       .out_act_jump_to_ialu_res  ( act_jump_to_ialu_res_DC_EX ),
       .out_act_write_res_to_reg  ( act_write_res_to_reg_DC_EX ),
       .out_pc                    ( pc_DC_EX )
@@ -116,11 +122,13 @@ module swt16_top  #(parameter PMEM_ADDR_WIDTH = 12,
              .PMEM_WORD_WIDTH(PMEM_WORD_WIDTH),
              .IALU_WORD_WIDTH(IALU_WORD_WIDTH),
              .REG_IDX_WIDTH  (REG_IDX_WIDTH  ),
-             .PC_WIDTH       (PC_WIDTH       )) exec_inst
+             .PC_WIDTH       (PC_WIDTH       ),
+             .PC_INCREMENT   (PC_INCREMENT   )) exec_inst
    (
        .clock                    ( clock ),
        .reset                    ( reset ),
        .in_act_ialu_add          ( act_ialu_add_DC_EX ),
+       .in_act_incr_pc_is_res    ( act_incr_pc_is_res_DC_EX ),
        .in_act_jump_to_ialu_res  ( act_jump_to_ialu_res_DC_EX ),
        .in_act_write_res_to_reg  ( act_write_res_to_reg_DC_EX ),
        .in_pc                    ( pc_DC_EX ),

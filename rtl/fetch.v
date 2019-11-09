@@ -1,13 +1,35 @@
+//           | in_new_pc
+//           |
+//     +-----|-----+----------------------+
+//     |     |     | + PC_INCREMENT       |
+//     |     V     V                      |
+//     |   +---------+                    |
+//     |   \_________/                    |
+//     |        |                         |
+//     |        | next_pc                 | out_pmem_addr
+//     |        V                         V
+//     |   +---------+              +-------------+
+//     |   |>  PC    |              | program mem |
+//     |   +---------+              +-------------+
+//     |        |                         |
+//     ---------+ next_pc_sampled         | out_inst 
+//              |                         |
+//              V out_pc                  V
+//  +--------------------------------------------+
+//  |>                 FE -> DC                  |
+//  +--------------------------------------------+
+
 module fetch #(parameter PC_WIDTH=12, PMEM_WIDTH=16, PC_INCREMENT=2)
            (
-            input                   clock,
-            input                   reset,
-            input                   in_flush,
-            input                   in_set_pc,
-            input  [PC_WIDTH-1:0]   in_new_pc,
-            input  [PMEM_WIDTH-1:0] in_instr,
-            output [PC_WIDTH-1:0]   out_pc,
-            output [PMEM_WIDTH-1:0] out_instr
+            input                    clock,
+            input                    reset,
+            input                    in_flush,
+            input                    in_set_pc,
+            input  [  PC_WIDTH-1:0]  in_new_pc,
+            input  [PMEM_WIDTH-1:0]  in_instr,
+            output [PMEM_WIDTH-1:0]  out_instr,
+            output [  PC_WIDTH-1:0]  out_pc,       // This goes to the pipeline (i.e., DC stage)
+            output [  PC_WIDTH-1:0]  out_pmem_addr // This goes to the program memory
            );
 
     reg  [PC_WIDTH-1:0] next_pc;
@@ -18,6 +40,7 @@ module fetch #(parameter PC_WIDTH=12, PMEM_WIDTH=16, PC_INCREMENT=2)
     localparam MAX_PC = ((1<<PC_WIDTH)-PC_INCREMENT);
     
     assign next_pc_ext = in_new_pc;
+    assign out_pc      = next_pc_sampled;    // Forward: sampled PC is forwarded to the decode stage
     
     // Register: sample next PC
     always @(posedge clock or posedge reset)
@@ -48,9 +71,9 @@ module fetch #(parameter PC_WIDTH=12, PMEM_WIDTH=16, PC_INCREMENT=2)
     always @(*)
     begin
         if (in_set_pc ==1)
-            out_pc = next_pc_ext;
+            out_pmem_addr = next_pc_ext;
         else
-            out_pc = next_pc_int;
+            out_pmem_addr = next_pc_int;
     end
 
     // Multiplexer: if pipeline is being flushed, send out nop (0x0). Otherwise send out instruction from pmem

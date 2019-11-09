@@ -3,11 +3,13 @@ module exec #(parameter OPCODE_WIDTH    =  4,
                         PMEM_WORD_WIDTH = 16,
                         IALU_WORD_WIDTH = 16,
                         REG_IDX_WIDTH   =  4,
-                        PC_WIDTH        = 12)
+                        PC_WIDTH        = 12,
+                        PC_INCREMENT    =  2)
              (
              input                         clock,
              input                         reset,
              input                         in_act_ialu_add,
+             input                         in_act_incr_pc_is_res,
              input                         in_act_jump_to_ialu_res,
              input                         in_act_write_res_to_reg,
              input  [       PC_WIDTH-1:0]  in_pc,
@@ -22,27 +24,36 @@ module exec #(parameter OPCODE_WIDTH    =  4,
              output                        out_set_pc
              );
 
+    // Sampled inputs
+    reg                       act_ialu_add_sampled;
+    reg                       act_incr_pc_is_res_sampled;
+    reg                       act_jump_to_ialu_res_sampled;
+    reg [       PC_WIDTH-1:0] pc_sampled;
     reg [IALU_WORD_WIDTH-1:0] src1_sampled;
     reg [IALU_WORD_WIDTH-1:0] src2_sampled;
-    reg                       act_ialu_add_sampled;
-    reg                       act_jump_to_ialu_res_sampled;
+    
+    // ALU regs
+    reg [IALU_WORD_WIDTH-1:0] ialu_res;
+    
     
     // Register: sample inputs
     always @(posedge clock or posedge reset)
     begin
-        if (!reset)
-        begin
+        if (!reset) begin
+            act_ialu_add_sampled         <= in_act_ialu_add;
+            act_incr_pc_is_res_sampled   <= in_act_incr_pc_is_res;
+            act_jump_to_ialu_res_sampled <= in_act_jump_to_ialu_res;
+            pc_sampled                   <= in_pc;
             src1_sampled                 <= in_src1;
             src2_sampled                 <= in_src2;
-            act_ialu_add_sampled         <= in_act_ialu_add;
-            act_jump_to_ialu_res_sampled <= in_act_jump_to_ialu_res;
         end
-        else
-        begin
+        else begin
+            act_ialu_add_sampled         <= 0;
+            act_incr_pc_is_res_sampled   <= 0;
+            act_jump_to_ialu_res_sampled <= 0;
+            pc_sampled                   <= 0;
             src1_sampled                 <= 0;
             src2_sampled                 <= 0;
-            act_ialu_add_sampled         <= 0;
-            act_jump_to_ialu_res_sampled <= 0;
         end
     end
 
@@ -62,18 +73,16 @@ module exec #(parameter OPCODE_WIDTH    =  4,
     always @(*)
     begin
         // Integer addition
-        if (act_ialu_add_sampled)
-        begin
-            out_res = src1_sampled + src2_sampled;
+        if (act_ialu_add_sampled) begin
+            ialu_res = src1_sampled + src2_sampled;
         end
         
         // default: do nothing
-        else
-        begin
-            out_res = 0;
+        else begin
+            ialu_res = 0;
         end
     end
-    
+
     // JUMP / BRANCH
     always @(*)
     begin
@@ -90,6 +99,17 @@ module exec #(parameter OPCODE_WIDTH    =  4,
         end
     end
 
+    // Multiplexer: forward either IALU result or incremented PC to result lane
+    always @(*)
+    begin
+        if (act_incr_pc_is_res_sampled) begin
+             out_res[IALU_WORD_WIDTH-1:PC_WIDTH] = 0;
+             out_res[       PC_WIDTH-1:       0] = pc_sampled + PC_INCREMENT;
+        end
+        else begin
+             out_res = ialu_res;           
+        end
+    end
 
 endmodule
 
