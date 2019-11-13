@@ -1,4 +1,6 @@
 module exec #(parameter OPCODE_WIDTH    =  4,
+                        DMEM_ADDR_WIDTH = 12,
+                        DMEM_WORD_WIDTH = 16,
                         PMEM_ADDR_WIDTH = 12,
                         PMEM_WORD_WIDTH = 16,
                         IALU_WORD_WIDTH = 16,
@@ -11,12 +13,20 @@ module exec #(parameter OPCODE_WIDTH    =  4,
              input                         in_act_ialu_add,
              input                         in_act_incr_pc_is_res,
              input                         in_act_jump_to_ialu_res,
+             input                         in_act_load_dmem,
+             input                         in_act_store_dmem,
              input                         in_act_write_res_to_reg,
+             input                         in_act_write_src2_to_res,
              input  [       PC_WIDTH-1:0]  in_pc,
              input  [  REG_IDX_WIDTH-1:0]  in_res_reg_idx,
              input  [IALU_WORD_WIDTH-1:0]  in_src1,
              input  [IALU_WORD_WIDTH-1:0]  in_src2,
+             output                        out_act_load_dmem,
+             output                        out_act_store_dmem,
              output                        out_act_write_res_to_reg,
+             output [DMEM_ADDR_WIDTH-1:0]  out_dmem_rd_addr,
+             output [DMEM_ADDR_WIDTH-1:0]  out_dmem_wr_addr,
+             output [DMEM_WORD_WIDTH-1:0]  out_dmem_wr_word,
              output                        out_flush,
              output [PMEM_ADDR_WIDTH-1:0]  out_new_pc,
              output [IALU_WORD_WIDTH-1:0]  out_res,
@@ -28,6 +38,10 @@ module exec #(parameter OPCODE_WIDTH    =  4,
     reg                       act_ialu_add_sampled;
     reg                       act_incr_pc_is_res_sampled;
     reg                       act_jump_to_ialu_res_sampled;
+    reg                       act_load_dmem_sampled;
+    reg                       act_store_dmem_sampled;
+    reg                       act_write_src2_to_res_sampled;
+
     reg [       PC_WIDTH-1:0] pc_sampled;
     reg [IALU_WORD_WIDTH-1:0] src1_sampled;
     reg [IALU_WORD_WIDTH-1:0] src2_sampled;
@@ -40,30 +54,40 @@ module exec #(parameter OPCODE_WIDTH    =  4,
     always @(posedge clock or posedge reset)
     begin
         if (!reset) begin
-            act_ialu_add_sampled         <= in_act_ialu_add;
-            act_incr_pc_is_res_sampled   <= in_act_incr_pc_is_res;
-            act_jump_to_ialu_res_sampled <= in_act_jump_to_ialu_res;
-            pc_sampled                   <= in_pc;
-            src1_sampled                 <= in_src1;
-            src2_sampled                 <= in_src2;
+            act_ialu_add_sampled          <= in_act_ialu_add;
+            act_incr_pc_is_res_sampled    <= in_act_incr_pc_is_res;
+            act_jump_to_ialu_res_sampled  <= in_act_jump_to_ialu_res;
+            act_load_dmem_sampled         <= in_act_load_dmem;
+            act_store_dmem_sampled        <= in_act_store_dmem;
+            act_write_src2_to_res_sampled <= in_act_write_src2_to_res;
+            pc_sampled                    <= in_pc;
+            src1_sampled                  <= in_src1;
+            src2_sampled                  <= in_src2;
         end
         else begin
-            act_ialu_add_sampled         <= 0;
-            act_incr_pc_is_res_sampled   <= 0;
-            act_jump_to_ialu_res_sampled <= 0;
-            pc_sampled                   <= 0;
-            src1_sampled                 <= 0;
-            src2_sampled                 <= 0;
+            act_ialu_add_sampled          <= 0;
+            act_incr_pc_is_res_sampled    <= 0;
+            act_jump_to_ialu_res_sampled  <= 0;
+            act_load_dmem_sampled         <= 0;
+            act_store_dmem_sampled        <= 0;
+            act_write_src2_to_res_sampled <= 0;
+            pc_sampled                    <= 0;
+            src1_sampled                  <= 0;
+            src2_sampled                  <= 0;
         end
     end
 
     // Register: pass through
     always @(posedge clock or posedge reset) begin
         if (!reset) begin
+            out_act_load_dmem        <= in_act_load_dmem;
+            out_act_store_dmem       <= in_act_store_dmem;
             out_act_write_res_to_reg <= in_act_write_res_to_reg;
             out_res_reg_idx          <= in_res_reg_idx;
         end
         else begin
+            out_act_load_dmem        <= 0;
+            out_act_store_dmem       <= 0;
             out_act_write_res_to_reg <= 0;
             out_res_reg_idx          <= 0;
         end
@@ -75,6 +99,11 @@ module exec #(parameter OPCODE_WIDTH    =  4,
         // Integer addition
         if (act_ialu_add_sampled) begin
             ialu_res = src1_sampled + src2_sampled;
+        end
+
+        // Forward src2 directly to res
+        else if (act_write_src2_to_res_sampled) begin
+            ialu_res = src2_sampled;
         end
         
         // default: do nothing
@@ -99,6 +128,26 @@ module exec #(parameter OPCODE_WIDTH    =  4,
         end
     end
 
+    // Load / store
+    always @(*)
+    begin
+        if (act_load_dmem_sampled) begin
+            out_dmem_rd_addr = src1_sampled;
+        end
+        else begin
+            out_dmem_rd_addr = 0;
+        end
+        
+        if (act_store_dmem_sampled) begin
+            out_dmem_wr_addr = src2_sampled;
+            out_dmem_wr_addr = src1_sampled;
+        end
+        else begin
+            out_dmem_wr_addr = 0;
+            out_dmem_wr_addr = 0;
+        end
+    end
+    
     // Multiplexer: forward either IALU result or incremented PC to result lane
     always @(*)
     begin

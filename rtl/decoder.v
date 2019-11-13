@@ -7,19 +7,45 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
        (
        input                         clock,
        input                         reset,
+       input                         in_flush,
        input  [PMEM_WORD_WIDTH-1:0]  in_instr,
        input  [       PC_WIDTH-1:0]  in_pc,
-       input                         in_flush,
+       input  [IALU_WORD_WIDTH-1:0]  in_src1,
+       input  [IALU_WORD_WIDTH-1:0]  in_src2,
        output [  REG_IDX_WIDTH-1:0]  out_res_reg_idx,
        output [IALU_WORD_WIDTH-1:0]  out_src1,
+       output [  REG_IDX_WIDTH-1:0]  out_src1_reg_idx,
        output [IALU_WORD_WIDTH-1:0]  out_src2,
+       output [  REG_IDX_WIDTH-1:0]  out_src2_reg_idx,
        output                        out_act_ialu_add,
        output                        out_act_incr_pc_is_res,
        output                        out_act_jump_to_ialu_res,
+       output                        out_act_load_dmem,
+       output                        out_act_store_dmem,
        output                        out_act_write_res_to_reg,
+       output                        out_act_write_src2_to_res,
        output [       PC_WIDTH-1:0]  out_pc
        );
 
+    localparam IMMA_WIDTH  = 4;
+    localparam IMMB_WITHD  = 16;
+    localparam FUNC1_WIDTH = 4;
+    localparam FUNC2_WIDTH = 4;
+    
+    localparam [OPCODE_WIDTH-1:0] OPCODE_U_TYPE = 4'b0001;
+    localparam [OPCODE_WIDTH-1:0] OPCODE_S_TYPE = 4'b0011;
+    localparam [OPCODE_WITTH-1:0] OPCODE_LH     = 4'b0100; // I-TYPE
+
+    localparam [ FUNC1_WIDTH-1:0] FUNC1_JRZ     = 4'b0000;
+    localparam [ FUNC1_WIDTH-1:0] FUNC1_JRNZ    = 4'b0001;
+    localparam [ FUNC1_WIDTH-1:0] FUNC1_SH      = 4'b0000;
+    
+    localparam [ FUNC2_WIDTH-1:0] FUNC2_J       = 4'b0000;
+    localparam [ FUNC2_WIDTH-1:0] FUNC2_JAL     = 4'b0001;
+    localparam [ FUNC2_WIDTH-1:0] FUNC2_JR      = 4'b0010;
+    localparam [ FUNC2_WIDTH-1:0] FUNC2_LI      = 4'b0011;
+    localparam [ FUNC2_WIDTH-1:0] FUNC2_LIL     = 4'b0100;
+    
     reg  [PMEM_WORD_WIDTH-1:0]  instr_1st_word_sampled;
     reg  [PMEM_WORD_WIDTH-1:0]  instr_1st_word;
     reg  [PMEM_WORD_WIDTH-1:0]  instr_sampled;
@@ -42,7 +68,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     // U-Type instruction segments
     wire [3:0]                  immA;
     wire [PMEM_WORD_WIDTH-1:0]  immB;
-    wire [3:0]                  func2;
+    wire [    FUNC2_WIDTH-1:0]  func2;
     
     assign opcode           = instr_1st_word_sampled[OPCODE_WIDTH-1:0];
     assign out_pc           = pc_sampled;
@@ -54,6 +80,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
 
     // U-Type instruction segments
     assign func2            = instr_1st_word_sampled[11:8];
+    assign immA             = instr_1st_word_sampled[15:12];
     assign immB             = instr_sampled; // only valid in 2nd cycle of multi-cycle instruction
 
 
@@ -111,7 +138,10 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         out_act_ialu_add             = 0;
         out_act_incr_pc_is_res       = 0;
         out_act_jump_to_ialu_res     = 0;
+        out_act_load_dmem            = 0;
+        out_act_store_dmem           = 0;
         out_act_write_res_to_reg     = 0;
+        out_act_write_src2_to_res    = 0;
         out_src1                     = 0;
         out_src2                     = 0;
     endtask;
@@ -127,11 +157,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         end
         
         // U-Type instructions
-        else if (opcode == 4'b0001)
+        else if (opcode == OPCODE_U_TYPE)
         begin
             case (func2)
                 // Jump by immediate
-                4'b0000:
+                FUNC2_J:
                 begin
                     is_2cycle_instr                          = 1;
                     cycle_in_instr_next                      = 1;
@@ -140,7 +170,10 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_add                     = 1;
                         out_act_incr_pc_is_res               = 0;
                         out_act_jump_to_ialu_res             = 1;
+                        out_act_load_dmem                    = 0;
+                        out_act_store_dmem                   = 0;
                         out_act_write_res_to_reg             = 0;
+                        out_act_write_src2_to_res            = 0;
                         out_src1[PC_WIDTH-1:0]               = pc_sampled2;
                         out_src1[IALU_WORD_WIDTH-1:PC_WIDTH] = 0;
                         out_src2                             = immB;
@@ -151,7 +184,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 end
     
                 // Jump and link by immediate
-                4'b0001:
+                FUNC2_JAL:
                 begin
                     is_2cycle_instr                          = 1;
                     cycle_in_instr_next                      = 1;
@@ -160,7 +193,10 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_add                     = 1;
                         out_act_incr_pc_is_res               = 1;
                         out_act_jump_to_ialu_res             = 1;
+                        out_act_load_dmem                    = 0;
+                        out_act_store_dmem                   = 0;
                         out_act_write_res_to_reg             = 1;
+                        out_act_write_src2_to_res            = 0;
                         out_src1[PC_WIDTH-1:0]               = pc_sampled2;
                         out_src1[IALU_WORD_WIDTH-1:PC_WIDTH] = 0;
                         out_src2                             = immB;
@@ -170,6 +206,24 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                     end
                 end
 
+                // Load immediate value to 4 LSBs (no sign extension)
+                FUNC2_LIL:
+                begin
+                    is_2cycle_inst                           = 0;
+                    cycle_in_instr_next                      = 0;
+                    
+                    out_act_ialu_add                         = 0;
+                    out_act_incr_pc_is_res                   = 0;
+                    out_act_jump_to_ialu_res                 = 0;
+                    out_act_load_dmem                        = 0;
+                    out_act_store_dmem                       = 0;
+                    out_act_write_res_to_reg                 = 1;
+                    out_act_write_src2_to_res                = 1;
+                    out_src1                                 = 0;
+                    out_src2[IMMA_WIDTH-1:0]                 = immA;
+                    out_src2[IALU_WORD_WIDTH-1:IMMA_WIDTH]   = 0;
+                end
+                
                 //
                 default:
                 begin
@@ -178,8 +232,49 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                     zero_outputs();
                 end
             endcase
+        end  // else if (opcode == OPCODE_U_TYPE)
+
+        // S-Type instructions
+        else if (opcode == OPCODE_S_TYPE)
+        begin
+            case (funct1)
+                
+                // Store half
+                FUNC1_SH:
+                begin
+                    is_2cycle_instr           = 0;
+                    cycle_in_instr_next       = 0;
+
+                    out_act_ialu_add          = 0;
+                    out_act_incr_pc_is_res    = 0;
+                    out_act_jump_to_ialu_res  = 0;
+                    out_act_load_dmem         = 0;
+                    out_act_store_dmem        = 1;
+                    out_act_write_res_to_reg  = 0;
+                    out_act_write_src2_to_res = 1;
+                    out_src1                  = in_src1;  // value
+                    out_src2                  = in_src2;  // offset
+                end
+                
+            endcase
         end
     
+        // Load from DMEM
+        else if (opcode == OPCODE_LH) begin
+            is_2cycle_instr     = 0;
+            cycle_in_instr_next = 0;
+
+            out_act_ialu_add          = 0;
+            out_act_incr_pc_is_res    = 0;
+            out_act_jump_to_ialu_res  = 0;
+            out_act_load_dmem         = 1;
+            out_act_store_dmem        = 0;
+            out_act_write_res_to_reg  = 1;
+            out_act_write_src2_to_res = 0;
+            out_src1                  = in_src1;  // offset / address
+            out_src2                  = 0;
+        end
+        
         // Default
         else begin
             is_2cycle_instr     = 0;
