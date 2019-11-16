@@ -132,19 +132,19 @@ module exec #(parameter OPCODE_WIDTH    =  4,
     always @(*)
     begin
         if (act_load_dmem_sampled) begin
-            out_dmem_rd_addr = src1_sampled;
+            out_dmem_rd_addr = src1_sampled[DMEM_ADDR_WIDTH-1:0];
         end
         else begin
             out_dmem_rd_addr = 0;
         end
         
         if (act_store_dmem_sampled) begin
-            out_dmem_wr_addr = src2_sampled;
-            out_dmem_wr_addr = src1_sampled;
+            out_dmem_wr_addr = src2_sampled[DMEM_ADDR_WIDTH-1:0];
+            out_dmem_wr_word = src1_sampled;
         end
         else begin
             out_dmem_wr_addr = 0;
-            out_dmem_wr_addr = 0;
+            out_dmem_wr_word = 0;
         end
     end
     

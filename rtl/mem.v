@@ -10,17 +10,17 @@ module mem #(parameter OPCODE_WIDTH    =  4,
            input                         in_act_load_dmem,
            input                         in_act_store_dmem,
            input                         in_act_write_res_to_reg,
-           input  [DMEM_ADDR_WIDTH-1:0]  in_mem_rd_addr;
-           input  [DMEM_WORD_WIDTH-1:0]  in_mem_rd_word;
-           input  [DMEM_ADDR_WIDTH-1:0]  in_mem_wr_addr;
-           input  [DMEM_WORD_WIDTH-1:0]  in_mem_wr_word;
+           input  [DMEM_ADDR_WIDTH-1:0]  in_mem_rd_addr,
+           input  [DMEM_WORD_WIDTH-1:0]  in_mem_rd_word,  // from dmem
+           input  [DMEM_ADDR_WIDTH-1:0]  in_mem_wr_addr,
+           input  [DMEM_WORD_WIDTH-1:0]  in_mem_wr_word,
            input  [IALU_WORD_WIDTH-1:0]  in_res,
            input  [  REG_IDX_WIDTH-1:0]  in_res_reg_idx,
            output                        out_act_write_res_to_reg,
-           output [DMEM_ADDR_WIDTH-1:0]  out_mem_rd_addr;
-           output [DMEM_ADDR_WIDTH-1:0]  out_mem_wr_addr;
-           output [DMEM_WORD_WIDTH-1:0]  out_mem_wr_word;
-           output                        out_mem_write_en;
+           output [DMEM_ADDR_WIDTH-1:0]  out_mem_rd_addr,
+           output [DMEM_ADDR_WIDTH-1:0]  out_mem_wr_addr,
+           output [DMEM_WORD_WIDTH-1:0]  out_mem_wr_word,
+           output                        out_mem_write_en,
            output [IALU_WORD_WIDTH-1:0]  out_res,
            output [  REG_IDX_WIDTH-1:0]  out_res_reg_idx
            );
@@ -65,10 +65,12 @@ module mem #(parameter OPCODE_WIDTH    =  4,
     end
 
     // Load/store logic
+    // If we are loading a value from memory and storing it to the regfile, output the word from dmem.
+    // Otherwise, output the result value passed by the execute stage.
     always @(*)
     begin
         if (act_load_dmem_sampled == 1) begin
-            out_res = in_rd_word;
+            out_res = in_mem_rd_word;
         end
         else begin
             out_res = in_res_sampled;

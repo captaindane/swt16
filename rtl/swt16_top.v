@@ -103,7 +103,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
    dmem_sim #(.WORD_WIDTH (DMEM_WORD_WIDTH),
               .ADDR_WIDTH (DMEM_ADDR_WIDTH),
               .NUM_WORDS  (DMEM_NUM_WORDS ),
-              .PMEM_FILE  (DMEM_FILE      ) ) dmem_sim_inst
+              .MEM_FILE   (DMEM_FILE      ) ) dmem_sim_inst
    (
       .clock       ( clock ),
       .in_addr_rd  ( dmem_rd_addr  ),
@@ -197,8 +197,8 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
 
    // Memory stage
    mem     #(.OPCODE_WIDTH   (OPCODE_WIDTH   ),
-             .PMEM_ADDR_WIDTH(PMEM_ADDR_WIDTH),
-             .PMEM_WORD_WIDTH(PMEM_WORD_WIDTH),
+             .DMEM_ADDR_WIDTH(DMEM_ADDR_WIDTH),
+             .DMEM_WORD_WIDTH(DMEM_WORD_WIDTH),
              .IALU_WORD_WIDTH(IALU_WORD_WIDTH),
              .REG_IDX_WIDTH  (REG_IDX_WIDTH  ),
              .PC_WIDTH       (PC_WIDTH       )) mem_inst
@@ -211,7 +211,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
        .in_mem_rd_addr           ( dmem_rd_addr_EX_MEM ),
        .in_mem_rd_word           ( dmem_rd_word ),
        .in_mem_wr_addr           ( dmem_wr_addr_EX_MEM ),
-       .in_mem_wr_word           ( dmem_wr_word_EX_MEM )
+       .in_mem_wr_word           ( dmem_wr_word_EX_MEM ),
        .in_res                   ( res_EX_MEM ),
        .in_res_reg_idx           ( res_reg_idx_EX_MEM ),
        .out_act_write_res_to_reg ( act_write_res_to_reg_MEM_WB ),

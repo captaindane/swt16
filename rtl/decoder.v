@@ -34,7 +34,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     
     localparam [OPCODE_WIDTH-1:0] OPCODE_U_TYPE = 4'b0001;
     localparam [OPCODE_WIDTH-1:0] OPCODE_S_TYPE = 4'b0011;
-    localparam [OPCODE_WITTH-1:0] OPCODE_LH     = 4'b0100; // I-TYPE
+    localparam [OPCODE_WIDTH-1:0] OPCODE_LH     = 4'b0100; // I-TYPE
 
     localparam [ FUNC1_WIDTH-1:0] FUNC1_JRZ     = 4'b0000;
     localparam [ FUNC1_WIDTH-1:0] FUNC1_JRNZ    = 4'b0001;
@@ -50,39 +50,36 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     reg  [PMEM_WORD_WIDTH-1:0]  instr_1st_word;
     reg  [PMEM_WORD_WIDTH-1:0]  instr_sampled;
 
-    reg  [PC_WIDTH-1:0       ]  pc_sampled;
-    reg  [PC_WIDTH-1:0       ]  pc_sampled2;
+    reg  [       PC_WIDTH-1:0]  pc_sampled;
+    reg  [       PC_WIDTH-1:0]  pc_sampled2;
 
     reg  [PMEM_ADDR_WIDTH-1:0]  jump_offset;
     reg                         is_2cycle_instr;
 
-    reg  [2:0]                  cycle_in_instr_next;
-    reg  [2:0]                  cycle_in_instr_sampled;
+    reg  [                2:0]  cycle_in_instr_next;
+    reg  [                2:0]  cycle_in_instr_sampled;
 
-    wire [OPCODE_WIDTH-1:0]     opcode;
     
     // R-Type instruction segments
-    wire [REG_IDX_WIDTH-1:0]    src1_reg_idx;
-    wire [REG_IDX_WIDTH-1:0]    src2_reg_idx;
-
-    // U-Type instruction segments
-    wire [3:0]                  immA;
-    wire [PMEM_WORD_WIDTH-1:0]  immB;
-    wire [    FUNC2_WIDTH-1:0]  func2;
+    wire [   OPCODE_WIDTH-1:0]  opcode       = instr_1st_word_sampled [OPCODE_WIDTH-1:0];
+    wire [  REG_IDX_WIDTH-1:0]  src1_reg_idx = instr_1st_word_sampled [11:8];
+    wire [  REG_IDX_WIDTH-1:0]  src2_reg_idx = instr_1st_word_sampled [15:12];
     
-    assign opcode           = instr_1st_word_sampled[OPCODE_WIDTH-1:0];
+    
+    // I-Type instruction segments
+    wire [    FUNC2_WIDTH-1:0]  func1 = instr_1st_word_sampled[7:4];
+    
+    
+    // U-Type instruction segments
+    wire [                3:0]  immA  = instr_1st_word_sampled[15:12];
+    wire [PMEM_WORD_WIDTH-1:0]  immB  = instr_sampled; // only valid in 2nd cycle of multi-cycle instruction
+    wire [    FUNC2_WIDTH-1:0]  func2 = instr_1st_word_sampled[11:8];
+    
+    
+    // Connecting signals to output ports
     assign out_pc           = pc_sampled;
-    
-    // R-Type instruction segments
     assign out_res_reg_idx  = instr_1st_word_sampled[7:4];
-    assign src1_reg_idx     = instr_1st_word_sampled[11:8];
-    assign src2_reg_idx     = instr_1st_word_sampled[15:12];
-
-    // U-Type instruction segments
-    assign func2            = instr_1st_word_sampled[11:8];
-    assign immA             = instr_1st_word_sampled[15:12];
-    assign immB             = instr_sampled; // only valid in 2nd cycle of multi-cycle instruction
-
+    
 
     // Register: index of the current cycle within a multi-cycle instruction
     always @(posedge clock or posedge reset)
@@ -93,6 +90,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
             cycle_in_instr_sampled <= 0;
     end
 
+    
     // Register: holds the first word of a multi-cycle instruction
     always @(posedge clock or posedge reset)
     begin
@@ -209,7 +207,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 // Load immediate value to 4 LSBs (no sign extension)
                 FUNC2_LIL:
                 begin
-                    is_2cycle_inst                           = 0;
+                    is_2cycle_instr                          = 0;
                     cycle_in_instr_next                      = 0;
                     
                     out_act_ialu_add                         = 0;
@@ -230,6 +228,8 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                     is_2cycle_instr          = 0;
                     cycle_in_instr_next      = 0;
                     zero_outputs();
+
+                    $display("WARNING: unknown U-Type instruction with func2 %b\n", func2);
                 end
             endcase
         end  // else if (opcode == OPCODE_U_TYPE)
@@ -237,7 +237,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         // S-Type instructions
         else if (opcode == OPCODE_S_TYPE)
         begin
-            case (funct1)
+            case (func1)
                 
                 // Store half
                 FUNC1_SH:
@@ -254,6 +254,15 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                     out_act_write_src2_to_res = 1;
                     out_src1                  = in_src1;  // value
                     out_src2                  = in_src2;  // offset
+                end
+
+                default:
+                begin
+                    is_2cycle_instr           = 0;
+                    cycle_in_instr_next       = 0;
+                    zero_outputs();
+
+                    $display("WARNING: unknown S-Type instruction with func2 %b\n", func2);
                 end
                 
             endcase
@@ -280,6 +289,8 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
             is_2cycle_instr     = 0;
             cycle_in_instr_next = 0;
             zero_outputs();
+            
+            $display("WARNING: unknown R-Type instruction with opcode %b\n", opcode);
         end
     end
 

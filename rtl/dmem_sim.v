@@ -12,28 +12,29 @@ module dmem_sim #(WORD_WIDTH = 16,
     // Least significant bit in address that determines which word to read
     localparam ADDR_LSB = ((WORD_WIDTH / 8)-1);
     
-    reg [WORD_WIDTH-1:0]          mem_array [ NUM_WORDS-1 : 0 ];
-    reg [ADDR_WIDTH-ADDR_LSB-1:0] sampled_addr;
+    reg [ADDR_WIDTH-ADDR_LSB-1:0]  addr_rd_sampled;
+    reg [         WORD_WIDTH-1:0]  mem_array         [ NUM_WORDS-1 : 0 ];
 
 
     initial begin
         $readmemh(MEM_FILE, mem_array);
     end
 
+    // Register: sample read address
     always @(posedge clock) begin
-        sampled_addr <= in_addr[ADDR_WIDTH-1:ADDR_LSB];
+        addr_rd_sampled <= in_addr_rd[ADDR_WIDTH-1:ADDR_LSB];
     end
 
-    // Read (asynchronous)
+    // Read (synchronous)
     always @(*) begin
-        out_word = mem_array[in_addr_rd];
+        out_word = mem_array[addr_rd_sampled];
     end
 
     // Write (synchronous)
     always @(posedge clock)
     begin
         if (in_write_en == 1) begin
-            mem_array[in_addr_wr] <= in_word;
+            mem_array[in_addr_wr[ADDR_WIDTH-1:ADDR_LSB]] <= in_word;
         end
     end
 
