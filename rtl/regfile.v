@@ -18,13 +18,13 @@ module regfile #(parameter WORD_WIDTH=16, IDX_WIDTH=4)
     reg [WORD_WIDTH-1:0] registers [NUM_REGS-1:0];
 
 
-    // Multiplexer: select src1 output
+    // Multiplexer: select src1 output (asynchronous read)
     always @(*)
     begin
         out_src1 = registers[in_src1_idx];
     end
 
-    // Multiplexer: select src2 output
+    // Multiplexer: select src2 output (asynchronous read)
     always @(*)
     begin
         out_src2 = registers[in_src2_idx];

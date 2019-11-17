@@ -14,9 +14,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
        input  [IALU_WORD_WIDTH-1:0]  in_src2,
        output [  REG_IDX_WIDTH-1:0]  out_res_reg_idx,
        output [IALU_WORD_WIDTH-1:0]  out_src1,
-       output [  REG_IDX_WIDTH-1:0]  out_src1_reg_idx,
+       output [  REG_IDX_WIDTH-1:0]  out_src1_reg_idx,  // to regfile
        output [IALU_WORD_WIDTH-1:0]  out_src2,
-       output [  REG_IDX_WIDTH-1:0]  out_src2_reg_idx,
+       output [  REG_IDX_WIDTH-1:0]  out_src2_reg_idx,  // to regfile
        output                        out_act_ialu_add,
        output                        out_act_incr_pc_is_res,
        output                        out_act_jump_to_ialu_res,
@@ -24,6 +24,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
        output                        out_act_store_dmem,
        output                        out_act_write_res_to_reg,
        output                        out_act_write_src2_to_res,
+       output [PMEM_WORD_WIDTH-1:0]  out_instr,
        output [       PC_WIDTH-1:0]  out_pc
        );
 
@@ -32,13 +33,14 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     localparam FUNC1_WIDTH = 4;
     localparam FUNC2_WIDTH = 4;
     
+    localparam [OPCODE_WIDTH-1:0] OPCODE_NOP    = 4'b0000; 
     localparam [OPCODE_WIDTH-1:0] OPCODE_U_TYPE = 4'b0001;
     localparam [OPCODE_WIDTH-1:0] OPCODE_S_TYPE = 4'b0011;
     localparam [OPCODE_WIDTH-1:0] OPCODE_LH     = 4'b0100; // I-TYPE
 
     localparam [ FUNC1_WIDTH-1:0] FUNC1_JRZ     = 4'b0000;
     localparam [ FUNC1_WIDTH-1:0] FUNC1_JRNZ    = 4'b0001;
-    localparam [ FUNC1_WIDTH-1:0] FUNC1_SH      = 4'b0000;
+    localparam [ FUNC1_WIDTH-1:0] FUNC1_SH      = 4'b0010;
     
     localparam [ FUNC2_WIDTH-1:0] FUNC2_J       = 4'b0000;
     localparam [ FUNC2_WIDTH-1:0] FUNC2_JAL     = 4'b0001;
@@ -64,6 +66,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     wire [   OPCODE_WIDTH-1:0]  opcode       = instr_1st_word_sampled [OPCODE_WIDTH-1:0];
     wire [  REG_IDX_WIDTH-1:0]  src1_reg_idx = instr_1st_word_sampled [11:8];
     wire [  REG_IDX_WIDTH-1:0]  src2_reg_idx = instr_1st_word_sampled [15:12];
+
+    assign out_src1_reg_idx = src1_reg_idx; // TODO: null me when i am not needed
+    assign out_src2_reg_idx = src2_reg_idx; // TODO: null me when i am not needed
     
     
     // I-Type instruction segments
@@ -77,6 +82,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     
     
     // Connecting signals to output ports
+    assign out_instr        = instr_sampled;
     assign out_pc           = pc_sampled;
     assign out_res_reg_idx  = instr_1st_word_sampled[7:4];
     
@@ -90,7 +96,6 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
             cycle_in_instr_sampled <= 0;
     end
 
-    
     // Register: holds the first word of a multi-cycle instruction
     always @(posedge clock or posedge reset)
     begin
@@ -121,6 +126,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
             pc_sampled2 <= 0;
         end
     end
+
     
     // Multiplexer: Hold first instruction word in case of 2-cycle instruction
     always @(*)
@@ -229,7 +235,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                     cycle_in_instr_next      = 0;
                     zero_outputs();
 
-                    $display("WARNING: unknown U-Type instruction with func2 %b\n", func2);
+                    $display("WARNING: unknown U-Type instruction with opcode %b, func2 %b\n", opcode, func2);
                 end
             endcase
         end  // else if (opcode == OPCODE_U_TYPE)
@@ -262,7 +268,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                     cycle_in_instr_next       = 0;
                     zero_outputs();
 
-                    $display("WARNING: unknown S-Type instruction with func2 %b\n", func2);
+                    $display("WARNING: unknown S-Type instruction with opcode %b, func1 %b\n", opcode, func1);
                 end
                 
             endcase
@@ -280,11 +286,18 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
             out_act_store_dmem        = 0;
             out_act_write_res_to_reg  = 1;
             out_act_write_src2_to_res = 0;
-            out_src1                  = in_src1;  // offset / address
+            out_src1                  = in_src1;      // address (comes back from regrile)
             out_src2                  = 0;
         end
         
-        // Default
+        // No operation
+        else if (opcode == OPCODE_NOP) begin
+            is_2cycle_instr     = 0;
+            cycle_in_instr_next = 0;
+            zero_outputs();
+        end
+        
+        // default
         else begin
             is_2cycle_instr     = 0;
             cycle_in_instr_next = 0;

@@ -1,15 +1,18 @@
-module mem #(parameter OPCODE_WIDTH    =  4,
-                       DMEM_ADDR_WIDTH = 12,
+module mem #(parameter DMEM_ADDR_WIDTH = 12,
                        DMEM_WORD_WIDTH = 16,
                        IALU_WORD_WIDTH = 16,
-                       REG_IDX_WIDTH   =  4,
-                       PC_WIDTH        = 12)
+                       OPCODE_WIDTH    =  4,
+                       PC_WIDTH        = 12,
+                       PMEM_ADDR_WIDTH = 12,
+                       PMEM_WORD_WIDTH = 16,
+                       REG_IDX_WIDTH   =  4)
            (
            input                         clock,
            input                         reset,
            input                         in_act_load_dmem,
            input                         in_act_store_dmem,
            input                         in_act_write_res_to_reg,
+           input  [PMEM_WORD_WIDTH-1:0]  in_instr,
            input  [DMEM_ADDR_WIDTH-1:0]  in_mem_rd_addr,
            input  [DMEM_WORD_WIDTH-1:0]  in_mem_rd_word,  // from dmem
            input  [DMEM_ADDR_WIDTH-1:0]  in_mem_wr_addr,
@@ -30,9 +33,11 @@ module mem #(parameter OPCODE_WIDTH    =  4,
     reg act_store_dmem_sampled;
 
     // Sampled data inputs
-    reg [IALU_WORD_WIDTH-1:0] in_res_sampled;
+    reg  [PMEM_WORD_WIDTH-1:0]  instr_sampled;
+    reg  [IALU_WORD_WIDTH-1:0]  in_res_sampled;
 
     // Wiring: write address, write word, and write enable to DMEM
+    assign out_mem_rd_addr  = in_mem_rd_addr;
     assign out_mem_wr_addr  = in_mem_wr_addr;
     assign out_mem_wr_word  = in_mem_wr_word;
     assign out_mem_write_en = in_act_store_dmem;
@@ -41,11 +46,13 @@ module mem #(parameter OPCODE_WIDTH    =  4,
     // Register: pass through
     always @(posedge clock or posedge reset) begin
         if (!reset) begin
+            instr_sampled            <= in_instr;
             in_res_sampled           <= in_res;
             out_act_write_res_to_reg <= in_act_write_res_to_reg;
             out_res_reg_idx          <= in_res_reg_idx;
         end
         else begin
+            instr_sampled            <= 0;
             in_res_sampled           <= 0;
             out_act_write_res_to_reg <= 0;
             out_res_reg_idx          <= 0;

@@ -44,6 +44,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
    wire                         act_load_dmem_DC_EX;
    wire                         act_store_dmem_DC_EX;
    wire                         act_write_res_to_reg_DC_EX;
+   wire [PMEM_WORD_WIDTH-1 : 0] instr_DC_EX;
    wire [PMEM_ADDR_WIDTH-1 : 0] pc_DC_EX;
    wire [  REG_IDX_WIDTH-1 : 0] res_reg_idx_DC_EX;
    wire [IALU_WORD_WIDTH-1 : 0] src1_DC_EX;
@@ -57,6 +58,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
    wire [DMEM_ADDR_WIDTH-1 : 0] dmem_rd_addr_EX_MEM;
    wire [DMEM_ADDR_WIDTH-1 : 0] dmem_wr_addr_EX_MEM;
    wire [DMEM_WORD_WIDTH-1 : 0] dmem_wr_word_EX_MEM;
+   wire [PMEM_WORD_WIDTH-1 : 0] instr_EX_MEM;
    wire [IALU_WORD_WIDTH-1 : 0] res_EX_MEM;
    wire [  REG_IDX_WIDTH-1 : 0] res_reg_idx_EX_MEM;
 
@@ -157,17 +159,20 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
       .out_act_store_dmem        ( act_store_dmem_DC_EX ),
       .out_act_write_res_to_reg  ( act_write_res_to_reg_DC_EX ),
       .out_act_write_src2_to_res ( act_write_src2_to_res_DC_EX ),
+      .out_instr                 ( instr_DC_EX ),
       .out_pc                    ( pc_DC_EX )
    );
 
    // Execution stage
-   exec    #(.OPCODE_WIDTH   (OPCODE_WIDTH   ),
+   exec    #(.DMEM_ADDR_WIDTH(DMEM_ADDR_WIDTH),
+             .DMEM_WORD_WIDTH(DMEM_WORD_WIDTH),
+             .IALU_WORD_WIDTH(IALU_WORD_WIDTH),
+             .OPCODE_WIDTH   (OPCODE_WIDTH   ),
+             .PC_INCREMENT   (PC_INCREMENT   ),
+             .PC_WIDTH       (PC_WIDTH       ),
              .PMEM_ADDR_WIDTH(PMEM_ADDR_WIDTH),
              .PMEM_WORD_WIDTH(PMEM_WORD_WIDTH),
-             .IALU_WORD_WIDTH(IALU_WORD_WIDTH),
-             .REG_IDX_WIDTH  (REG_IDX_WIDTH  ),
-             .PC_WIDTH       (PC_WIDTH       ),
-             .PC_INCREMENT   (PC_INCREMENT   )) exec_inst
+             .REG_IDX_WIDTH  (REG_IDX_WIDTH  )) exec_inst
    (
        .clock                    ( clock ),
        .reset                    ( reset ),
@@ -178,6 +183,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
        .in_act_store_dmem        ( act_store_dmem_DC_EX ),
        .in_act_write_res_to_reg  ( act_write_res_to_reg_DC_EX ),
        .in_act_write_src2_to_res ( act_write_src2_to_res_DC_EX ),
+       .in_instr                 ( instr_DC_EX ),
        .in_pc                    ( pc_DC_EX ),
        .in_res_reg_idx           ( res_reg_idx_DC_EX ),
        .in_src1                  ( src1_DC_EX ),
@@ -189,6 +195,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
        .out_dmem_wr_addr         ( dmem_wr_addr_EX_MEM ),
        .out_dmem_wr_word         ( dmem_wr_word_EX_MEM ),
        .out_flush                ( flush_pipeline ),
+       .out_instr                ( instr_EX_MEM ),
        .out_new_pc               ( new_pc ),
        .out_res                  ( res_EX_MEM ),
        .out_res_reg_idx          ( res_reg_idx_EX_MEM ),
@@ -196,18 +203,21 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
    );
 
    // Memory stage
-   mem     #(.OPCODE_WIDTH   (OPCODE_WIDTH   ),
-             .DMEM_ADDR_WIDTH(DMEM_ADDR_WIDTH),
+   mem     #(.DMEM_ADDR_WIDTH(DMEM_ADDR_WIDTH),
              .DMEM_WORD_WIDTH(DMEM_WORD_WIDTH),
              .IALU_WORD_WIDTH(IALU_WORD_WIDTH),
-             .REG_IDX_WIDTH  (REG_IDX_WIDTH  ),
-             .PC_WIDTH       (PC_WIDTH       )) mem_inst
+             .OPCODE_WIDTH   (OPCODE_WIDTH   ),
+             .PC_WIDTH       (PC_WIDTH       ),
+             .PMEM_ADDR_WIDTH(PMEM_ADDR_WIDTH),
+             .PMEM_WORD_WIDTH(PMEM_WORD_WIDTH),
+             .REG_IDX_WIDTH  (REG_IDX_WIDTH  )) mem_inst
    (
        .clock                    ( clock ),
        .reset                    ( reset ),
        .in_act_load_dmem         ( act_load_dmem_EX_MEM ),
        .in_act_store_dmem        ( act_store_dmem_EX_MEM ),
        .in_act_write_res_to_reg  ( act_write_res_to_reg_EX_MEM ),
+       .in_instr                 ( instr_EX_MEM ),
        .in_mem_rd_addr           ( dmem_rd_addr_EX_MEM ),
        .in_mem_rd_word           ( dmem_rd_word ),
        .in_mem_wr_addr           ( dmem_wr_addr_EX_MEM ),
