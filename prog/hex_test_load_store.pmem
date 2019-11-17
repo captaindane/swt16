@@ -1,9 +1,12 @@
 0000  // nop
-1411  // lil r1, 1
-1411  // lil r2, 2
+2411  // lil r1, 2
+4421  // lil r2, 4
 0000  // nop
 0000  // nop
-0124  // lh r3, r1
+0134  // lh r3(val), r1(addr)
 0000  // nop
 0000  // nop
-2323  // sh r2, r3
+2323  // sh r2(addr), r3(val)
+0000  // nop
+0000  // nop
+0244  // lh r4(val), r2(addr)
