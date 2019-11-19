@@ -20,6 +20,7 @@ module mem #(parameter DMEM_ADDR_WIDTH = 12,
            input  [IALU_WORD_WIDTH-1:0]  in_res,
            input  [  REG_IDX_WIDTH-1:0]  in_res_reg_idx,
            output                        out_act_write_res_to_reg,
+           output [PMEM_WORD_WIDTH-1:0]  out_instr,
            output [DMEM_ADDR_WIDTH-1:0]  out_mem_rd_addr,
            output [DMEM_ADDR_WIDTH-1:0]  out_mem_wr_addr,
            output [DMEM_WORD_WIDTH-1:0]  out_mem_wr_word,
@@ -49,12 +50,14 @@ module mem #(parameter DMEM_ADDR_WIDTH = 12,
             instr_sampled            <= in_instr;
             in_res_sampled           <= in_res;
             out_act_write_res_to_reg <= in_act_write_res_to_reg;
+            out_instr                <= in_instr;
             out_res_reg_idx          <= in_res_reg_idx;
         end
         else begin
             instr_sampled            <= 0;
             in_res_sampled           <= 0;
             out_act_write_res_to_reg <= 0;
+            out_instr                <= 0;
             out_res_reg_idx          <= 0;
         end
     end

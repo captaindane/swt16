@@ -64,6 +64,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
 
    // Connections: MEM stage -> WB stage
    wire                         act_write_res_to_reg_MEM_WB;
+   wire [PMEM_WORD_WIDTH-1 : 0] instr_MEM_WB;
    wire [IALU_WORD_WIDTH-1 : 0] res_MEM_WB;
    wire [  REG_IDX_WIDTH-1 : 0] res_reg_idx_MEM_WB;
    
@@ -225,6 +226,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
        .in_res                   ( res_EX_MEM ),
        .in_res_reg_idx           ( res_reg_idx_EX_MEM ),
        .out_act_write_res_to_reg ( act_write_res_to_reg_MEM_WB ),
+       .out_instr                ( instr_MEM_WB ),
        .out_mem_rd_addr          ( dmem_rd_addr ),
        .out_mem_wr_addr          ( dmem_wr_addr ),
        .out_mem_wr_word          ( dmem_wr_word ),
@@ -244,6 +246,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
        .clock                    ( clock ),
        .reset                    ( reset ),
        .in_act_write_res_to_reg  ( act_write_res_to_reg_MEM_WB ),
+       .in_instr                 ( instr_MEM_WB ),
        .in_res                   ( res_MEM_WB ),
        .in_res_reg_idx           ( res_reg_idx_MEM_WB ),
        .out_act_write_res_to_reg ( reg_write ),
