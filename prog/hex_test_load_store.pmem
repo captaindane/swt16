@@ -10,3 +10,6 @@
 0000  // nop
 0000  // nop
 0244  // lh r4(val), r2(addr)
+0351  // li r5, DEAD
+DEAD  // ...
+0000  // nop
