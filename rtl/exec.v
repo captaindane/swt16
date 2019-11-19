@@ -126,7 +126,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
         if (act_jump_to_ialu_res_sampled) begin
             out_flush  = 1;
             out_set_pc = 1;
-            out_new_pc = out_res[PMEM_ADDR_WIDTH-1:0];
+            out_new_pc = ialu_res[PMEM_ADDR_WIDTH-1:0];
         end
         else begin
             out_flush  = 0;
@@ -157,16 +157,10 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
         end
     end
     
-    // Multiplexer: forward either IALU result or incremented PC to result lane
+    // Multiplexer: forward either IALU result or (to be defined) to result output port
     always @(*)
     begin
-        if (act_incr_pc_is_res_sampled) begin
-             out_res[IALU_WORD_WIDTH-1:PC_WIDTH] = 0;
-             out_res[       PC_WIDTH-1:       0] = pc_sampled + PC_INCREMENT;
-        end
-        else begin
-             out_res = ialu_res;           
-        end
+        out_res = ialu_res;           
     end
 
 endmodule
