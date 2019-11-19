@@ -1,3 +1,6 @@
+// Register File
+// Register 0 set to zero at reset and cannot be written.
+
 module regfile #(parameter WORD_WIDTH=16, IDX_WIDTH=4) 
        (
        input                   clock,
@@ -37,7 +40,12 @@ module regfile #(parameter WORD_WIDTH=16, IDX_WIDTH=4)
         begin
             if (in_write)
             begin
-                registers[in_dst_idx] <= in_dst;
+                if (in_dst_idx > 0) begin
+                    registers[in_dst_idx] <= in_dst;
+                end
+                else begin
+                    $display("WARNING @ time %0t: Attempt to write to reg0 which is tied to 0.\n", $time);
+                end
             end
         end
         else
