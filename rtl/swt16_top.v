@@ -2,11 +2,13 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
                               DMEM_WORD_WIDTH = 16,
                               DMEM_NUM_WORDS  = 2048,
                               DMEM_FILE       = "../prog/hex_test_load_store.dmem",
+//                            DMEM_FILE       = "../prog/hex_test_jmp.dmem",
                               
                               PMEM_ADDR_WIDTH = 12, 
                               PMEM_WORD_WIDTH = 16,
                               PMEM_NUM_WORDS  = 2048,
                               PMEM_FILE       = "../prog/hex_test_load_store.pmem",
+//                            PMEM_FILE       = "../prog/hex_test_jmp.pmem",
                               
                               OPCODE_WIDTH    = 4,
                               REG_IDX_WIDTH   = 4,
