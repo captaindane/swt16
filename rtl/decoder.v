@@ -32,9 +32,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     localparam IMMB_WITHD  = 16;
     localparam FUNC1_WIDTH = 4;
     localparam FUNC2_WIDTH = 4;
+    localparam FUNC3_WIDTH = 4;
     
     localparam [OPCODE_WIDTH-1:0] OPCODE_NOP    = 4'b0000; 
     localparam [OPCODE_WIDTH-1:0] OPCODE_U_TYPE = 4'b0001;
+    localparam [OPCODE_WIDTH-1:0] OPCODE_J_TYPE = 4'b0010;
     localparam [OPCODE_WIDTH-1:0] OPCODE_S_TYPE = 4'b0011;
     localparam [OPCODE_WIDTH-1:0] OPCODE_LH     = 4'b0100; // I-TYPE
 
@@ -44,11 +46,13 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     localparam [ FUNC1_WIDTH-1:0] FUNC1_SH      = 4'b0010;
     
     // U-TYPE
-    localparam [ FUNC2_WIDTH-1:0] FUNC2_J       = 4'b0000;
-    localparam [ FUNC2_WIDTH-1:0] FUNC2_JAL     = 4'b0001;
-    localparam [ FUNC2_WIDTH-1:0] FUNC2_JR      = 4'b0010;
     localparam [ FUNC2_WIDTH-1:0] FUNC2_LI      = 4'b0011;
     localparam [ FUNC2_WIDTH-1:0] FUNC2_LIL     = 4'b0100;
+
+    // J-Type
+    localparam [ FUNC2_WIDTH-1:0] FUNC2_JAL     = 4'b0000;
+    localparam [ FUNC2_WIDTH-1:0] FUNC2_JALR    = 4'b0001;
+    
     
     wire [PMEM_WORD_WIDTH-1:0]  instr_1st_word;  // Holds first word of instruction (also for multi-cycle instructions)
     reg  [PMEM_WORD_WIDTH-1:0]  instr_sampled;   // Current instruction word
@@ -63,26 +67,20 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     reg  [                2:0]  cycle_in_instr_sampled;
 
     
-    // R-Type instruction segments
+    // Instruction segments
     wire [   OPCODE_WIDTH-1:0]  opcode       = instr_1st_word [OPCODE_WIDTH-1:0];
     wire [  REG_IDX_WIDTH-1:0]  src1_reg_idx = instr_1st_word [11:8];
     wire [  REG_IDX_WIDTH-1:0]  src2_reg_idx = instr_1st_word [15:12];
+    wire [    FUNC1_WIDTH-1:0]  func1        = instr_1st_word [7:4];
+    wire [    FUNC2_WIDTH-1:0]  func2        = instr_1st_word [11:8];
+    wire [    FUNC3_WIDTH-1:0]  func3        = instr_1st_word [15:12];
+    wire [                3:0]  immA         = instr_1st_word [15:12];
+    wire [PMEM_WORD_WIDTH-1:0]  immB         = instr_sampled; // only valid in 2nd cycle of multi-cycle instruction
 
-    assign out_src1_reg_idx = src1_reg_idx; // TODO: null me when i am not needed
-    assign out_src2_reg_idx = src2_reg_idx; // TODO: null me when i am not needed
-    
-    
-    // I-Type instruction segments
-    wire [    FUNC2_WIDTH-1:0]  func1 = instr_1st_word[7:4];
-    
-    
-    // U-Type instruction segments
-    wire [                3:0]  immA  = instr_1st_word[15:12];
-    wire [PMEM_WORD_WIDTH-1:0]  immB  = instr_sampled; // only valid in 2nd cycle of multi-cycle instruction
-    wire [    FUNC2_WIDTH-1:0]  func2 = instr_1st_word[11:8];
-    
     
     // Connecting signals to output ports
+    assign out_src1_reg_idx = src1_reg_idx; // TODO: null me when i am not needed
+    assign out_src2_reg_idx = src2_reg_idx; // TODO: null me when i am not needed
     assign out_instr        = instr_sampled;
     assign out_pc           = pc_sampled;
     assign out_res_reg_idx  = instr_1st_word[7:4];
@@ -152,67 +150,23 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         else if (opcode == OPCODE_U_TYPE)
         begin
             case (func2)
-                // Jump by immediate
-                FUNC2_J:
-                begin
-                    if (cycle_in_instr_sampled == 1) begin
-                        cycle_in_instr_next                  = 0;
-                        out_act_ialu_add                     = 1;
-                        out_act_incr_pc_is_res               = 0;
-                        out_act_jump_to_ialu_res             = 1;
-                        out_act_load_dmem                    = 0;
-                        out_act_store_dmem                   = 0;
-                        out_act_write_res_to_reg             = 0;
-                        out_act_write_src2_to_res            = 0;
-                        out_src1[PC_WIDTH-1:0]               = pc_sampled2;
-                        out_src1[IALU_WORD_WIDTH-1:PC_WIDTH] = 0;
-                        out_src2                             = immB;
-                    end
-                    else begin
-                        cycle_in_instr_next                  = 1;
-                        zero_outputs();
-                    end
-                end
-    
-                // Jump and link by immediate
-                FUNC2_JAL:
-                begin
-                    if (cycle_in_instr_sampled == 1) begin
-                        cycle_in_instr_next                  = 0;
-                        out_act_ialu_add                     = 1;
-                        out_act_incr_pc_is_res               = 1;
-                        out_act_jump_to_ialu_res             = 1;
-                        out_act_load_dmem                    = 0;
-                        out_act_store_dmem                   = 0;
-                        out_act_write_res_to_reg             = 1;
-                        out_act_write_src2_to_res            = 0;
-                        out_src1[PC_WIDTH-1:0]               = pc_sampled2;
-                        out_src1[IALU_WORD_WIDTH-1:PC_WIDTH] = 0;
-                        out_src2                             = immB;
-                    end
-                    else begin
-                        cycle_in_instr_next                  = 1;
-                        zero_outputs();
-                    end
-                end
-
                 // Load 16-bit immediate value
                 FUNC2_LI:
                 begin
                     if (cycle_in_instr_sampled == 1) begin
-                        cycle_in_instr_next                  = 0;
-                        out_act_ialu_add                     = 0;
-                        out_act_incr_pc_is_res               = 0;
-                        out_act_jump_to_ialu_res             = 0;
-                        out_act_load_dmem                    = 0;
-                        out_act_store_dmem                   = 0;
-                        out_act_write_res_to_reg             = 1;
-                        out_act_write_src2_to_res            = 1;
-                        out_src1                             = 0;
-                        out_src2                             = immB;
+                        cycle_in_instr_next                    = 0;
+                        out_act_ialu_add                       = 0;
+                        out_act_incr_pc_is_res                 = 0;
+                        out_act_jump_to_ialu_res               = 0;
+                        out_act_load_dmem                      = 0;
+                        out_act_store_dmem                     = 0;
+                        out_act_write_res_to_reg               = 1;
+                        out_act_write_src2_to_res              = 1;
+                        out_src1                               = 0;
+                        out_src2                               = immB;
                     end
                     else begin
-                        cycle_in_instr_next                  = 1;
+                        cycle_in_instr_next                    = 1;
                         zero_outputs();
                     end
                 end
@@ -220,27 +174,26 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 // Load immediate value to 4 LSBs (no sign extension)
                 FUNC2_LIL:
                 begin
-                    cycle_in_instr_next                      = 0;
-                    
-                    out_act_ialu_add                         = 0;
-                    out_act_incr_pc_is_res                   = 0;
-                    out_act_jump_to_ialu_res                 = 0;
-                    out_act_load_dmem                        = 0;
-                    out_act_store_dmem                       = 0;
-                    out_act_write_res_to_reg                 = 1;
-                    out_act_write_src2_to_res                = 1;
-                    out_src1                                 = 0;
-                    out_src2[IMMA_WIDTH-1:0]                 = immA;
-                    out_src2[IALU_WORD_WIDTH-1:IMMA_WIDTH]   = 0;
+                        cycle_in_instr_next                    = 0;
+                        out_act_ialu_add                       = 0;
+                        out_act_incr_pc_is_res                 = 0;
+                        out_act_jump_to_ialu_res               = 0;
+                        out_act_load_dmem                      = 0;
+                        out_act_store_dmem                     = 0;
+                        out_act_write_res_to_reg               = 1;
+                        out_act_write_src2_to_res              = 1;
+                        out_src1                               = 0;
+                        out_src2[IMMA_WIDTH-1:0]               = immA;
+                        out_src2[IALU_WORD_WIDTH-1:IMMA_WIDTH] = 0;
                 end
                 
                 //
                 default:
                 begin
-                    cycle_in_instr_next                      = 0;
-                    zero_outputs();
+                        cycle_in_instr_next                    = 0;
+                        zero_outputs();
 
-                    $display("WARNING: unknown U-Type instruction with opcode %b, func2 %b at time %0t.\n", opcode, func2, $time);
+                        $display("WARNING: unknown U-Type instruction with opcode %b, func2 %b at time %0t.\n", opcode, func2, $time);
                 end
             endcase
         end  // else if (opcode == OPCODE_U_TYPE)
@@ -272,6 +225,59 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                     zero_outputs();
 
                     $display("WARNING: unknown S-Type instruction with opcode %b, func1 %b at time %0t.\n", opcode, func1, $time);
+                end
+                
+            endcase
+        end
+
+        else if (opcode == OPCODE_J_TYPE)
+        begin
+            case (func3)
+                
+                // Jump and link by immediate
+                FUNC2_JAL:
+                begin
+                    if (cycle_in_instr_sampled == 1) begin
+                        cycle_in_instr_next                  = 0;
+                        out_act_ialu_add                     = 1;
+                        out_act_incr_pc_is_res               = 1;
+                        out_act_jump_to_ialu_res             = 1;
+                        out_act_load_dmem                    = 0;
+                        out_act_store_dmem                   = 0;
+                        out_act_write_res_to_reg             = 1;
+                        out_act_write_src2_to_res            = 0;
+                        out_src1                             = immB;
+                        out_src2[PC_WIDTH-1:0]               = pc_sampled2;
+                        out_src2[IALU_WORD_WIDTH-1:PC_WIDTH] = 0;
+                    end
+                    else begin
+                        cycle_in_instr_next                  = 1;
+                        zero_outputs();
+                    end
+                end
+                
+                // Jump and link by register
+                FUNC2_JALR:
+                begin
+                        cycle_in_instr_next                  = 0;
+                        out_act_ialu_add                     = 1;
+                        out_act_incr_pc_is_res               = 1;
+                        out_act_jump_to_ialu_res             = 1;
+                        out_act_load_dmem                    = 0;
+                        out_act_store_dmem                   = 0;
+                        out_act_write_res_to_reg             = 1;
+                        out_act_write_src2_to_res            = 0;
+                        out_src1                             = in_src1;
+                        out_src2[PC_WIDTH-1:0]               = pc_sampled;
+                        out_src2[IALU_WORD_WIDTH-1:PC_WIDTH] = 0;
+                end
+
+                default:
+                begin
+                        cycle_in_instr_next                  = 0;
+                        zero_outputs();
+    
+                        $display("WARNING: unknown J-Type instruction with opcode %b, func3 %b at time %0t.\n", opcode, func3, $time);
                 end
                 
             endcase
