@@ -3,6 +3,7 @@
 
 #include "verilated_vcd_c.h"
 
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <cstdlib>
@@ -30,8 +31,16 @@ double sc_time_stamp () {       // Called by $time in Verilog
 typedef struct cmdLineArgs_t
 {
     bool        abort;
-    size_t      simTime;
+
+    std::string dmemFile;
+    bool        dmemFileSpecified;
+
     std::string execName;
+    
+    std::string pmemFile;
+    bool        pmemFileSpecified;
+    
+    size_t      simTime;
 
 } cmdLineArgs_t;
 
@@ -41,8 +50,11 @@ void printHelp (cmdLineArgs_t& cmdLineArgs)
 {
     std::cout << "Usage of swt16 simulator" << std::endl;
 
-    std::cout << cmdLineArgs.execName << "  --simTime  <simulation time in time units>" << std::endl
-              << "                    --help" << std::endl;
+    std::cout << cmdLineArgs.execName << std::endl \
+              << "        --dmemFile <hex file containing init values for data memory>" << std::endl \
+              << "        --pmemFile <hex file containing contents of program memory>" << std::endl \
+              << "        --simTime  <simulation time in time units>" << std::endl \
+              << "        --help" << std::endl;
 }
 
 
@@ -51,8 +63,10 @@ void printHelp (cmdLineArgs_t& cmdLineArgs)
 void parseCmdLine (int argc, char**argv, cmdLineArgs_t& cmdLineArgs)
 {
     // Set default values
-    cmdLineArgs.abort    = false;
-    cmdLineArgs.simTime  = 100;
+    cmdLineArgs.abort             = false;
+    cmdLineArgs.dmemFileSpecified = false;
+    cmdLineArgs.pmemFileSpecified = false;
+    cmdLineArgs.simTime           = 100;
 
     // Set name of simulation executable
     cmdLineArgs.execName = std::string(argv[0]);
@@ -61,17 +75,46 @@ void parseCmdLine (int argc, char**argv, cmdLineArgs_t& cmdLineArgs)
     for (size_t parIdx=1; parIdx < argc; parIdx++)
     {
 	    std::string par = argv[parIdx];
-
-	    if      (par == "--simTime")
-	    {
-            std::string value   = argv[++parIdx];
-	        cmdLineArgs.simTime = std::stoi(value);
-	    }
-
+        
+        if      (par == "--dmemFile")
+        {
+            cmdLineArgs.dmemFile          = std::string(argv[++parIdx]);
+            cmdLineArgs.dmemFileSpecified = true;
+        }
+	    
         else if (par == "--help")
         {
             cmdLineArgs.abort = true;
         }
+        
+        else if (par == "--pmemFile")
+        {
+            cmdLineArgs.pmemFile          = std::string(argv[++parIdx]);
+            cmdLineArgs.pmemFileSpecified = true;
+        }
+	    
+        else if (par == "--simTime")
+	    {
+	        cmdLineArgs.simTime = std::stoi(std::string(argv[++parIdx]));
+	    }
+        
+    }
+
+    // Setup DMEM, PMEM
+    if (cmdLineArgs.dmemFileSpecified == true)
+    {
+        std::ofstream outfile;
+        outfile.open("../prog/_dmem_to_use.txt");
+        outfile << cmdLineArgs.dmemFile << std::endl; 
+        outfile.close();
+    }
+    
+    if (cmdLineArgs.pmemFileSpecified == true)
+    {
+        std::ofstream outfile;
+        outfile.open("../prog/_pmem_to_use.txt");
+        outfile << cmdLineArgs.pmemFile << std::endl; 
+        outfile.close();
     }
 }
 
@@ -108,7 +151,6 @@ int main(int argc, char** argv)
 
         std::string vcdname = argv[0];
         vcdname += ".vcd";
-        std::cout << vcdname << std::endl;
         tfp->open(vcdname.c_str());
     }
 

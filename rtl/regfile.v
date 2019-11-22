@@ -43,9 +43,6 @@ module regfile #(parameter WORD_WIDTH=16, IDX_WIDTH=4)
                 if (in_dst_idx > 0) begin
                     registers[in_dst_idx] <= in_dst;
                 end
-                else begin
-                    $display("WARNING @ time %0t: Attempt to write to reg0 which is tied to 0.\n", $time);
-                end
             end
         end
         else

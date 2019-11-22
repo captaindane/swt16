@@ -15,9 +15,21 @@ module dmem_sim #(WORD_WIDTH = 16,
     reg [ADDR_WIDTH-ADDR_LSB-1:0]  addr_rd_sampled;
     reg [         WORD_WIDTH-1:0]  mem_array         [ NUM_WORDS-1 : 0 ];
 
+    // Helpers
+    integer cfgFileHandle;
+    reg  [256*8-1:0] memFileName;
 
+    // Initialze simulation menory
     initial begin
-        $readmemh(MEM_FILE, mem_array);
+        cfgFileHandle = $fopen(MEM_FILE, "r");
+
+        if (cfgFileHandle == 0) begin
+           $display("ERROR: Could not open memory config file %s\n", MEM_FILE);
+           $finish;
+        end
+
+        $fscanf  (cfgFileHandle, "%s", memFileName);
+        $readmemh(memFileName, mem_array);
     end
 
     // Register: sample read address
