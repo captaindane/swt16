@@ -1,14 +1,14 @@
 module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12, 
                               DMEM_WORD_WIDTH = 16,
                               DMEM_NUM_WORDS  = 2048,
-                              DMEM_FILE       = "../prog/hex_test_load_store.dmem",
-//                            DMEM_FILE       = "../prog/hex_test_jmp.dmem",
+//                            DMEM_FILE       = "../prog/hex_test_load_store.dmem",
+                              DMEM_FILE       = "../prog/hex_test_jmp.dmem",
                               
                               PMEM_ADDR_WIDTH = 12, 
                               PMEM_WORD_WIDTH = 16,
                               PMEM_NUM_WORDS  = 2048,
-                              PMEM_FILE       = "../prog/hex_test_load_store.pmem",
-//                            PMEM_FILE       = "../prog/hex_test_jmp.pmem",
+//                            PMEM_FILE       = "../prog/hex_test_load_store.pmem",
+                              PMEM_FILE       = "../prog/hex_test_jmp.pmem",
                               
                               OPCODE_WIDTH    = 4,
                               REG_IDX_WIDTH   = 4,
@@ -22,7 +22,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
 
    wire                         set_pc;
    wire                         flush_pipeline;
-   wire [PMEM_ADDR_WIDTH-1 : 0] new_pc;
+   wire [PMEM_ADDR_WIDTH-1 : 0] branch_pc;
    
    // Connections: PMEM
    wire [PMEM_ADDR_WIDTH-1 : 0] pmem_addr;
@@ -61,12 +61,14 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
    wire [DMEM_ADDR_WIDTH-1 : 0] dmem_wr_addr_EX_MEM;
    wire [DMEM_WORD_WIDTH-1 : 0] dmem_wr_word_EX_MEM;
    wire [PMEM_WORD_WIDTH-1 : 0] instr_EX_MEM;
+   wire [PMEM_ADDR_WIDTH-1 : 0] pc_EX_MEM;
    wire [IALU_WORD_WIDTH-1 : 0] res_EX_MEM;
    wire [  REG_IDX_WIDTH-1 : 0] res_reg_idx_EX_MEM;
 
    // Connections: MEM stage -> WB stage
    wire                         act_write_res_to_reg_MEM_WB;
    wire [PMEM_WORD_WIDTH-1 : 0] instr_MEM_WB;
+   wire [PMEM_ADDR_WIDTH-1 : 0] pc_MEM_WB;
    wire [IALU_WORD_WIDTH-1 : 0] res_MEM_WB;
    wire [  REG_IDX_WIDTH-1 : 0] res_reg_idx_MEM_WB;
    
@@ -126,7 +128,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
    (
       .clock         ( clock ),
       .reset         ( reset ),
-      .in_new_pc     ( new_pc ),
+      .in_branch_pc  ( branch_pc ),
       .in_set_pc     ( set_pc ),
       .in_flush      ( flush_pipeline ),
       .in_instr      ( pmem_word ),
@@ -194,12 +196,13 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
        .out_act_load_dmem        ( act_load_dmem_EX_MEM ),
        .out_act_store_dmem       ( act_store_dmem_EX_MEM ),
        .out_act_write_res_to_reg ( act_write_res_to_reg_EX_MEM ),
+       .out_branch_pc            ( branch_pc ),
        .out_dmem_rd_addr         ( dmem_rd_addr_EX_MEM ),
        .out_dmem_wr_addr         ( dmem_wr_addr_EX_MEM ),
        .out_dmem_wr_word         ( dmem_wr_word_EX_MEM ),
        .out_flush                ( flush_pipeline ),
        .out_instr                ( instr_EX_MEM ),
-       .out_new_pc               ( new_pc ),
+       .out_pc                   ( pc_EX_MEM ),
        .out_res                  ( res_EX_MEM ),
        .out_res_reg_idx          ( res_reg_idx_EX_MEM ),
        .out_set_pc               ( set_pc )
@@ -225,6 +228,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
        .in_mem_rd_word           ( dmem_rd_word ),
        .in_mem_wr_addr           ( dmem_wr_addr_EX_MEM ),
        .in_mem_wr_word           ( dmem_wr_word_EX_MEM ),
+       .in_pc                    ( pc_EX_MEM ),
        .in_res                   ( res_EX_MEM ),
        .in_res_reg_idx           ( res_reg_idx_EX_MEM ),
        .out_act_write_res_to_reg ( act_write_res_to_reg_MEM_WB ),
@@ -233,6 +237,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
        .out_mem_wr_addr          ( dmem_wr_addr ),
        .out_mem_wr_word          ( dmem_wr_word ),
        .out_mem_write_en         ( dmem_write_en ),
+       .out_pc                   ( pc_MEM_WB ),
        .out_res                  ( res_MEM_WB ),
        .out_res_reg_idx          ( res_reg_idx_MEM_WB )
    );
@@ -249,6 +254,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
        .reset                    ( reset ),
        .in_act_write_res_to_reg  ( act_write_res_to_reg_MEM_WB ),
        .in_instr                 ( instr_MEM_WB ),
+       .in_pc                    ( pc_MEM_WB ),
        .in_res                   ( res_MEM_WB ),
        .in_res_reg_idx           ( res_reg_idx_MEM_WB ),
        .out_act_write_res_to_reg ( reg_write ),

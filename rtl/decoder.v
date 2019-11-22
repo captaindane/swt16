@@ -55,16 +55,16 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     
     
     wire [PMEM_WORD_WIDTH-1:0]  instr_1st_word;  // Holds first word of instruction (also for multi-cycle instructions)
-    reg  [PMEM_WORD_WIDTH-1:0]  instr_sampled;   // Current instruction word
-    reg  [PMEM_WORD_WIDTH-1:0]  instr_sampled2;  // Instruction word before current word instruction
+    reg  [PMEM_WORD_WIDTH-1:0]  instr_ff;   // Current instruction word
+    reg  [PMEM_WORD_WIDTH-1:0]  instr_ff2;  // Instruction word before current word instruction
 
-    reg  [       PC_WIDTH-1:0]  pc_sampled;
-    reg  [       PC_WIDTH-1:0]  pc_sampled2;
+    reg  [       PC_WIDTH-1:0]  pc_ff;
+    reg  [       PC_WIDTH-1:0]  pc_ff2;
 
     reg  [PMEM_ADDR_WIDTH-1:0]  jump_offset;
 
     reg  [                2:0]  cycle_in_instr_next;
-    reg  [                2:0]  cycle_in_instr_sampled;
+    reg  [                2:0]  cycle_in_instr_ff;
 
     
     // Instruction segments
@@ -75,14 +75,14 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     wire [    FUNC2_WIDTH-1:0]  func2        = instr_1st_word [11:8];
     wire [    FUNC3_WIDTH-1:0]  func3        = instr_1st_word [15:12];
     wire [                3:0]  immA         = instr_1st_word [15:12];
-    wire [PMEM_WORD_WIDTH-1:0]  immB         = instr_sampled; // only valid in 2nd cycle of multi-cycle instruction
+    wire [PMEM_WORD_WIDTH-1:0]  immB         = instr_ff; // only valid in 2nd cycle of multi-cycle instruction
 
     
     // Connecting signals to output ports
     assign out_src1_reg_idx = src1_reg_idx; // TODO: null me when i am not needed
     assign out_src2_reg_idx = src2_reg_idx; // TODO: null me when i am not needed
-    assign out_instr        = instr_sampled;
-    assign out_pc           = pc_sampled;
+    assign out_instr        = instr_ff;
+    assign out_pc           = pc_ff;
     assign out_res_reg_idx  = instr_1st_word[7:4];
     
 
@@ -90,21 +90,21 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     always @(posedge clock or posedge reset)
     begin
         if (!reset)
-            cycle_in_instr_sampled <= cycle_in_instr_next;
+            cycle_in_instr_ff <= cycle_in_instr_next;
         else
-            cycle_in_instr_sampled <= 0;
+            cycle_in_instr_ff <= 0;
     end
 
     // Register: holds the current and last sampled instruction
     always @(posedge clock or posedge reset)
     begin
         if (!reset) begin
-            instr_sampled  <= in_instr;
-            instr_sampled2 <= instr_sampled;
+            instr_ff  <= in_instr;
+            instr_ff2 <= instr_ff;
         end
         else begin
-            instr_sampled  <= 0;
-            instr_sampled2 <= 0;
+            instr_ff  <= 0;
+            instr_ff2 <= 0;
         end
     end
 
@@ -112,17 +112,17 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     always @(posedge clock or posedge reset)
     begin
         if (!reset) begin
-            pc_sampled  <= in_pc;
-            pc_sampled2 <= pc_sampled;
+            pc_ff  <= in_pc;
+            pc_ff2 <= pc_ff;
         end
         else begin
-            pc_sampled  <= 0;
-            pc_sampled2 <= 0;
+            pc_ff  <= 0;
+            pc_ff2 <= 0;
         end
     end
 
     // Multiplexer: Hold first instruction word in case of 2-cycle instruction
-    assign instr_1st_word = (cycle_in_instr_sampled == 0) ? instr_sampled : instr_sampled2;
+    assign instr_1st_word = (cycle_in_instr_ff == 0) ? instr_ff : instr_ff2;
 
     // Helper function: set all output to zero
     task zero_outputs;
@@ -153,7 +153,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 // Load 16-bit immediate value
                 FUNC2_LI:
                 begin
-                    if (cycle_in_instr_sampled == 1) begin
+                    if (cycle_in_instr_ff == 1) begin
                         cycle_in_instr_next                    = 0;
                         out_act_ialu_add                       = 0;
                         out_act_incr_pc_is_res                 = 0;
@@ -237,7 +237,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 // Jump and link by immediate
                 FUNC2_JAL:
                 begin
-                    if (cycle_in_instr_sampled == 1) begin
+                    if (cycle_in_instr_ff == 1) begin
                         cycle_in_instr_next                  = 0;
                         out_act_ialu_add                     = 1;
                         out_act_incr_pc_is_res               = 1;
@@ -247,7 +247,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_write_res_to_reg             = 1;
                         out_act_write_src2_to_res            = 0;
                         out_src1                             = immB;
-                        out_src2[PC_WIDTH-1:0]               = pc_sampled2;
+                        out_src2[PC_WIDTH-1:0]               = pc_ff2;
                         out_src2[IALU_WORD_WIDTH-1:PC_WIDTH] = 0;
                     end
                     else begin
@@ -268,7 +268,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_write_res_to_reg             = 1;
                         out_act_write_src2_to_res            = 0;
                         out_src1                             = in_src1;
-                        out_src2[PC_WIDTH-1:0]               = pc_sampled;
+                        out_src2[PC_WIDTH-1:0]               = pc_ff;
                         out_src2[IALU_WORD_WIDTH-1:PC_WIDTH] = 0;
                 end
 

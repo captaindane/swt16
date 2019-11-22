@@ -17,6 +17,7 @@ module mem #(parameter DMEM_ADDR_WIDTH = 12,
            input  [DMEM_WORD_WIDTH-1:0]  in_mem_rd_word,  // from dmem
            input  [DMEM_ADDR_WIDTH-1:0]  in_mem_wr_addr,
            input  [DMEM_WORD_WIDTH-1:0]  in_mem_wr_word,
+           input  [       PC_WIDTH-1:0]  in_pc,
            input  [IALU_WORD_WIDTH-1:0]  in_res,
            input  [  REG_IDX_WIDTH-1:0]  in_res_reg_idx,
            output                        out_act_write_res_to_reg,
@@ -25,16 +26,18 @@ module mem #(parameter DMEM_ADDR_WIDTH = 12,
            output [DMEM_ADDR_WIDTH-1:0]  out_mem_wr_addr,
            output [DMEM_WORD_WIDTH-1:0]  out_mem_wr_word,
            output                        out_mem_write_en,
+           output [       PC_WIDTH-1:0]  out_pc,
            output [IALU_WORD_WIDTH-1:0]  out_res,
            output [  REG_IDX_WIDTH-1:0]  out_res_reg_idx
            );
 
     // Sampled CTRL inputs
-    reg act_load_dmem_sampled;
-    reg act_store_dmem_sampled;
+    reg                         act_load_dmem_sampled;
+    reg                         act_store_dmem_sampled;
+    reg  [PMEM_WORD_WIDTH-1:0]  instr_ff;
+    reg  [       PC_WIDTH-1:0]  pc_ff;
 
     // Sampled data inputs
-    reg  [PMEM_WORD_WIDTH-1:0]  instr_sampled;
     reg  [IALU_WORD_WIDTH-1:0]  in_res_sampled;
 
     // Wiring: write address, write word, and write enable to DMEM
@@ -43,22 +46,27 @@ module mem #(parameter DMEM_ADDR_WIDTH = 12,
     assign out_mem_wr_word  = in_mem_wr_word;
     assign out_mem_write_en = in_act_store_dmem;
 
+    // Wiring: forwarding sampled pc
+    assign out_pc           = pc_ff;
+
     
     // Register: pass through
     always @(posedge clock or posedge reset) begin
         if (!reset) begin
-            instr_sampled            <= in_instr;
+            instr_ff                 <= in_instr;
             in_res_sampled           <= in_res;
             out_act_write_res_to_reg <= in_act_write_res_to_reg;
             out_instr                <= in_instr;
             out_res_reg_idx          <= in_res_reg_idx;
+            pc_ff                    <= in_pc;
         end
         else begin
-            instr_sampled            <= 0;
+            instr_ff                 <= 0;
             in_res_sampled           <= 0;
             out_act_write_res_to_reg <= 0;
             out_instr                <= 0;
             out_res_reg_idx          <= 0;
+            pc_ff                    <= 0;
         end
     end
 

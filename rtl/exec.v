@@ -25,12 +25,13 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
              output                        out_act_load_dmem,
              output                        out_act_store_dmem,
              output                        out_act_write_res_to_reg,
+             output [PMEM_ADDR_WIDTH-1:0]  out_branch_pc,
              output [DMEM_ADDR_WIDTH-1:0]  out_dmem_rd_addr,
              output [DMEM_ADDR_WIDTH-1:0]  out_dmem_wr_addr,
              output [DMEM_WORD_WIDTH-1:0]  out_dmem_wr_word,
              output                        out_flush,
              output [PMEM_WORD_WIDTH-1:0]  out_instr,
-             output [PMEM_ADDR_WIDTH-1:0]  out_new_pc,
+             output [       PC_WIDTH-1:0]  out_pc,
              output [IALU_WORD_WIDTH-1:0]  out_res,
              output [  REG_IDX_WIDTH-1:0]  out_res_reg_idx,
              output                        out_set_pc
@@ -43,14 +44,15 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     reg                         act_load_dmem_sampled;
     reg                         act_store_dmem_sampled;
     reg                         act_write_src2_to_res_sampled;
-    reg  [PMEM_WORD_WIDTH-1:0]  instr_sampled;
-
-    reg  [       PC_WIDTH-1:0]  pc_sampled;
-    reg  [IALU_WORD_WIDTH-1:0]  src1_sampled;
-    reg  [IALU_WORD_WIDTH-1:0]  src2_sampled;
+    reg  [PMEM_WORD_WIDTH-1:0]  instr_ff;
+    reg  [       PC_WIDTH-1:0]  pc_ff;
+    reg  [IALU_WORD_WIDTH-1:0]  src1_ff;
+    reg  [IALU_WORD_WIDTH-1:0]  src2_ff;
     
     // ALU regs
-    reg [IALU_WORD_WIDTH-1:0] ialu_res;
+    reg  [IALU_WORD_WIDTH-1:0]  ialu_res;
+
+    assign out_pc = pc_ff;
     
     
     // Register: sample inputs
@@ -63,10 +65,10 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             act_load_dmem_sampled         <= in_act_load_dmem;
             act_store_dmem_sampled        <= in_act_store_dmem;
             act_write_src2_to_res_sampled <= in_act_write_src2_to_res;
-            instr_sampled                 <= in_instr;
-            pc_sampled                    <= in_pc;
-            src1_sampled                  <= in_src1;
-            src2_sampled                  <= in_src2;
+            instr_ff                      <= in_instr;
+            pc_ff                         <= in_pc;
+            src1_ff                       <= in_src1;
+            src2_ff                       <= in_src2;
         end
         else begin
             act_ialu_add_sampled          <= 0;
@@ -75,10 +77,10 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             act_load_dmem_sampled         <= 0;
             act_store_dmem_sampled        <= 0;
             act_write_src2_to_res_sampled <= 0;
-            instr_sampled                 <= 0;
-            pc_sampled                    <= 0;
-            src1_sampled                  <= 0;
-            src2_sampled                  <= 0;
+            instr_ff                      <= 0;
+            pc_ff                         <= 0;
+            src1_ff                       <= 0;
+            src2_ff                       <= 0;
         end
     end
 
@@ -105,12 +107,12 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     begin
         // Integer addition
         if (act_ialu_add_sampled) begin
-            ialu_res = src1_sampled + src2_sampled;
+            ialu_res = src1_ff + src2_ff;
         end
 
         // Forward src2 directly to res
         else if (act_write_src2_to_res_sampled) begin
-            ialu_res = src2_sampled;
+            ialu_res = src2_ff;
         end
         
         // default: do nothing
@@ -124,14 +126,14 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     begin
         // Trigger jump after getting 2nd instruction word with immedate target address
         if (act_jump_to_ialu_res_sampled) begin
-            out_flush  = 1;
-            out_set_pc = 1;
-            out_new_pc = ialu_res[PMEM_ADDR_WIDTH-1:0];
+            out_flush     = 1;
+            out_set_pc    = 1;
+            out_branch_pc = ialu_res[PMEM_ADDR_WIDTH-1:0];
         end
         else begin
-            out_flush  = 0;
-            out_set_pc = 0;
-            out_new_pc = 0;
+            out_flush     = 0;
+            out_set_pc    = 0;
+            out_branch_pc = 0;
         end
     end
 
@@ -140,7 +142,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     begin
         // Load from memory
         if (act_load_dmem_sampled) begin
-            out_dmem_rd_addr = src1_sampled[DMEM_ADDR_WIDTH-1:0];
+            out_dmem_rd_addr = src1_ff[DMEM_ADDR_WIDTH-1:0];
         end
         else begin
             out_dmem_rd_addr = 0;
@@ -148,8 +150,8 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
         
         // Store to memory
         if (act_store_dmem_sampled) begin
-            out_dmem_wr_addr = src2_sampled[DMEM_ADDR_WIDTH-1:0];
-            out_dmem_wr_word = src1_sampled;
+            out_dmem_wr_addr = src2_ff[DMEM_ADDR_WIDTH-1:0];
+            out_dmem_wr_word = src1_ff;
         end
         else begin
             out_dmem_wr_addr = 0;
