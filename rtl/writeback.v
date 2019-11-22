@@ -17,11 +17,11 @@ module writeback #(parameter OPCODE_WIDTH    =  4,
            output [  REG_IDX_WIDTH-1:0]  out_res_reg_idx
            );
 
-    reg                        act_write_res_to_reg_sampled;
+    reg                        act_write_res_to_reg_ff;
     reg [PMEM_WORD_WIDTH-1:0]  instr_ff;
     reg [       PC_WIDTH-1:0]  pc_ff;
-    reg [IALU_WORD_WIDTH-1:0]  res_sampled;
-    reg [  REG_IDX_WIDTH-1:0]  res_reg_idx_sampled;
+    reg [IALU_WORD_WIDTH-1:0]  res_ff;
+    reg [  REG_IDX_WIDTH-1:0]  res_reg_idx_ff;
 
 
     assign out_act_write_res_to_reg = in_act_write_res_to_reg;
@@ -32,18 +32,18 @@ module writeback #(parameter OPCODE_WIDTH    =  4,
     // Register: sampled inputs (TODO: do we need all of them?)
     always @(posedge clock or posedge reset) begin
         if (!reset) begin
-            act_write_res_to_reg_sampled <= in_act_write_res_to_reg;
-            instr_ff                     <= in_instr;
-            pc_ff                        <= in_pc;
-            res_sampled                  <= res_sampled;
-            res_reg_idx_sampled          <= res_reg_idx_sampled;
+            act_write_res_to_reg_ff <= in_act_write_res_to_reg;
+            instr_ff                <= in_instr;
+            pc_ff                   <= in_pc;
+            res_ff                  <= res_ff;
+            res_reg_idx_ff          <= res_reg_idx_ff;
         end
         else begin
-            act_write_res_to_reg_sampled <= 0;
-            instr_ff                     <= 0;
-            pc_ff                        <= 0;
-            res_sampled                  <= 0;
-            res_reg_idx_sampled          <= 0;
+            act_write_res_to_reg_ff <= 0;
+            instr_ff                <= 0;
+            pc_ff                   <= 0;
+            res_ff                  <= 0;
+            res_reg_idx_ff          <= 0;
         end
     end
 

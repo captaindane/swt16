@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.101 (w)1999-2019 BSI
-[*] Tue Nov 19 16:35:11 2019
+[*] Fri Nov 22 16:08:38 2019
 [*]
 [dumpfile] "/home/guenther/verilator/swt16/bench/swt16/Vswt16_top.vcd"
-[dumpfile_mtime] "Tue Nov 19 16:34:11 2019"
-[dumpfile_size] 25238
+[dumpfile_mtime] "Fri Nov 22 16:08:01 2019"
+[dumpfile_size] 33441
 [savefile] "/home/guenther/verilator/swt16/bench/gtkwave_views/swt16.view.gtkw"
 [timestart] 0
-[size] 1877 1283
-[pos] -1 -1
-*-2.945638 1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[size] 1687 1283
+[pos] 1 0
+*-2.945638 5 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.swt16_top.
 [sst_width] 233
@@ -45,12 +45,6 @@ TOP.swt16_top.regfile_inst.registers(14)[15:0]
 TOP.swt16_top.regfile_inst.registers(15)[15:0]
 @200
 -
--PMEM
-@22
-TOP.swt16_top.pmem_sim_inst.in_addr[11:0]
-TOP.swt16_top.pmem_sim_inst.out_word[15:0]
-@200
--
 -DMEM
 @22
 TOP.swt16_top.dmem_sim_inst.in_addr_rd[11:0]
@@ -59,54 +53,61 @@ TOP.swt16_top.dmem_sim_inst.in_word[15:0]
 TOP.swt16_top.dmem_sim_inst.out_word[15:0]
 @200
 -
+-PMEM
+@22
+TOP.swt16_top.pmem_sim_inst.in_addr[11:0]
+[color] 2
+TOP.swt16_top.pmem_sim_inst.out_word[15:0]
+@200
+-
 -Fetch
+@22
+[color] 7
+TOP.swt16_top.fetch_inst.pc_ff[11:0]
 @28
 TOP.swt16_top.fetch_inst.in_set_pc
-@24
-TOP.swt16_top.fetch_inst.out_pc[11:0]
-@22
-TOP.swt16_top.fetch_inst.out_instr[15:0]
 @200
 -
 -Decoder
 @22
+[color] 7
+TOP.swt16_top.decoder_inst.pc_ff[11:0]
 [color] 2
-TOP.swt16_top.decoder_inst.instr_sampled[15:0]
-TOP.swt16_top.decoder_inst.in_pc[11:0]
+TOP.swt16_top.decoder_inst.instr_ff[15:0]
 TOP.swt16_top.decoder_inst.out_src1[15:0]
 TOP.swt16_top.decoder_inst.out_src2[15:0]
 @28
 TOP.swt16_top.decoder_inst.out_act_ialu_add
 TOP.swt16_top.decoder_inst.out_act_load_dmem
 TOP.swt16_top.decoder_inst.out_act_write_res_to_reg
-@24
-TOP.swt16_top.decoder_inst.out_pc[11:0]
 @200
 -
 -Exec
 @22
+[color] 7
+TOP.swt16_top.exec_inst.pc_ff[11:0]
 [color] 2
-TOP.swt16_top.exec_inst.instr_sampled[15:0]
+TOP.swt16_top.exec_inst.instr_ff[15:0]
 @28
-TOP.swt16_top.exec_inst.in_act_write_res_to_reg
+TOP.swt16_top.exec_inst.act_ialu_add_ff
 @22
-TOP.swt16_top.exec_inst.in_src1[15:0]
-TOP.swt16_top.exec_inst.in_src2[15:0]
 TOP.swt16_top.exec_inst.out_res[15:0]
 @28
 TOP.swt16_top.exec_inst.out_flush
 @24
 TOP.swt16_top.exec_inst.out_set_pc
 @22
-TOP.swt16_top.exec_inst.out_new_pc[11:0]
+TOP.swt16_top.exec_inst.out_branch_pc[11:0]
 @28
 TOP.swt16_top.exec_inst.out_act_write_res_to_reg
 @200
 -
 -Mem
 @22
+[color] 7
+TOP.swt16_top.mem_inst.pc_ff[11:0]
 [color] 2
-TOP.swt16_top.mem_inst.instr_sampled[15:0]
+TOP.swt16_top.mem_inst.instr_ff[15:0]
 @28
 TOP.swt16_top.mem_inst.in_act_load_dmem
 TOP.swt16_top.mem_inst.in_act_store_dmem
@@ -122,9 +123,11 @@ TOP.swt16_top.mem_inst.out_res_reg_idx[3:0]
 @200
 -
 -Writeback
-@23
+@22
+[color] 7
+TOP.swt16_top.writeback_inst.pc_ff[11:0]
 [color] 2
-TOP.swt16_top.writeback_inst.instr_sampled[15:0]
+TOP.swt16_top.writeback_inst.instr_ff[15:0]
 @28
 TOP.swt16_top.writeback_inst.in_act_write_res_to_reg
 @22
