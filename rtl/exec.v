@@ -10,13 +10,18 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
              (
              input                         clock,
              input                         reset,
+             input                         in_act_branch_ialu_res_eq0,
+             input                         in_act_branch_ialu_res_gt0,
+             input                         in_act_branch_ialu_res_lt0,
              input                         in_act_ialu_add,
+             input                         in_act_ialu_neg_src1,
              input                         in_act_incr_pc_is_res,
              input                         in_act_jump_to_ialu_res,
              input                         in_act_load_dmem,
              input                         in_act_store_dmem,
              input                         in_act_write_res_to_reg,
              input                         in_act_write_src2_to_res,
+             input  [       PC_WIDTH-1:0]  in_branch_addr,
              input  [PMEM_WORD_WIDTH-1:0]  in_instr,
              input  [       PC_WIDTH-1:0]  in_pc,
              input  [  REG_IDX_WIDTH-1:0]  in_res_reg_idx,
@@ -37,6 +42,13 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
              output                        out_set_pc
              );
 
+    // TODO: PROCESS NEW INPUTS
+    // in_act_branch_ialu_res_eq0
+    // in_act_branch_ialu_res_gt0
+    // in_act_branch_ialu_res_lt0
+    // in_branch_addr
+    // in_act_ialu_neg_src1
+    
     // Sampled inputs
     reg                         act_ialu_add_ff;
     reg                         act_incr_pc_is_res_ff;

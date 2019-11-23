@@ -12,20 +12,25 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
        input  [       PC_WIDTH-1:0]  in_pc,
        input  [IALU_WORD_WIDTH-1:0]  in_src1,
        input  [IALU_WORD_WIDTH-1:0]  in_src2,
-       output [  REG_IDX_WIDTH-1:0]  out_res_reg_idx,
-       output [IALU_WORD_WIDTH-1:0]  out_src1,
-       output [  REG_IDX_WIDTH-1:0]  out_src1_reg_idx,  // to regfile
-       output [IALU_WORD_WIDTH-1:0]  out_src2,
-       output [  REG_IDX_WIDTH-1:0]  out_src2_reg_idx,  // to regfile
+       output                        out_act_branch_ialu_res_eq0,
+       output                        out_act_branch_ialu_res_gt0,
+       output                        out_act_branch_ialu_res_lt0,
        output                        out_act_ialu_add,
+       output                        out_act_ialu_neg_src1,
        output                        out_act_incr_pc_is_res,
        output                        out_act_jump_to_ialu_res,
        output                        out_act_load_dmem,
        output                        out_act_store_dmem,
        output                        out_act_write_res_to_reg,
        output                        out_act_write_src2_to_res,
+       output [       PC_WIDTH-1:0]  out_branch_addr,
        output [PMEM_WORD_WIDTH-1:0]  out_instr,
-       output [       PC_WIDTH-1:0]  out_pc
+       output [       PC_WIDTH-1:0]  out_pc,
+       output [  REG_IDX_WIDTH-1:0]  out_res_reg_idx,
+       output [IALU_WORD_WIDTH-1:0]  out_src1,
+       output [  REG_IDX_WIDTH-1:0]  out_src1_reg_idx,  // to regfile
+       output [IALU_WORD_WIDTH-1:0]  out_src2,
+       output [  REG_IDX_WIDTH-1:0]  out_src2_reg_idx   // to regfile
        );
 
     localparam IMMA_WIDTH  = 4;
@@ -41,9 +46,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     localparam [OPCODE_WIDTH-1:0] OPCODE_LH     = 4'b0100; // I-TYPE
 
     // S-TYPE
-    localparam [ FUNC1_WIDTH-1:0] FUNC1_JRZ     = 4'b0000;
-    localparam [ FUNC1_WIDTH-1:0] FUNC1_JRNZ    = 4'b0001;
-    localparam [ FUNC1_WIDTH-1:0] FUNC1_SH      = 4'b0010;
+    localparam [ FUNC1_WIDTH-1:0] FUNC1_BEQ     = 4'b0000;
+    localparam [ FUNC1_WIDTH-1:0] FUNC1_BNEQ    = 4'b0001;
+    localparam [ FUNC1_WIDTH-1:0] FUNC1_BGE     = 4'b0010;
+    localparam [ FUNC1_WIDTH-1:0] FUNC1_BLT     = 4'b0011;
+    localparam [ FUNC1_WIDTH-1:0] FUNC1_SH      = 4'b0100; // Store half (i.e., 16-bit)
     
     // U-TYPE
     localparam [ FUNC2_WIDTH-1:0] FUNC2_LI      = 4'b0011;
@@ -126,13 +133,18 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
 
     // Helper function: set all output to zero
     task zero_outputs;
+        out_act_branch_ialu_res_eq0  = 0;
+        out_act_branch_ialu_res_gt0  = 0;
+        out_act_branch_ialu_res_lt0  = 0;
         out_act_ialu_add             = 0;
+        out_act_ialu_neg_src1        = 0;
         out_act_incr_pc_is_res       = 0;
         out_act_jump_to_ialu_res     = 0;
         out_act_load_dmem            = 0;
         out_act_store_dmem           = 0;
         out_act_write_res_to_reg     = 0;
         out_act_write_src2_to_res    = 0;
+        out_branch_addr              = 0;
         out_src1                     = 0;
         out_src2                     = 0;
     endtask;
@@ -155,13 +167,18 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 begin
                     if (cycle_in_instr_ff == 1) begin
                         cycle_in_instr_next                    = 0;
+                        out_act_branch_ialu_res_eq0            = 0;
+                        out_act_branch_ialu_res_gt0            = 0;
+                        out_act_branch_ialu_res_lt0            = 0;
                         out_act_ialu_add                       = 0;
+                        out_act_ialu_neg_src1                  = 0;
                         out_act_incr_pc_is_res                 = 0;
                         out_act_jump_to_ialu_res               = 0;
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
                         out_act_write_res_to_reg               = 1;
                         out_act_write_src2_to_res              = 1;
+                        out_branch_addr                        = 0;
                         out_src1                               = 0;
                         out_src2                               = immB;
                     end
@@ -175,13 +192,18 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 FUNC2_LIL:
                 begin
                         cycle_in_instr_next                    = 0;
+                        out_act_branch_ialu_res_eq0            = 0;
+                        out_act_branch_ialu_res_gt0            = 0;
+                        out_act_branch_ialu_res_lt0            = 0;
                         out_act_ialu_add                       = 0;
+                        out_act_ialu_neg_src1                  = 0;
                         out_act_incr_pc_is_res                 = 0;
                         out_act_jump_to_ialu_res               = 0;
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
                         out_act_write_res_to_reg               = 1;
                         out_act_write_src2_to_res              = 1;
+                        out_branch_addr                        = 0;
                         out_src1                               = 0;
                         out_src2[IMMA_WIDTH-1:0]               = immA;
                         out_src2[IALU_WORD_WIDTH-1:IMMA_WIDTH] = 0;
@@ -203,20 +225,132 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         begin
             case (func1)
                 
+                // Branch if equal
+                FUNC1_BEQ:
+                begin
+                    if (cycle_in_instr_ff == 1) begin
+                        cycle_in_instr_next                    = 0;
+                        out_act_branch_ialu_res_eq0            = 1;
+                        out_act_branch_ialu_res_gt0            = 0;
+                        out_act_branch_ialu_res_lt0            = 0;
+                        out_act_ialu_add                       = 1;
+                        out_act_ialu_neg_src1                  = 1;
+                        out_act_incr_pc_is_res                 = 0;
+                        out_act_jump_to_ialu_res               = 0;
+                        out_act_load_dmem                      = 0;
+                        out_act_store_dmem                     = 0;
+                        out_act_write_res_to_reg               = 0;
+                        out_act_write_src2_to_res              = 0;
+                        out_branch_addr                        = immB[PC_WIDTH-1:0];
+                        out_src1                               = in_src1;
+                        out_src2                               = in_src2;
+                    end
+                    else begin
+                        cycle_in_instr_next                    = 1;
+                        zero_outputs();
+                    end
+
+                end
+
+                // Branch if not equal
+                FUNC1_BNEQ:
+                begin
+                    if (cycle_in_instr_ff == 1) begin
+                        cycle_in_instr_next                    = 0;
+                        out_act_branch_ialu_res_eq0            = 0;
+                        out_act_branch_ialu_res_gt0            = 1;
+                        out_act_branch_ialu_res_lt0            = 1;
+                        out_act_ialu_add                       = 1;
+                        out_act_ialu_neg_src1                  = 1;
+                        out_act_incr_pc_is_res                 = 0;
+                        out_act_jump_to_ialu_res               = 0;
+                        out_act_load_dmem                      = 0;
+                        out_act_store_dmem                     = 0;
+                        out_act_write_res_to_reg               = 0;
+                        out_act_write_src2_to_res              = 0;
+                        out_branch_addr                        = immB[PC_WIDTH-1:0];
+                        out_src1                               = in_src1;
+                        out_src2                               = in_src2;
+                    end
+                    else begin
+                        cycle_in_instr_next                    = 1;
+                        zero_outputs();
+                    end
+
+                end
+
+                // Branch if greater equal
+                FUNC1_BGE:
+                begin
+                    if (cycle_in_instr_ff == 1) begin
+                        cycle_in_instr_next                    = 0;
+                        out_act_branch_ialu_res_eq0            = 1;
+                        out_act_branch_ialu_res_gt0            = 1;
+                        out_act_branch_ialu_res_lt0            = 0;
+                        out_act_ialu_add                       = 1;
+                        out_act_ialu_neg_src1                  = 1;
+                        out_act_incr_pc_is_res                 = 0;
+                        out_act_jump_to_ialu_res               = 0;
+                        out_act_load_dmem                      = 0;
+                        out_act_store_dmem                     = 0;
+                        out_act_write_res_to_reg               = 0;
+                        out_act_write_src2_to_res              = 0;
+                        out_branch_addr                        = immB[PC_WIDTH-1:0];
+                        out_src1                               = in_src1;
+                        out_src2                               = in_src2;
+                    end
+                    else begin
+                        cycle_in_instr_next                    = 1;
+                        zero_outputs();
+                    end
+
+                end
+                
+                // Branch if less than
+                FUNC1_BLT:
+                begin
+                    if (cycle_in_instr_ff == 1) begin
+                        cycle_in_instr_next                    = 0;
+                        out_act_branch_ialu_res_eq0            = 0;
+                        out_act_branch_ialu_res_gt0            = 0;
+                        out_act_branch_ialu_res_lt0            = 1;
+                        out_act_ialu_add                       = 1;
+                        out_act_ialu_neg_src1                  = 1;
+                        out_act_incr_pc_is_res                 = 0;
+                        out_act_jump_to_ialu_res               = 0;
+                        out_act_load_dmem                      = 0;
+                        out_act_store_dmem                     = 0;
+                        out_act_write_res_to_reg               = 0;
+                        out_act_write_src2_to_res              = 0;
+                        out_branch_addr                        = immB[PC_WIDTH-1:0];
+                        out_src1                               = in_src1;
+                        out_src2                               = in_src2;
+                    end
+                    else begin
+                        cycle_in_instr_next                    = 1;
+                        zero_outputs();
+                    end
+
+                end
+                
                 // Store half
                 FUNC1_SH:
                 begin
-                    cycle_in_instr_next       = 0;
-
-                    out_act_ialu_add          = 0;
-                    out_act_incr_pc_is_res    = 0;
-                    out_act_jump_to_ialu_res  = 0;
-                    out_act_load_dmem         = 0;
-                    out_act_store_dmem        = 1;
-                    out_act_write_res_to_reg  = 0;
-                    out_act_write_src2_to_res = 1;
-                    out_src1                  = in_src1;  // value
-                    out_src2                  = in_src2;  // offset
+                        cycle_in_instr_next                    = 0;
+                        out_act_branch_ialu_res_eq0            = 0;
+                        out_act_branch_ialu_res_gt0            = 0;
+                        out_act_branch_ialu_res_lt0            = 0;
+                        out_act_ialu_add                       = 0;
+                        out_act_ialu_neg_src1                  = 0;
+                        out_act_incr_pc_is_res                 = 0;
+                        out_act_jump_to_ialu_res               = 0;
+                        out_act_load_dmem                      = 0;
+                        out_act_store_dmem                     = 1;
+                        out_act_write_res_to_reg               = 0;
+                        out_act_write_src2_to_res              = 1;
+                        out_branch_addr                        = 0;
+                        out_src1                               = in_src1;  // value
+                        out_src2                               = in_src2;  // offset
                 end
 
                 default:
@@ -238,20 +372,25 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 FUNC2_JAL:
                 begin
                     if (cycle_in_instr_ff == 1) begin
-                        cycle_in_instr_next                  = 0;
-                        out_act_ialu_add                     = 1;
-                        out_act_incr_pc_is_res               = 1;
-                        out_act_jump_to_ialu_res             = 1;
-                        out_act_load_dmem                    = 0;
-                        out_act_store_dmem                   = 0;
-                        out_act_write_res_to_reg             = 1;
-                        out_act_write_src2_to_res            = 0;
-                        out_src1                             = immB;
-                        out_src2[PC_WIDTH-1:0]               = pc_ff2;
-                        out_src2[IALU_WORD_WIDTH-1:PC_WIDTH] = 0;
+                        cycle_in_instr_next                    = 0;
+                        out_act_branch_ialu_res_eq0            = 0;
+                        out_act_branch_ialu_res_gt0            = 0;
+                        out_act_branch_ialu_res_lt0            = 0;
+                        out_act_ialu_add                       = 1;
+                        out_act_ialu_neg_src1                  = 0;
+                        out_act_incr_pc_is_res                 = 1;
+                        out_act_jump_to_ialu_res               = 1;
+                        out_act_load_dmem                      = 0;
+                        out_act_store_dmem                     = 0;
+                        out_act_write_res_to_reg               = 1;
+                        out_act_write_src2_to_res              = 0;
+                        out_branch_addr                        = 0;
+                        out_src1                               = immB;
+                        out_src2[PC_WIDTH-1:0]                 = pc_ff2;
+                        out_src2[IALU_WORD_WIDTH-1:PC_WIDTH]   = 0;
                     end
                     else begin
-                        cycle_in_instr_next                  = 1;
+                        cycle_in_instr_next                    = 1;
                         zero_outputs();
                     end
                 end
@@ -259,22 +398,27 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 // Jump and link by register
                 FUNC2_JALR:
                 begin
-                        cycle_in_instr_next                  = 0;
-                        out_act_ialu_add                     = 1;
-                        out_act_incr_pc_is_res               = 1;
-                        out_act_jump_to_ialu_res             = 1;
-                        out_act_load_dmem                    = 0;
-                        out_act_store_dmem                   = 0;
-                        out_act_write_res_to_reg             = 1;
-                        out_act_write_src2_to_res            = 0;
-                        out_src1                             = in_src1;
-                        out_src2[PC_WIDTH-1:0]               = pc_ff;
-                        out_src2[IALU_WORD_WIDTH-1:PC_WIDTH] = 0;
+                        cycle_in_instr_next                    = 0;
+                        out_act_branch_ialu_res_eq0            = 0;
+                        out_act_branch_ialu_res_gt0            = 0;
+                        out_act_branch_ialu_res_lt0            = 0;
+                        out_act_ialu_add                       = 1;
+                        out_act_ialu_neg_src1                  = 0;
+                        out_act_incr_pc_is_res                 = 1;
+                        out_act_jump_to_ialu_res               = 1;
+                        out_act_load_dmem                      = 0;
+                        out_act_store_dmem                     = 0;
+                        out_act_write_res_to_reg               = 1;
+                        out_act_write_src2_to_res              = 0;
+                        out_branch_addr                        = 0;
+                        out_src1                               = in_src1;
+                        out_src2[PC_WIDTH-1:0]                 = pc_ff;
+                        out_src2[IALU_WORD_WIDTH-1:PC_WIDTH]   = 0;
                 end
 
                 default:
                 begin
-                        cycle_in_instr_next                  = 0;
+                        cycle_in_instr_next                    = 0;
                         zero_outputs();
     
                         $display("WARNING: unknown J-Type instruction with opcode %b, func3 %b at time %0t.\n", opcode, func3, $time);
@@ -285,16 +429,21 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     
         // Load from DMEM
         else if (opcode == OPCODE_LH) begin
-            cycle_in_instr_next       = 0;
-            out_act_ialu_add          = 0;
-            out_act_incr_pc_is_res    = 0;
-            out_act_jump_to_ialu_res  = 0;
-            out_act_load_dmem         = 1;
-            out_act_store_dmem        = 0;
-            out_act_write_res_to_reg  = 1;
-            out_act_write_src2_to_res = 0;
-            out_src1                  = in_src1;      // address (comes back from regrile)
-            out_src2                  = 0;
+            cycle_in_instr_next                    = 0;
+            out_act_branch_ialu_res_eq0            = 0;
+            out_act_branch_ialu_res_gt0            = 0;
+            out_act_branch_ialu_res_lt0            = 0;
+            out_act_ialu_add                       = 0;
+            out_act_ialu_neg_src1                  = 0;
+            out_act_incr_pc_is_res                 = 0;
+            out_act_jump_to_ialu_res               = 0;
+            out_act_load_dmem                      = 1;
+            out_act_store_dmem                     = 0;
+            out_act_write_res_to_reg               = 1;
+            out_act_write_src2_to_res              = 0;
+            out_branch_addr                        = 0;
+            out_src1                               = in_src1;      // address (comes back from regrile)
+            out_src2                               = 0;
         end
         
         // No operation
