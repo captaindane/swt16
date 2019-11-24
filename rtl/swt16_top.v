@@ -48,12 +48,12 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
    wire                         act_load_dmem_DC_EX;
    wire                         act_store_dmem_DC_EX;
    wire                         act_write_res_to_reg_DC_EX;
-   wire [       PC_WIDTH-1 : 0] branch_addr_DC_EX;
    wire [PMEM_WORD_WIDTH-1 : 0] instr_DC_EX;
    wire [PMEM_ADDR_WIDTH-1 : 0] pc_DC_EX;
    wire [  REG_IDX_WIDTH-1 : 0] res_reg_idx_DC_EX;
    wire [IALU_WORD_WIDTH-1 : 0] src1_DC_EX;
    wire [IALU_WORD_WIDTH-1 : 0] src2_DC_EX;
+   wire [IALU_WORD_WIDTH-1 : 0] src3_DC_EX;
 
    // Connections: EX stage -> MEM stage
    wire                         act_load_dmem_EX_MEM;
@@ -166,14 +166,14 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
       .out_act_store_dmem          ( act_store_dmem_DC_EX ),
       .out_act_write_res_to_reg    ( act_write_res_to_reg_DC_EX ),
       .out_act_write_src2_to_res   ( act_write_src2_to_res_DC_EX ),
-      .out_branch_addr             ( branch_addr_DC_EX ),
       .out_instr                   ( instr_DC_EX ),
       .out_pc                      ( pc_DC_EX ),
       .out_res_reg_idx             ( res_reg_idx_DC_EX ),
       .out_src1                    ( src1_DC_EX ),
       .out_src1_reg_idx            ( src1_idx ),
       .out_src2                    ( src2_DC_EX ),
-      .out_src2_reg_idx            ( src2_idx )
+      .out_src2_reg_idx            ( src2_idx ),
+      .out_src3                    ( src3_DC_EX )
    );
 
    // Execution stage
@@ -193,19 +193,20 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
        .in_act_branch_ialu_res_gt0 ( act_branch_ialu_res_gt0_DC_EX ),
        .in_act_branch_ialu_res_lt0 ( act_branch_ialu_res_lt0_DC_EX ),
        .in_act_ialu_add            ( act_ialu_add_DC_EX ),
-       .in_act_ialu_neg_src1       ( ),
+       .in_act_ialu_neg_src1       ( act_ialu_neg_src1_DC_EX ),
        .in_act_incr_pc_is_res      ( act_incr_pc_is_res_DC_EX ),
        .in_act_jump_to_ialu_res    ( act_jump_to_ialu_res_DC_EX ),
        .in_act_load_dmem           ( act_load_dmem_DC_EX ),
        .in_act_store_dmem          ( act_store_dmem_DC_EX ),
        .in_act_write_res_to_reg    ( act_write_res_to_reg_DC_EX ),
        .in_act_write_src2_to_res   ( act_write_src2_to_res_DC_EX ),
-       .in_branch_addr             ( branch_addr_DC_EX ),
+       .in_flush                   ( flush_pipeline ),
        .in_instr                   ( instr_DC_EX ),
        .in_pc                      ( pc_DC_EX ),
        .in_res_reg_idx             ( res_reg_idx_DC_EX ),
        .in_src1                    ( src1_DC_EX ),
        .in_src2                    ( src2_DC_EX ),
+       .in_src3                    ( src3_DC_EX ),
        .out_act_load_dmem          ( act_load_dmem_EX_MEM ),
        .out_act_store_dmem         ( act_store_dmem_EX_MEM ),
        .out_act_write_res_to_reg   ( act_write_res_to_reg_EX_MEM ),
