@@ -159,7 +159,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     always @(*)
     begin
         // Flush
-        if (flush_ff) begin
+        if (flush_ff == 1) begin
             cycle_in_instr_next      = 0;
             zero_outputs();
         end

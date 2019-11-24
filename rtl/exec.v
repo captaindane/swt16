@@ -125,7 +125,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     //==============================================
     always @(*)
     begin
-        if (flush_ff == 1) begin
+        if (flush_ff == 0) begin
             out_act_load_dmem        = act_load_dmem_ff;
             out_act_store_dmem       = act_store_dmem_ff;
             out_act_write_res_to_reg = act_write_res_to_reg_ff;
