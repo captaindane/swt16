@@ -1,0 +1,30 @@
+0000      // nop
+7411      // lil r1, 7
+8421      // lil r2, 8
+8431      // lil r3, 8
+9441      // lil r4, 9
+1451      // lil r5, 1
+0000      // nop
+0000      // nop
+//=====================================================
+// Test #1: BEQ should not take branch => dmem[1] = 0
+//=====================================================
+0553      // sho r5(value), r0(offset), 0x1(base)
+0001
+1203      // beq r1, r2, 8
+0008            
+0053      // sho r0(value), r0(offset), 0x1(base) : set mem 0x1 back to zero if branch not taken
+0001
+0000      // nop
+0000      // nop
+//=====================================================
+// Test #2: BEQ should take branch => dmem[2] = 1
+//=====================================================
+0553      // sho r5(value), r0(offset), 0x2(base)
+0002
+2303      // beq r2, r3, 8
+0008            
+0053      // sho r0(value), r0(offset), 0x2(base) : set mem 0x2 back to zero if branch not taken
+0002
+0000      // nop
+0000      // nop
