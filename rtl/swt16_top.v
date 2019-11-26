@@ -19,7 +19,8 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
                     input reset );
 
    wire                         set_pc;
-   wire                         flush_pipeline;
+   wire                         flush_FE;
+   wire                         flush_pipeline; // TODO: better name. differentiate from flush_FE.
    wire [PMEM_ADDR_WIDTH-1 : 0] branch_pc;
    
    // Connections: PMEM
@@ -38,9 +39,9 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
    wire [PMEM_ADDR_WIDTH-1 : 0] pc_IF_DC;
    
    // Connections: DC stage -> EX stage
-   wire                         act_branch_ialu_res_eq0_DC_EX;
-   wire                         act_branch_ialu_res_gt0_DC_EX;
-   wire                         act_branch_ialu_res_lt0_DC_EX;
+   wire                         act_branch_ialu_res_ff_eq0_DC_EX;
+   wire                         act_branch_ialu_res_ff_gt0_DC_EX;
+   wire                         act_branch_ialu_res_ff_lt0_DC_EX;
    wire                         act_ialu_add_DC_EX;
    wire                         act_ialu_neg_src1_DC_EX;
    wire                         act_incr_pc_is_res_DC_EX;
@@ -48,6 +49,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
    wire                         act_load_dmem_DC_EX;
    wire                         act_store_dmem_DC_EX;
    wire                         act_write_res_to_reg_DC_EX;
+   wire                 [2 : 0] cycle_in_instr_DC_EX;
    wire [PMEM_WORD_WIDTH-1 : 0] instr_DC_EX;
    wire [PMEM_ADDR_WIDTH-1 : 0] pc_DC_EX;
    wire [  REG_IDX_WIDTH-1 : 0] res_reg_idx_DC_EX;
@@ -133,7 +135,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
       .reset         ( reset ),
       .in_branch_pc  ( branch_pc ),
       .in_set_pc     ( set_pc ),
-      .in_flush      ( flush_pipeline ),
+      .in_flush      ( flush_FE ),
       .in_instr      ( pmem_word ),
       .out_instr     ( instr_IF_DC ),
       .out_pc        ( pc_IF_DC ),
@@ -148,32 +150,33 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
              .REG_IDX_WIDTH  (REG_IDX_WIDTH  ),
              .PC_WIDTH       (PC_WIDTH       )) decoder_inst
    (
-      .clock                       ( clock ),
-      .reset                       ( reset ),
-      .in_flush                    ( flush_pipeline ),
-      .in_instr                    ( instr_IF_DC ),
-      .in_pc                       ( pc_IF_DC ),
-      .in_src1                     ( src1 ),
-      .in_src2                     ( src2 ),
-      .out_act_branch_ialu_res_eq0 ( act_branch_ialu_res_eq0_DC_EX ),
-      .out_act_branch_ialu_res_gt0 ( act_branch_ialu_res_gt0_DC_EX ),
-      .out_act_branch_ialu_res_lt0 ( act_branch_ialu_res_lt0_DC_EX ),
-      .out_act_ialu_add            ( act_ialu_add_DC_EX ),
-      .out_act_ialu_neg_src1       ( act_ialu_neg_src1_DC_EX ),
-      .out_act_incr_pc_is_res      ( act_incr_pc_is_res_DC_EX ),
-      .out_act_jump_to_ialu_res    ( act_jump_to_ialu_res_DC_EX ),
-      .out_act_load_dmem           ( act_load_dmem_DC_EX ),
-      .out_act_store_dmem          ( act_store_dmem_DC_EX ),
-      .out_act_write_res_to_reg    ( act_write_res_to_reg_DC_EX ),
-      .out_act_write_src2_to_res   ( act_write_src2_to_res_DC_EX ),
-      .out_instr                   ( instr_DC_EX ),
-      .out_pc                      ( pc_DC_EX ),
-      .out_res_reg_idx             ( res_reg_idx_DC_EX ),
-      .out_src1                    ( src1_DC_EX ),
-      .out_src1_reg_idx            ( src1_idx ),
-      .out_src2                    ( src2_DC_EX ),
-      .out_src2_reg_idx            ( src2_idx ),
-      .out_src3                    ( src3_DC_EX )
+      .clock                          ( clock ),
+      .reset                          ( reset ),
+      .in_flush                       ( flush_pipeline ),
+      .in_instr                       ( instr_IF_DC ),
+      .in_pc                          ( pc_IF_DC ),
+      .in_src1                        ( src1 ),
+      .in_src2                        ( src2 ),
+      .out_act_branch_ialu_res_ff_eq0 ( act_branch_ialu_res_ff_eq0_DC_EX ),
+      .out_act_branch_ialu_res_ff_gt0 ( act_branch_ialu_res_ff_gt0_DC_EX ),
+      .out_act_branch_ialu_res_ff_lt0 ( act_branch_ialu_res_ff_lt0_DC_EX ),
+      .out_act_ialu_add               ( act_ialu_add_DC_EX ),
+      .out_act_ialu_neg_src1          ( act_ialu_neg_src1_DC_EX ),
+      .out_act_incr_pc_is_res         ( act_incr_pc_is_res_DC_EX ),
+      .out_act_jump_to_ialu_res       ( act_jump_to_ialu_res_DC_EX ),
+      .out_act_load_dmem              ( act_load_dmem_DC_EX ),
+      .out_act_store_dmem             ( act_store_dmem_DC_EX ),
+      .out_act_write_res_to_reg       ( act_write_res_to_reg_DC_EX ),
+      .out_act_write_src2_to_res      ( act_write_src2_to_res_DC_EX ),
+      .out_cycle_in_instr             ( cycle_in_instr_DC_EX ),
+      .out_instr                      ( instr_DC_EX ),
+      .out_pc                         ( pc_DC_EX ),
+      .out_res_reg_idx                ( res_reg_idx_DC_EX ),
+      .out_src1                       ( src1_DC_EX ),
+      .out_src1_reg_idx               ( src1_idx ),
+      .out_src2                       ( src2_DC_EX ),
+      .out_src2_reg_idx               ( src2_idx ),
+      .out_src3                       ( src3_DC_EX )
    );
 
    // Execution stage
@@ -187,39 +190,41 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
              .PMEM_WORD_WIDTH(PMEM_WORD_WIDTH),
              .REG_IDX_WIDTH  (REG_IDX_WIDTH  )) exec_inst
    (
-       .clock                      ( clock ),
-       .reset                      ( reset ),
-       .in_act_branch_ialu_res_eq0 ( act_branch_ialu_res_eq0_DC_EX ),
-       .in_act_branch_ialu_res_gt0 ( act_branch_ialu_res_gt0_DC_EX ),
-       .in_act_branch_ialu_res_lt0 ( act_branch_ialu_res_lt0_DC_EX ),
-       .in_act_ialu_add            ( act_ialu_add_DC_EX ),
-       .in_act_ialu_neg_src1       ( act_ialu_neg_src1_DC_EX ),
-       .in_act_incr_pc_is_res      ( act_incr_pc_is_res_DC_EX ),
-       .in_act_jump_to_ialu_res    ( act_jump_to_ialu_res_DC_EX ),
-       .in_act_load_dmem           ( act_load_dmem_DC_EX ),
-       .in_act_store_dmem          ( act_store_dmem_DC_EX ),
-       .in_act_write_res_to_reg    ( act_write_res_to_reg_DC_EX ),
-       .in_act_write_src2_to_res   ( act_write_src2_to_res_DC_EX ),
-       .in_flush                   ( flush_pipeline ),
-       .in_instr                   ( instr_DC_EX ),
-       .in_pc                      ( pc_DC_EX ),
-       .in_res_reg_idx             ( res_reg_idx_DC_EX ),
-       .in_src1                    ( src1_DC_EX ),
-       .in_src2                    ( src2_DC_EX ),
-       .in_src3                    ( src3_DC_EX ),
-       .out_act_load_dmem          ( act_load_dmem_EX_MEM ),
-       .out_act_store_dmem         ( act_store_dmem_EX_MEM ),
-       .out_act_write_res_to_reg   ( act_write_res_to_reg_EX_MEM ),
-       .out_branch_pc              ( branch_pc ),
-       .out_dmem_rd_addr           ( dmem_rd_addr_EX_MEM ),
-       .out_dmem_wr_addr           ( dmem_wr_addr_EX_MEM ),
-       .out_dmem_wr_word           ( dmem_wr_word_EX_MEM ),
-       .out_flush                  ( flush_pipeline ),
-       .out_instr                  ( instr_EX_MEM ),
-       .out_pc                     ( pc_EX_MEM ),
-       .out_res                    ( res_EX_MEM ),
-       .out_res_reg_idx            ( res_reg_idx_EX_MEM ),
-       .out_set_pc                 ( set_pc )
+       .clock                         ( clock ),
+       .reset                         ( reset ),
+       .in_act_branch_ialu_res_ff_eq0 ( act_branch_ialu_res_ff_eq0_DC_EX ),
+       .in_act_branch_ialu_res_ff_gt0 ( act_branch_ialu_res_ff_gt0_DC_EX ),
+       .in_act_branch_ialu_res_ff_lt0 ( act_branch_ialu_res_ff_lt0_DC_EX ),
+       .in_act_ialu_add               ( act_ialu_add_DC_EX ),
+       .in_act_ialu_neg_src1          ( act_ialu_neg_src1_DC_EX ),
+       .in_act_incr_pc_is_res         ( act_incr_pc_is_res_DC_EX ),
+       .in_act_jump_to_ialu_res       ( act_jump_to_ialu_res_DC_EX ),
+       .in_act_load_dmem              ( act_load_dmem_DC_EX ),
+       .in_act_store_dmem             ( act_store_dmem_DC_EX ),
+       .in_act_write_res_to_reg       ( act_write_res_to_reg_DC_EX ),
+       .in_act_write_src2_to_res      ( act_write_src2_to_res_DC_EX ),
+       .in_cycle_in_instr             ( cycle_in_instr_DC_EX ),
+       .in_flush                      ( flush_pipeline ),
+       .in_instr                      ( instr_DC_EX ),
+       .in_pc                         ( pc_DC_EX ),
+       .in_res_reg_idx                ( res_reg_idx_DC_EX ),
+       .in_src1                       ( src1_DC_EX ),
+       .in_src2                       ( src2_DC_EX ),
+       .in_src3                       ( src3_DC_EX ),
+       .out_act_load_dmem             ( act_load_dmem_EX_MEM ),
+       .out_act_store_dmem            ( act_store_dmem_EX_MEM ),
+       .out_act_write_res_to_reg      ( act_write_res_to_reg_EX_MEM ),
+       .out_branch_pc                 ( branch_pc ),
+       .out_dmem_rd_addr              ( dmem_rd_addr_EX_MEM ),
+       .out_dmem_wr_addr              ( dmem_wr_addr_EX_MEM ),
+       .out_dmem_wr_word              ( dmem_wr_word_EX_MEM ),
+       .out_flush                     ( flush_pipeline ),
+       .out_flush_FE                  ( flush_FE ),
+       .out_instr                     ( instr_EX_MEM ),
+       .out_pc                        ( pc_EX_MEM ),
+       .out_res                       ( res_EX_MEM ),
+       .out_res_reg_idx               ( res_reg_idx_EX_MEM ),
+       .out_set_pc                    ( set_pc )
    );
 
    // Memory stage

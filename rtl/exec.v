@@ -10,9 +10,9 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
              (
              input                         clock,
              input                         reset,
-             input                         in_act_branch_ialu_res_eq0,
-             input                         in_act_branch_ialu_res_gt0,
-             input                         in_act_branch_ialu_res_lt0,
+             input                         in_act_branch_ialu_res_ff_eq0,
+             input                         in_act_branch_ialu_res_ff_gt0,
+             input                         in_act_branch_ialu_res_ff_lt0,
              input                         in_act_ialu_add,
              input                         in_act_ialu_neg_src1,
              input                         in_act_incr_pc_is_res,
@@ -21,6 +21,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
              input                         in_act_store_dmem,
              input                         in_act_write_res_to_reg,
              input                         in_act_write_src2_to_res,
+             input                  [2:0]  in_cycle_in_instr,
              input                         in_flush,
              input  [PMEM_WORD_WIDTH-1:0]  in_instr,
              input  [       PC_WIDTH-1:0]  in_pc,
@@ -36,6 +37,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
              output [DMEM_ADDR_WIDTH-1:0]  out_dmem_wr_addr,
              output [DMEM_WORD_WIDTH-1:0]  out_dmem_wr_word,
              output                        out_flush,
+             output                        out_flush_FE,
              output [PMEM_WORD_WIDTH-1:0]  out_instr,
              output [       PC_WIDTH-1:0]  out_pc,
              output [IALU_WORD_WIDTH-1:0]  out_res,
@@ -44,9 +46,9 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
              );
 
     // Sampled inputs
-    reg                         act_branch_ialu_res_eq0_ff;
-    reg                         act_branch_ialu_res_gt0_ff;
-    reg                         act_branch_ialu_res_lt0_ff;
+    reg                         act_branch_ialu_res_ff_eq0_ff;
+    reg                         act_branch_ialu_res_ff_gt0_ff;
+    reg                         act_branch_ialu_res_ff_lt0_ff;
     reg                         act_ialu_add_ff;
     reg                         act_ialu_neg_src1_ff;
     reg                         act_incr_pc_is_res_ff;
@@ -55,6 +57,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     reg                         act_store_dmem_ff;
     reg                         act_write_res_to_reg_ff;
     reg                         act_write_src2_to_res_ff;
+    reg                  [2:0]  cycle_in_instr_ff;
     reg                         flush_ff;
     reg  [PMEM_WORD_WIDTH-1:0]  instr_ff;
     reg  [       PC_WIDTH-1:0]  pc_ff;
@@ -69,7 +72,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
 
     // ALU regs
     reg  [IALU_WORD_WIDTH-1:0]  ialu_res;
-    
+    reg  [IALU_WORD_WIDTH-1:0]  ialu_res_ff;
     
     //==============================================
     // Register: sampled inputs
@@ -77,44 +80,46 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     always @(posedge clock or posedge reset)
     begin
         if (!reset) begin
-            act_branch_ialu_res_eq0_ff <= in_act_branch_ialu_res_eq0;
-            act_branch_ialu_res_gt0_ff <= in_act_branch_ialu_res_gt0;
-            act_branch_ialu_res_lt0_ff <= in_act_branch_ialu_res_lt0;
-            act_ialu_add_ff            <= in_act_ialu_add;
-            act_ialu_neg_src1_ff       <= in_act_ialu_neg_src1;
-            act_incr_pc_is_res_ff      <= in_act_incr_pc_is_res;
-            act_jump_to_ialu_res_ff    <= in_act_jump_to_ialu_res;
-            act_load_dmem_ff           <= in_act_load_dmem;
-            act_store_dmem_ff          <= in_act_store_dmem;
-            act_write_res_to_reg_ff    <= in_act_write_res_to_reg;
-            act_write_src2_to_res_ff   <= in_act_write_src2_to_res;
-            flush_ff                   <= in_flush;
-            instr_ff                   <= in_instr;
-            pc_ff                      <= in_pc;
-            res_reg_idx_ff             <= in_res_reg_idx;
-            src1_ff                    <= in_src1;
-            src2_ff                    <= in_src2;
-            src3_ff                    <= in_src3;
+            act_branch_ialu_res_ff_eq0_ff <= in_act_branch_ialu_res_ff_eq0;
+            act_branch_ialu_res_ff_gt0_ff <= in_act_branch_ialu_res_ff_gt0;
+            act_branch_ialu_res_ff_lt0_ff <= in_act_branch_ialu_res_ff_lt0;
+            act_ialu_add_ff               <= in_act_ialu_add;
+            act_ialu_neg_src1_ff          <= in_act_ialu_neg_src1;
+            act_incr_pc_is_res_ff         <= in_act_incr_pc_is_res;
+            act_jump_to_ialu_res_ff       <= in_act_jump_to_ialu_res;
+            act_load_dmem_ff              <= in_act_load_dmem;
+            act_store_dmem_ff             <= in_act_store_dmem;
+            act_write_res_to_reg_ff       <= in_act_write_res_to_reg;
+            act_write_src2_to_res_ff      <= in_act_write_src2_to_res;
+            cycle_in_instr_ff             <= in_cycle_in_instr;
+            flush_ff                      <= in_flush;
+            instr_ff                      <= in_instr;
+            pc_ff                         <= in_pc;
+            res_reg_idx_ff                <= in_res_reg_idx;
+            src1_ff                       <= in_src1;
+            src2_ff                       <= in_src2;
+            src3_ff                       <= in_src3;
         end
         else begin
-            act_branch_ialu_res_eq0_ff <= 0;
-            act_branch_ialu_res_gt0_ff <= 0;
-            act_branch_ialu_res_lt0_ff <= 0;
-            act_ialu_add_ff            <= 0;
-            act_ialu_neg_src1_ff       <= 0;
-            act_incr_pc_is_res_ff      <= 0;
-            act_jump_to_ialu_res_ff    <= 0;
-            act_load_dmem_ff           <= 0;
-            act_store_dmem_ff          <= 0;
-            act_write_res_to_reg_ff    <= 0;
-            act_write_src2_to_res_ff   <= 0;
-            flush_ff                   <= 0;
-            instr_ff                   <= 0;
-            pc_ff                      <= 0;
-            res_reg_idx_ff             <= 0;
-            src1_ff                    <= 0;
-            src2_ff                    <= 0;
-            src3_ff                    <= 0;
+            act_branch_ialu_res_ff_eq0_ff <= 0;
+            act_branch_ialu_res_ff_gt0_ff <= 0;
+            act_branch_ialu_res_ff_lt0_ff <= 0;
+            act_ialu_add_ff               <= 0;
+            act_ialu_neg_src1_ff          <= 0;
+            act_incr_pc_is_res_ff         <= 0;
+            act_jump_to_ialu_res_ff       <= 0;
+            act_load_dmem_ff              <= 0;
+            act_store_dmem_ff             <= 0;
+            act_write_res_to_reg_ff       <= 0;
+            act_write_src2_to_res_ff      <= 0;
+            cycle_in_instr_ff             <= 0;
+            flush_ff                      <= 0;
+            instr_ff                      <= 0;
+            pc_ff                         <= 0;
+            res_reg_idx_ff                <= 0;
+            src1_ff                       <= 0;
+            src2_ff                       <= 0;
+            src3_ff                       <= 0;
         end
     end
 
@@ -172,6 +177,22 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     end
 
     //==============================================
+    // Register: sample ialu_res
+    // - Some 2-cycle instructions (e.g., branches)
+    //   need the result from the previous IALU
+    //   cycle.
+    //==============================================
+    always @(posedge clock or posedge reset)
+    begin
+        if (!reset) begin
+            ialu_res_ff <= ialu_res;
+        end
+        else begin
+            ialu_res_ff <= 0;
+        end
+    end
+    
+    //==============================================
     // Jump / Branch
     // - writes: out_flush
     //           out_set_pc
@@ -181,32 +202,57 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     begin
         // Output zero if stage should be flushed
         if (flush_ff == 1) begin
-            out_flush     = 0;
-            out_set_pc    = 0;
-            out_branch_pc = 0;
+            $display("EXEC in conditional branch 1 @ %0t\n", $time);
+            out_flush       = 0;
+            out_flush_FE    = 0;
+            out_set_pc      = 0;
+            out_branch_pc   = 0;
         end
 
         // Trigger jump after getting 2nd instruction word with immedate target address
         else if (act_jump_to_ialu_res_ff) begin
+            $display("EXEC in conditional branch 2 @ %0t\n", $time);
             out_flush     = 1;
+            out_flush_FE  = 1;
             out_set_pc    = 1;
             out_branch_pc = ialu_res[PMEM_ADDR_WIDTH-1:0];
         end
         
-        // All conditional branch instructions
-        else if (    ((act_branch_ialu_res_eq0_ff == 1) && (ialu_res == 0))
-                  || ((act_branch_ialu_res_gt0_ff == 1) && (ialu_res[IALU_WORD_WIDTH-1] == 1'b0) && (ialu_res[IALU_WORD_WIDTH-2:0] != 0))
-                  || ((act_branch_ialu_res_lt0_ff == 1) && (ialu_res[IALU_WORD_WIDTH-1] == 1'b1))
+        // All conditional branch instructions (1st cycle)
+        // - Flush FE, stage in next cycle.
+        // - Do not flush DC, EX stage in next cycle. We still have to compute the branch address.
+        // - Do not branch, yet.
+        else if (    ((cycle_in_instr_ff == 0) && (act_branch_ialu_res_ff_eq0_ff == 1) && (ialu_res == 0))
+                  || ((cycle_in_instr_ff == 0) && (act_branch_ialu_res_ff_gt0_ff == 1) && (ialu_res[IALU_WORD_WIDTH-1] == 1'b0) && (ialu_res[IALU_WORD_WIDTH-2:0] != 0))
+                  || ((cycle_in_instr_ff == 0) && (act_branch_ialu_res_ff_lt0_ff == 1) && (ialu_res[IALU_WORD_WIDTH-1] == 1'b1))
                 )
         begin
+            $display("EXEC in conditional branch 3a @ %0t\n", $time);
+            out_flush     = 0;
+            out_flush_FE  = 1;
+            out_set_pc    = 0;
+            out_branch_pc = 0;
+        end
+        
+        // All conditional branch instructions (2nd cycle)
+        // - Perform actual branch
+        else if (    ((cycle_in_instr_ff == 1) && (act_branch_ialu_res_ff_eq0_ff == 1) && (ialu_res_ff == 0))
+                  || ((cycle_in_instr_ff == 1) && (act_branch_ialu_res_ff_gt0_ff == 1) && (ialu_res_ff[IALU_WORD_WIDTH-1] == 1'b0) && (ialu_res_ff[IALU_WORD_WIDTH-2:0] != 0))
+                  || ((cycle_in_instr_ff == 1) && (act_branch_ialu_res_ff_lt0_ff == 1) && (ialu_res_ff[IALU_WORD_WIDTH-1] == 1'b1))
+                )
+        begin
+            $display("EXEC in conditional branch 3b @ %0t\n", $time);
             out_flush     = 1;
+            out_flush_FE  = 1;
             out_set_pc    = 1;
-            out_branch_pc = src3_ff[PC_WIDTH-1:0];
+            out_branch_pc = ialu_res[PMEM_ADDR_WIDTH-1:0];
         end
         
         // default: do nothing
         else begin
+            $display("EXEC in conditional branch 4 @ %0t\n", $time);
             out_flush     = 0;
+            out_flush_FE  = 0;
             out_set_pc    = 0;
             out_branch_pc = 0;
         end
