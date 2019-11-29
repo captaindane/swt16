@@ -16,7 +16,9 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
                               PC_INCREMENT    =  2
                               ) 
                    (input clock,
-                    input reset );
+                    input dmem_dbg_dump, // debug only, not synthesizable
+                    input reset
+);
 
    wire                         set_pc;
    wire                         flush_FE;
@@ -120,6 +122,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
       .clock       ( clock ),
       .in_addr_rd  ( dmem_rd_addr  ),
       .in_addr_wr  ( dmem_wr_addr  ),
+      .in_dbg_dump ( dmem_dbg_dump ),
       .in_write_en ( dmem_write_en ),
       .in_word     ( dmem_wr_word  ),
       .out_word    ( dmem_rd_word  )

@@ -21,17 +21,20 @@ void printHelp    (cmdLineArgs_t& cmdLineArgs);
 Vswt16_top *uut;                // Instantiation of module
 vluint64_t main_time = 0;       // Current simulation time
 
-double sc_time_stamp () {       // Called by $time in Verilog
+// Called by $time in Verilog
+double sc_time_stamp ()
+{
     return main_time;           // converts to double, to match
     // what SystemC does
 }
 
 
-// Config structure
+// Config structure for parsed command line arguments
 typedef struct cmdLineArgs_t
 {
     bool        abort;
 
+    bool        dmemDump;
     std::string dmemFile;
     bool        dmemFileSpecified;
 
@@ -52,6 +55,7 @@ void printHelp (cmdLineArgs_t& cmdLineArgs)
 
     std::cout << cmdLineArgs.execName << std::endl \
               << "        --dmemFile <hex file containing init values for data memory>" << std::endl \
+              << "        --dmemDump" << std::endl \
               << "        --pmemFile <hex file containing contents of program memory>" << std::endl \
               << "        --simTime  <simulation time in time units>" << std::endl \
               << "        --help" << std::endl;
@@ -64,6 +68,7 @@ void parseCmdLine (int argc, char**argv, cmdLineArgs_t& cmdLineArgs)
 {
     // Set default values
     cmdLineArgs.abort             = false;
+    cmdLineArgs.dmemDump          = false;
     cmdLineArgs.dmemFileSpecified = false;
     cmdLineArgs.pmemFileSpecified = false;
     cmdLineArgs.simTime           = 100;
@@ -76,7 +81,12 @@ void parseCmdLine (int argc, char**argv, cmdLineArgs_t& cmdLineArgs)
     {
 	    std::string par = argv[parIdx];
         
-        if      (par == "--dmemFile")
+        
+        if      (par == "--dmemDump")
+        {
+            cmdLineArgs.dmemDump = true;
+        }
+        else if (par == "--dmemFile")
         {
             cmdLineArgs.dmemFile          = std::string(argv[++parIdx]);
             cmdLineArgs.dmemFileSpecified = true;
@@ -173,11 +183,14 @@ int main(int argc, char** argv)
     if (tfp != NULL) { tfp->dump (main_time); }
     main_time++;
 
+    // Run for specified amount of time
     while (main_time < cmdLineArgs.simTime)
     {
-        uut->clock = uut->clock ? 0 : 1;       // Toggle clock
-        uut->eval();            // Evaluate model
+        // Toggle clock
+        uut->clock = uut->clock ? 0 : 1;
 
+        // Evaluate model
+        uut->eval();
         if (tfp != NULL)
         {
             tfp->dump (main_time);
@@ -186,7 +199,15 @@ int main(int argc, char** argv)
         main_time++;            // Time passes...
     }
 
-    uut->final();               // Done simulating
+    // Dump contents of dmem
+    if (cmdLineArgs.dmemDump == true)
+    {
+        uut->dmem_dbg_dump = 1;
+        uut->eval();
+    }
+    
+    // Done simulating
+    uut->final();
 
     if (tfp != NULL)
     {

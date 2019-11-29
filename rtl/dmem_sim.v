@@ -5,6 +5,7 @@ module dmem_sim #(WORD_WIDTH = 16,
          (input                   clock,
 		  input  [ADDR_WIDTH-1:0] in_addr_rd,
 		  input  [ADDR_WIDTH-1:0] in_addr_wr,
+          input                   in_dbg_dump,
           input  [WORD_WIDTH-1:0] in_word,
           input                   in_write_en,
 		  output [WORD_WIDTH-1:0] out_word);
@@ -17,9 +18,9 @@ module dmem_sim #(WORD_WIDTH = 16,
 
     // Helpers
     integer cfgFileHandle;
-    reg  [256*8-1:0] memFileName;
+    reg  [200*8-1:0] memFileName;
 
-    // Initialze simulation menory
+    // Initialze simulation memory
     initial begin
         cfgFileHandle = $fopen(MEM_FILE, "r");
 
@@ -30,6 +31,13 @@ module dmem_sim #(WORD_WIDTH = 16,
 
         $fscanf  (cfgFileHandle, "%s", memFileName);
         $readmemh(memFileName, mem_array);
+    end
+
+    // Dump contents of simulation memory (e.g., at the end of the simulation)
+    always @(*) begin
+        if (in_dbg_dump == 1) begin
+            $writememh({memFileName,".postsim"}, mem_array);
+        end
     end
 
     // Register: sample read address
