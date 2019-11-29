@@ -202,7 +202,6 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     begin
         // Output zero if stage should be flushed
         if (flush_ff == 1) begin
-            $display("EXEC in conditional branch 1 @ %0t\n", $time);
             out_flush       = 0;
             out_flush_FE    = 0;
             out_set_pc      = 0;
@@ -211,7 +210,6 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
 
         // Trigger jump after getting 2nd instruction word with immedate target address
         else if (act_jump_to_ialu_res_ff) begin
-            $display("EXEC in conditional branch 2 @ %0t\n", $time);
             out_flush     = 1;
             out_flush_FE  = 1;
             out_set_pc    = 1;
@@ -227,7 +225,6 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
                   || ((cycle_in_instr_ff == 0) && (act_branch_ialu_res_ff_lt0_ff == 1) && (ialu_res[IALU_WORD_WIDTH-1] == 1'b1))
                 )
         begin
-            $display("EXEC in conditional branch 3a @ %0t\n", $time);
             out_flush     = 0;
             out_flush_FE  = 1;
             out_set_pc    = 0;
@@ -241,7 +238,6 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
                   || ((cycle_in_instr_ff == 1) && (act_branch_ialu_res_ff_lt0_ff == 1) && (ialu_res_ff[IALU_WORD_WIDTH-1] == 1'b1))
                 )
         begin
-            $display("EXEC in conditional branch 3b @ %0t\n", $time);
             out_flush     = 1;
             out_flush_FE  = 1;
             out_set_pc    = 1;
@@ -250,7 +246,6 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
         
         // default: do nothing
         else begin
-            $display("EXEC in conditional branch 4 @ %0t\n", $time);
             out_flush     = 0;
             out_flush_FE  = 0;
             out_set_pc    = 0;
