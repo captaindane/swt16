@@ -236,42 +236,34 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 // Branch if equal
                 FUNC1_BEQ:
                 begin
-                    // 1st cycle
-                    if (cycle_in_instr_ff == 0) begin
-                        cycle_in_instr_next                    = 1;
-                        out_act_branch_ialu_res_ff_eq0         = 1; // both cycles need this info
+                    // 1st and 2nd cycle
+                        out_act_branch_ialu_res_ff_eq0         = 1;
                         out_act_branch_ialu_res_ff_gt0         = 0;
                         out_act_branch_ialu_res_ff_lt0         = 0;
                         out_act_ialu_add                       = 1;
-                        out_act_ialu_neg_src1                  = 1;
                         out_act_incr_pc_is_res                 = 0;
                         out_act_jump_to_ialu_res               = 0;
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
                         out_act_write_res_to_reg               = 0;
                         out_act_write_src2_to_res              = 0;
+                    
+                    // 1st cycle (evaluate branch condition)
+                    if (cycle_in_instr_ff == 0) begin
+                        cycle_in_instr_next                    = 1;
+                        out_act_ialu_neg_src1                  = 1;
                         out_src1                               = in_src1;
                         out_src2                               = in_src2;
                         out_src3                               = 0;
                     end
-                    // 2nd cycle
+                    // 2nd cycle (compute branch target address)
                     else if (cycle_in_instr_ff == 1) begin
                         cycle_in_instr_next                    = 0;
-                        out_act_branch_ialu_res_ff_eq0         = 1; // both cycles need this info
-                        out_act_branch_ialu_res_ff_gt0         = 0;
-                        out_act_branch_ialu_res_ff_lt0         = 0;
-                        out_act_ialu_add                       = 1;
                         out_act_ialu_neg_src1                  = 0;
-                        out_act_incr_pc_is_res                 = 0;
-                        out_act_jump_to_ialu_res               = 0; // TODO: strictly speaking, this should be 1. rename or rework
-                        out_act_load_dmem                      = 0;
-                        out_act_store_dmem                     = 0;
-                        out_act_write_res_to_reg               = 0;
-                        out_act_write_src2_to_res              = 0;
                         out_src1                               = immB;
                         out_src2[PC_WIDTH-1:0]                 = pc_ff2;
                         out_src2[IALU_WORD_WIDTH-1:PC_WIDTH]   = 0;
-                        out_src3                               = 0;     // Branch address offset
+                        out_src3                               = 0;
                     end
 
                 end
@@ -279,26 +271,34 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 // Branch if not equal
                 FUNC1_BNEQ:
                 begin
-                    if (cycle_in_instr_ff == 1) begin
-                        cycle_in_instr_next                    = 0;
+                    // 1st and 2nd cycle
                         out_act_branch_ialu_res_ff_eq0         = 0;
                         out_act_branch_ialu_res_ff_gt0         = 1;
                         out_act_branch_ialu_res_ff_lt0         = 1;
                         out_act_ialu_add                       = 1;
-                        out_act_ialu_neg_src1                  = 1;
                         out_act_incr_pc_is_res                 = 0;
                         out_act_jump_to_ialu_res               = 0;
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
                         out_act_write_res_to_reg               = 0;
                         out_act_write_src2_to_res              = 0;
+                    
+                    // 1st cycle (evaluate branch condition)
+                    if (cycle_in_instr_ff == 0) begin
+                        cycle_in_instr_next                    = 1;
+                        out_act_ialu_neg_src1                  = 1;
                         out_src1                               = in_src1;
                         out_src2                               = in_src2;
-                        out_src3                               = immB;     // Branch address
+                        out_src3                               = 0;
                     end
-                    else begin
-                        cycle_in_instr_next                    = 1;
-                        zero_outputs();
+                    // 2nd cycle (compute branch target address)
+                    else if (cycle_in_instr_ff == 1) begin
+                        cycle_in_instr_next                    = 0;
+                        out_act_ialu_neg_src1                  = 0;
+                        out_src1                               = immB;
+                        out_src2[PC_WIDTH-1:0]                 = pc_ff2;
+                        out_src2[IALU_WORD_WIDTH-1:PC_WIDTH]   = 0;
+                        out_src3                               = 0;
                     end
 
                 end
@@ -306,26 +306,34 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 // Branch if greater equal
                 FUNC1_BGE:
                 begin
-                    if (cycle_in_instr_ff == 1) begin
-                        cycle_in_instr_next                    = 0;
+                    // 1st and 2nd cycle
                         out_act_branch_ialu_res_ff_eq0         = 1;
                         out_act_branch_ialu_res_ff_gt0         = 1;
                         out_act_branch_ialu_res_ff_lt0         = 0;
                         out_act_ialu_add                       = 1;
-                        out_act_ialu_neg_src1                  = 1;
                         out_act_incr_pc_is_res                 = 0;
                         out_act_jump_to_ialu_res               = 0;
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
                         out_act_write_res_to_reg               = 0;
                         out_act_write_src2_to_res              = 0;
+                    
+                    // 1st cycle (evaluate branch condition)
+                    if (cycle_in_instr_ff == 0) begin
+                        cycle_in_instr_next                    = 1;
+                        out_act_ialu_neg_src1                  = 1;
                         out_src1                               = in_src1;
                         out_src2                               = in_src2;
-                        out_src3                               = immB;     // Branch address
+                        out_src3                               = 0;
                     end
-                    else begin
-                        cycle_in_instr_next                    = 1;
-                        zero_outputs();
+                    // 2nd cycle (compute branch target address)
+                    else if (cycle_in_instr_ff == 1) begin
+                        cycle_in_instr_next                    = 0;
+                        out_act_ialu_neg_src1                  = 0;
+                        out_src1                               = immB;
+                        out_src2[PC_WIDTH-1:0]                 = pc_ff2;
+                        out_src2[IALU_WORD_WIDTH-1:PC_WIDTH]   = 0;
+                        out_src3                               = 0;
                     end
 
                 end
@@ -333,26 +341,34 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 // Branch if less than
                 FUNC1_BLT:
                 begin
-                    if (cycle_in_instr_ff == 1) begin
-                        cycle_in_instr_next                    = 0;
+                    // 1st and 2nd cycle
                         out_act_branch_ialu_res_ff_eq0         = 0;
                         out_act_branch_ialu_res_ff_gt0         = 0;
                         out_act_branch_ialu_res_ff_lt0         = 1;
                         out_act_ialu_add                       = 1;
-                        out_act_ialu_neg_src1                  = 1;
                         out_act_incr_pc_is_res                 = 0;
                         out_act_jump_to_ialu_res               = 0;
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
                         out_act_write_res_to_reg               = 0;
                         out_act_write_src2_to_res              = 0;
+                    
+                    // 1st cycle (evaluate branch condition)
+                    if (cycle_in_instr_ff == 0) begin
+                        cycle_in_instr_next                    = 1;
+                        out_act_ialu_neg_src1                  = 1;
                         out_src1                               = in_src1;
                         out_src2                               = in_src2;
-                        out_src3                               = immB;     // Branch address
+                        out_src3                               = 0;
                     end
-                    else begin
-                        cycle_in_instr_next                    = 1;
-                        zero_outputs();
+                    // 2nd cycle (compute branch target address)
+                    else if (cycle_in_instr_ff == 1) begin
+                        cycle_in_instr_next                    = 0;
+                        out_act_ialu_neg_src1                  = 0;
+                        out_src1                               = immB;
+                        out_src2[PC_WIDTH-1:0]                 = pc_ff2;
+                        out_src2[IALU_WORD_WIDTH-1:PC_WIDTH]   = 0;
+                        out_src3                               = 0;
                     end
 
                 end
