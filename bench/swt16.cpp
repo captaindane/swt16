@@ -132,9 +132,9 @@ void parseCmdLine (int argc, char**argv, cmdLineArgs_t& cmdLineArgs)
 // Main function. Runs simulator loop.
 int main(int argc, char** argv)
 {
-    // turn on trace or not?
-    bool vcdTrace = true;
-    VerilatedVcdC* tfp = NULL;
+    // Turn on trace or not?
+    bool           vcdTrace   = true;
+    VerilatedVcdC* pVcdTracer = NULL;
 
     Verilated::commandArgs(argc, argv);   // Remember args
     
@@ -156,31 +156,31 @@ int main(int argc, char** argv)
     {
         Verilated::traceEverOn(true);
 
-        tfp = new VerilatedVcdC;
-        uut->trace(tfp, 99);
+        pVcdTracer = new VerilatedVcdC;
+        uut->trace(pVcdTracer, 99);
 
         std::string vcdname = argv[0];
         vcdname += ".vcd";
-        tfp->open(vcdname.c_str());
+        pVcdTracer->open(vcdname.c_str());
     }
 
     // Reset
     uut->clock = 0;
     uut->reset = 1;
     uut->eval();
-    if (tfp != NULL) { tfp->dump (main_time); }
+    if (pVcdTracer != NULL) { pVcdTracer->dump (main_time); }
     main_time++;
 
     uut->clock = 1;
     uut->reset = 1;
     uut->eval();
-    if (tfp != NULL) { tfp->dump (main_time); }
+    if (pVcdTracer != NULL) { pVcdTracer->dump (main_time); }
     main_time++;
 
     uut->clock = 0;
     uut->reset = 0;
     uut->eval();
-    if (tfp != NULL) { tfp->dump (main_time); }
+    if (pVcdTracer != NULL) { pVcdTracer->dump (main_time); }
     main_time++;
 
     // Run for specified amount of time
@@ -191,12 +191,8 @@ int main(int argc, char** argv)
 
         // Evaluate model
         uut->eval();
-        if (tfp != NULL)
-        {
-            tfp->dump (main_time);
-        }
- 
-        main_time++;            // Time passes...
+        if (pVcdTracer != NULL) { pVcdTracer->dump (main_time); }
+        main_time++;
     }
 
     // Dump contents of dmem
@@ -204,15 +200,17 @@ int main(int argc, char** argv)
     {
         uut->dmem_dbg_dump = 1;
         uut->eval();
+        if (pVcdTracer != NULL) { pVcdTracer->dump (main_time); }
+        main_time++;
     }
     
     // Done simulating
     uut->final();
 
-    if (tfp != NULL)
+    if (pVcdTracer != NULL)
     {
-        tfp->close();
-        delete tfp;
+        pVcdTracer->close();
+        delete pVcdTracer;
     }
 
     std::cout << "Finished simulation of " << cmdLineArgs.simTime << " time units." << std::endl;
