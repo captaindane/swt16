@@ -267,7 +267,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
         end
         
         else if (act_load_dmem_ff) begin
-            out_dmem_rd_addr = src1_ff[DMEM_ADDR_WIDTH-1:0];
+            out_dmem_rd_addr = ialu_res[DMEM_ADDR_WIDTH-1:0];
         end
         
         else begin

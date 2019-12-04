@@ -493,23 +493,51 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
             endcase
         end
     
-        // Load from DMEM
+        // Load half word from DMEM
         else if (opcode == OPCODE_LH) begin
-            cycle_in_instr_next                    = 0;
-            out_act_branch_ialu_res_ff_eq0         = 0;
-            out_act_branch_ialu_res_ff_gt0         = 0;
-            out_act_branch_ialu_res_ff_lt0         = 0;
-            out_act_ialu_add                       = 0;
-            out_act_ialu_neg_src1                  = 0;
-            out_act_incr_pc_is_res                 = 0;
-            out_act_jump_to_ialu_res               = 0;
-            out_act_load_dmem                      = 1;
-            out_act_store_dmem                     = 0;
-            out_act_write_res_to_reg               = 1;
-            out_act_write_src2_to_res              = 0;
-            out_src1                               = in_src1;      // address (comes back from regrile)
-            out_src2                               = 0;
-            out_src3                               = 0;
+                cycle_in_instr_next                    = 0;
+                out_act_branch_ialu_res_ff_eq0         = 0;
+                out_act_branch_ialu_res_ff_gt0         = 0;
+                out_act_branch_ialu_res_ff_lt0         = 0;
+                out_act_ialu_add                       = 0;
+                out_act_ialu_neg_src1                  = 0;
+                out_act_incr_pc_is_res                 = 0;
+                out_act_jump_to_ialu_res               = 0;
+                out_act_load_dmem                      = 1;
+                out_act_store_dmem                     = 0;
+                out_act_write_res_to_reg               = 1;
+                out_act_write_src2_to_res              = 1;
+                out_src1                               = 0;
+                out_src2                               = in_src1;      // address (yes, strange to write src1 to src2, but srcX_to_res only exists for src2)
+                out_src3                               = 0;
+        end
+
+        // Load half word with offset from DMEM
+        else if (opcode == OPCODE_LHO) begin
+            
+            if (cycle_in_instr_ff == 1) begin
+                cycle_in_instr_next                    = 0;
+                out_act_branch_ialu_res_ff_eq0         = 0;
+                out_act_branch_ialu_res_ff_gt0         = 0;
+                out_act_branch_ialu_res_ff_lt0         = 0;
+                out_act_ialu_add                       = 1;
+                out_act_ialu_neg_src1                  = 0;
+                out_act_incr_pc_is_res                 = 0;
+                out_act_jump_to_ialu_res               = 0;
+                out_act_load_dmem                      = 1;
+                out_act_store_dmem                     = 0;
+                out_act_write_res_to_reg               = 1;
+                out_act_write_src2_to_res              = 0;
+                out_src1                               = in_src1;
+                out_src2                               = immB;
+                out_src3                               = 0;
+
+            end
+            else begin
+                cycle_in_instr_next                    = 1;
+                zero_outputs();
+            end
+
         end
 
         // Integer addition
