@@ -11,4 +11,4 @@ Call the simulator with parameter "--help" to see all available options to run i
 This project is developed and tested using Ubuntu.
 
 The RTL simulator is built using Verilator (https://www.veripool.org/).
-Verilator is open source it can be downloaded from Github or obtained from the Ubuntu packet manager.
+Verilator is open source. It can be downloaded from Github or obtained from the Ubuntu packet manager.
