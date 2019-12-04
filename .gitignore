@@ -1,2 +1,3 @@
 bench/swt16/
 rtl/*.swp
+prog/*.postsim
