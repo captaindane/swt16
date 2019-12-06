@@ -330,8 +330,8 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                     // 1st cycle (evaluate branch condition)
                     if (cycle_in_instr_ff == 0) begin
                         cycle_in_instr_next                    = 1;
-                        out_act_ialu_neg_src1                  = 1;
-                        out_act_ialu_neg_src2                  = 0;
+                        out_act_ialu_neg_src1                  = 0;
+                        out_act_ialu_neg_src2                  = 1;
                         out_src1                               = in_src1;
                         out_src2                               = in_src2;
                         out_src3                               = 0;
@@ -367,8 +367,8 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                     // 1st cycle (evaluate branch condition)
                     if (cycle_in_instr_ff == 0) begin
                         cycle_in_instr_next                    = 1;
-                        out_act_ialu_neg_src1                  = 1;
-                        out_act_ialu_neg_src2                  = 0;
+                        out_act_ialu_neg_src1                  = 0;
+                        out_act_ialu_neg_src2                  = 1;
                         out_src1                               = in_src1;
                         out_src2                               = in_src2;
                         out_src3                               = 0;
