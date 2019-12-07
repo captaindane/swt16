@@ -24,10 +24,13 @@ Build the simulator by calling make from [bench]. After that, the simulator will
 
 ## Running the simulator
 Call the simulator with parameter "--help" to see all available options to run it.
+
 Example simulation run:
+
 `./swt16/Vswt16_top --simTime 200 --pmemFile ../prog/hex_test_load_store.pmem --dmemFile ../prog/hex_test_load_store.dmem --dmemDump`
 
 Inspection with GTKWAVE: 
+
 `gtkwave ./swt16/Vswt16_top.vcd -a gtkwave_views/swt16.view.gtkw &`
 
 This project is developed and tested using Ubuntu.
