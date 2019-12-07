@@ -15,6 +15,9 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
              input                         in_act_branch_ialu_res_ff_lt0,
              input                         in_act_ialu_add,
              input                         in_act_ialu_neg_src2,
+             input                         in_act_ialu_sll,  // shift left logically
+             input                         in_act_ialu_sra,  // shift right arithmetically
+             input                         in_act_ialu_srl,  // shift right logically
              input                         in_act_incr_pc_is_res,
              input                         in_act_jump_to_ialu_res,
              input                         in_act_load_dmem,
@@ -46,25 +49,28 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
              );
 
     // Sampled inputs
-    reg                         act_branch_ialu_res_ff_eq0_ff;
-    reg                         act_branch_ialu_res_ff_gt0_ff;
-    reg                         act_branch_ialu_res_ff_lt0_ff;
-    reg                         act_ialu_add_ff;
-    reg                         act_ialu_neg_src2_ff;
-    reg                         act_incr_pc_is_res_ff;
-    reg                         act_jump_to_ialu_res_ff;
-    reg                         act_load_dmem_ff;
-    reg                         act_store_dmem_ff;
-    reg                         act_write_res_to_reg_ff;
-    reg                         act_write_src2_to_res_ff;
-    reg                  [2:0]  cycle_in_instr_ff;
-    reg                         flush_ff;
-    reg  [PMEM_WORD_WIDTH-1:0]  instr_ff;
-    reg  [       PC_WIDTH-1:0]  pc_ff;
-    reg  [  REG_IDX_WIDTH-1:0]  res_reg_idx_ff;
-    reg  [IALU_WORD_WIDTH-1:0]  src1_ff;
-    reg  [IALU_WORD_WIDTH-1:0]  src2_ff;
-    reg  [IALU_WORD_WIDTH-1:0]  src3_ff;
+    reg                                act_branch_ialu_res_ff_eq0_ff;
+    reg                                act_branch_ialu_res_ff_gt0_ff;
+    reg                                act_branch_ialu_res_ff_lt0_ff;
+    reg                                act_ialu_add_ff;
+    reg                                act_ialu_neg_src2_ff;
+    reg                                act_ialu_sll_ff;
+    reg                                act_ialu_sra_ff;
+    reg                                act_ialu_srl_ff;
+    reg                                act_incr_pc_is_res_ff;
+    reg                                act_jump_to_ialu_res_ff;
+    reg                                act_load_dmem_ff;
+    reg                                act_store_dmem_ff;
+    reg                                act_write_res_to_reg_ff;
+    reg                                act_write_src2_to_res_ff;
+    reg                         [2:0]  cycle_in_instr_ff;
+    reg                                flush_ff;
+    reg         [PMEM_WORD_WIDTH-1:0]  instr_ff;
+    reg         [       PC_WIDTH-1:0]  pc_ff;
+    reg         [  REG_IDX_WIDTH-1:0]  res_reg_idx_ff;
+    reg  signed [IALU_WORD_WIDTH-1:0]  src1_ff;
+    reg  signed [IALU_WORD_WIDTH-1:0]  src2_ff;
+    reg         [IALU_WORD_WIDTH-1:0]  src3_ff;
 
     // Modified version of src1, src2 (potentially negated)
     wire [IALU_WORD_WIDTH-1:0]  src2_mod;
@@ -85,6 +91,9 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             act_branch_ialu_res_ff_lt0_ff <= in_act_branch_ialu_res_ff_lt0;
             act_ialu_add_ff               <= in_act_ialu_add;
             act_ialu_neg_src2_ff          <= in_act_ialu_neg_src2;
+            act_ialu_sll_ff               <= in_act_ialu_sll;
+            act_ialu_sra_ff               <= in_act_ialu_sra;
+            act_ialu_srl_ff               <= in_act_ialu_srl;
             act_incr_pc_is_res_ff         <= in_act_incr_pc_is_res;
             act_jump_to_ialu_res_ff       <= in_act_jump_to_ialu_res;
             act_load_dmem_ff              <= in_act_load_dmem;
@@ -106,6 +115,9 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             act_branch_ialu_res_ff_lt0_ff <= 0;
             act_ialu_add_ff               <= 0;
             act_ialu_neg_src2_ff          <= 0;
+            act_ialu_sll_ff               <= 0;
+            act_ialu_sra_ff               <= 0;
+            act_ialu_srl_ff               <= 0;
             act_incr_pc_is_res_ff         <= 0;
             act_jump_to_ialu_res_ff       <= 0;
             act_load_dmem_ff              <= 0;
@@ -160,9 +172,24 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             ialu_res = 0;
         end
         
-        // Integer addition
+        // Integer addition, subtraction
         else if (act_ialu_add_ff) begin
             ialu_res = src1_ff + src2_mod;
+        end
+
+        // Shift left logically
+        else if (act_ialu_sll_ff) begin
+            ialu_res = src1_ff << src2_mod;
+        end
+
+        // Shift right logically
+        else if (act_ialu_srl_ff) begin
+            ialu_res = src1_ff >> src2_mod;
+        end
+
+        // Shift right arithmetically
+        else if (act_ialu_sra_ff) begin
+            ialu_res = src1_ff >>> src2_mod;
         end
 
         // Forward src2 directly to res
