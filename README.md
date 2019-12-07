@@ -7,9 +7,22 @@ Check [doc/isa.ods] for the current (humble) state of the ISA.
 RTL code for the processor is located in [rtl].
 Test programs written in assembler can be found in [prog].
 
+## Prerequirements
+
+[Verilator](https://www.veripool.org/)
+`sudo apt-get install verilator gtkwave`
+
+
+## Build
+
+```
+cd bench && make
+```
+
 This project also contains a simulator for the RTL design.
 The RTL simulator is built using Verilator (https://www.veripool.org/).
 Verilator is open source. It can be downloaded from Github or obtained from the Ubuntu packet manager.
+
 Make sure Verilator is installed before attempting to run or build the simulator.
 Build the simulator by calling make from [bench]. After that, the simulator will be located in [bench/swt16/Vswt16_top].
 Call the simulator with parameter "--help" to see all available options to run it.
