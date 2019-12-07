@@ -9,10 +9,13 @@ The RTL simulator is built using Verilator (https://www.veripool.org/).
 Verilator is open source. It can be downloaded from Github or obtained from the Ubuntu packet manager.
 
 ## Directory structure
-Check [doc/isa.ods] for the current (humble) state of the ISA.
-RTL code for the processor is located in [rtl].
-Test programs written in assembler can be found in [prog].
-
+```
+├── bench        : simulator directory
+├── doc          : ISA documentation
+├── prog         : example programs
+├── README.md    : this readme
+└── rtl          : processor description in Verilog
+```
 ## Prerequisites
 Make sure Verilator is installed before attempting to run or build the simulator.
 Install Verilator [Verilator](https://www.veripool.org/) and GTKWAVE.
