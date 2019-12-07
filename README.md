@@ -21,8 +21,9 @@ Make sure Verilator is installed before attempting to run or build the simulator
 Install Verilator [Verilator](https://www.veripool.org/) and GTKWAVE.
 `sudo apt-get install verilator gtkwave`
 
-## Build simulator
+## Building simulator
 Build the simulator by calling make from [bench]. After that, the simulator will be located in [bench/swt16/Vswt16_top].
+
 `cd bench && make`
 
 ## Running the simulator
@@ -31,6 +32,8 @@ Call the simulator with parameter "--help" to see all available options to run i
 Example simulation run:
 
 `./swt16/Vswt16_top --simTime 200 --pmemFile ../prog/hex_test_load_store.pmem --dmemFile ../prog/hex_test_load_store.dmem --dmemDump`
+
+In this example, `--simTime <timeUnits>` specifies the number of time units for which the simulation is run. The option `--pmemFile <filename>` specifies the program file that is loaded into the program memory. Similarly, `--dmemFile <filename>` specifies the data file that is loaded into the data memory. 
 
 Inspection with GTKWAVE: 
 
