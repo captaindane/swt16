@@ -18,7 +18,8 @@ Verilator is open source. It can be downloaded from Github or obtained from the 
 ```
 ## Prerequisites
 Make sure Verilator is installed before attempting to run or build the simulator.
-Install Verilator [Verilator](https://www.veripool.org/) and GTKWAVE.
+To install Verilator [Verilator](https://www.veripool.org/) and GTKWAVE, execute the following command:
+
 `sudo apt-get install verilator gtkwave`
 
 ## Building simulator
@@ -39,4 +40,5 @@ Inspection with GTKWAVE:
 
 `gtkwave ./swt16/Vswt16_top.vcd -a gtkwave_views/swt16.view.gtkw &`
 
+## Note
 This project is developed and tested using Ubuntu.
