@@ -14,10 +14,13 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
              input                         in_act_branch_ialu_res_ff_gt0,
              input                         in_act_branch_ialu_res_ff_lt0,
              input                         in_act_ialu_add,
+             input                         in_act_ialu_and,
              input                         in_act_ialu_neg_src2,
+             input                         in_act_ialu_or,
              input                         in_act_ialu_sll,  // shift left logically
              input                         in_act_ialu_sra,  // shift right arithmetically
              input                         in_act_ialu_srl,  // shift right logically
+             input                         in_act_ialu_xor,
              input                         in_act_incr_pc_is_res,
              input                         in_act_jump_to_ialu_res,
              input                         in_act_load_dmem,
@@ -53,10 +56,13 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     reg                                act_branch_ialu_res_ff_gt0_ff;
     reg                                act_branch_ialu_res_ff_lt0_ff;
     reg                                act_ialu_add_ff;
+    reg                                act_ialu_and_ff;
     reg                                act_ialu_neg_src2_ff;
+    reg                                act_ialu_or_ff;
     reg                                act_ialu_sll_ff;
     reg                                act_ialu_sra_ff;
     reg                                act_ialu_srl_ff;
+    reg                                act_ialu_xor_ff;
     reg                                act_incr_pc_is_res_ff;
     reg                                act_jump_to_ialu_res_ff;
     reg                                act_load_dmem_ff;
@@ -90,10 +96,13 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             act_branch_ialu_res_ff_gt0_ff <= in_act_branch_ialu_res_ff_gt0;
             act_branch_ialu_res_ff_lt0_ff <= in_act_branch_ialu_res_ff_lt0;
             act_ialu_add_ff               <= in_act_ialu_add;
+            act_ialu_and_ff               <= in_act_ialu_and;
             act_ialu_neg_src2_ff          <= in_act_ialu_neg_src2;
+            act_ialu_or_ff                <= in_act_ialu_or;
             act_ialu_sll_ff               <= in_act_ialu_sll;
             act_ialu_sra_ff               <= in_act_ialu_sra;
             act_ialu_srl_ff               <= in_act_ialu_srl;
+            act_ialu_xor_ff               <= in_act_ialu_xor;
             act_incr_pc_is_res_ff         <= in_act_incr_pc_is_res;
             act_jump_to_ialu_res_ff       <= in_act_jump_to_ialu_res;
             act_load_dmem_ff              <= in_act_load_dmem;
@@ -114,10 +123,13 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             act_branch_ialu_res_ff_gt0_ff <= 0;
             act_branch_ialu_res_ff_lt0_ff <= 0;
             act_ialu_add_ff               <= 0;
+            act_ialu_and_ff               <= 0;
             act_ialu_neg_src2_ff          <= 0;
+            act_ialu_or_ff                <= 0;
             act_ialu_sll_ff               <= 0;
             act_ialu_sra_ff               <= 0;
             act_ialu_srl_ff               <= 0;
+            act_ialu_xor_ff               <= 0;
             act_incr_pc_is_res_ff         <= 0;
             act_jump_to_ialu_res_ff       <= 0;
             act_load_dmem_ff              <= 0;
@@ -190,6 +202,21 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
         // Shift right arithmetically
         else if (act_ialu_sra_ff) begin
             ialu_res = src1_ff >>> src2_mod;
+        end
+
+        // Bitwise logical and
+        else if (act_ialu_and_ff) begin
+            ialu_res = src1_ff & src2_mod;
+        end
+        
+        // Bitwise logcial or
+        else if (act_ialu_or_ff) begin
+            ialu_res = src1_ff | src2_mod;
+        end
+
+        // Bitwise logical xor
+        else if (act_ialu_xor_ff) begin
+            ialu_res = src1_ff ^ src2_mod;
         end
 
         // Forward src2 directly to res
