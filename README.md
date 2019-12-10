@@ -56,7 +56,7 @@ Currently, this project contains no tooling to generate machine code for the pro
 This means, the programmer has to write the machine code themselves.
 For a limited-size ISA like the one used for this project, this is actually still feasible (and sometimes even fun!).
 Examples can be found in the [prog] directory.
-Refer to [prog/ISA.odt] for an overview of the current state of the ISA.
+Refer to [doc/ISA.odt] for an overview of the current state of the ISA.
 
 ## Note
 This project is developed and tested using Ubuntu.
