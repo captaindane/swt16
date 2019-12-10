@@ -56,13 +56,13 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     localparam [OPCODE_WIDTH-1:0] OPCODE_LHO    = 4'b0101; // I-Type: Load half with offset
     localparam [OPCODE_WIDTH-1:0] OPCODE_ADD    = 4'b0110; // R-Type: integer addition
     localparam [OPCODE_WIDTH-1:0] OPCODE_SUB    = 4'b0111; // R-Type: integer subtraction
-    localparam [OPCODE_WIDTH-1:0] OPCODE_SLL    = 4'b1000; // R-Type: shift left logically
-    localparam [OPCODE_WIDTH-1:0] OPCODE_SRL    = 4'b1001; // R-Type: shift right logically
-    localparam [OPCODE_WIDTH-1:0] OPCODE_SRA    = 4'b1010; // R-Type: shift right arithmetically
-    localparam [OPCODE_WIDTH-1:0] OPCODE_AND    = 4'b1011; // R-Type: logical and
-    localparam [OPCODE_WIDTH-1:0] OPCODE_OR     = 4'b1100; // R-Type: logical or
-    localparam [OPCODE_WIDTH-1:0] OPCODE_XOR    = 4'b1101; // R-Type: logical xor
-    localparam [OPCODE_WIDTH-1:0] OPCODE_MUL    = 4'b1110; // R-Type: integer multiplication
+    localparam [OPCODE_WIDTH-1:0] OPCODE_MUL    = 4'b1000; // R-Type: integer multiplication
+    localparam [OPCODE_WIDTH-1:0] OPCODE_SLL    = 4'b1001; // R-Type: shift left logically
+    localparam [OPCODE_WIDTH-1:0] OPCODE_SRL    = 4'b1010; // R-Type: shift right logically
+    localparam [OPCODE_WIDTH-1:0] OPCODE_SRA    = 4'b1011; // R-Type: shift right arithmetically
+    localparam [OPCODE_WIDTH-1:0] OPCODE_AND    = 4'b1100; // R-Type: logical and
+    localparam [OPCODE_WIDTH-1:0] OPCODE_OR     = 4'b1101; // R-Type: logical or
+    localparam [OPCODE_WIDTH-1:0] OPCODE_XOR    = 4'b1110; // R-Type: logical xor
 
     // S-TYPE
     localparam [ FUNC1_WIDTH-1:0] FUNC1_BEQ     = 4'b0000;

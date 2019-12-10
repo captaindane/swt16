@@ -8,9 +8,10 @@
 2146    // add  r4, r1, r2    : r4  <- r1 + r2   =  3 = 0x0003
 2157    // sub  r5, r1, r2    : r5  <- r1 - r2   = -1 = 0xFFFF
 1267    // sub  r6, r2, r1    : r6  <- r2 - r1   =  1 = 0x0001
-1278    // sll  r7, r2, r1    : r7  <- r2 <<  r1 =  4 = 0x0004
-1389    // srl  r8, r3, r1    : r8  <- r3 >>  r1 =      0x4000
-139A    // sra  r9, r3, r1    : r9  <- r3 >>> r1 =  4 = 0xC000
-21AB    // and r10, r1, r2    : r10 <- r1 & r2   =      0x0000
-21BC    // or  r11, r1, r2    : r11 <- r1 | r2   =      0x0003
-15CD    // xor r12, r5, r1    : r12 <- r5 ^ r1   =      0xFFFE
+2278    // mul  r7, r2, r2    : r7  <- r2 * r2   =      0x0004
+1289    // sll  r8, r2, r1    : r8  <- r2 <<  r1 =  4 = 0x0004
+139A    // srl  r9, r3, r1    : r9  <- r3 >>  r1 =      0x4000
+13AB    // sra r10, r3, r1    : r10 <- r3 >>> r1 =  4 = 0xC000
+21BC    // and r11, r1, r2    : r11 <- r1 & r2   =      0x0000
+21CD    // or  r12, r1, r2    : r12 <- r1 | r2   =      0x0003
+15DE    // xor r13, r5, r1    : r13 <- r5 ^ r1   =      0xFFFE
