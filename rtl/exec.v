@@ -15,6 +15,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
              input                         in_act_branch_ialu_res_ff_lt0,
              input                         in_act_ialu_add,
              input                         in_act_ialu_and,
+             input                         in_act_ialu_mul,
              input                         in_act_ialu_neg_src2,
              input                         in_act_ialu_or,
              input                         in_act_ialu_sll,  // shift left logically
@@ -57,6 +58,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     reg                                act_branch_ialu_res_ff_lt0_ff;
     reg                                act_ialu_add_ff;
     reg                                act_ialu_and_ff;
+    reg                                act_ialu_mul_ff;
     reg                                act_ialu_neg_src2_ff;
     reg                                act_ialu_or_ff;
     reg                                act_ialu_sll_ff;
@@ -97,6 +99,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             act_branch_ialu_res_ff_lt0_ff <= in_act_branch_ialu_res_ff_lt0;
             act_ialu_add_ff               <= in_act_ialu_add;
             act_ialu_and_ff               <= in_act_ialu_and;
+            act_ialu_mul_ff               <= in_act_ialu_mul;
             act_ialu_neg_src2_ff          <= in_act_ialu_neg_src2;
             act_ialu_or_ff                <= in_act_ialu_or;
             act_ialu_sll_ff               <= in_act_ialu_sll;
@@ -124,6 +127,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             act_branch_ialu_res_ff_lt0_ff <= 0;
             act_ialu_add_ff               <= 0;
             act_ialu_and_ff               <= 0;
+            act_ialu_mul_ff               <= 0;
             act_ialu_neg_src2_ff          <= 0;
             act_ialu_or_ff                <= 0;
             act_ialu_sll_ff               <= 0;
@@ -187,6 +191,11 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
         // Integer addition, subtraction
         else if (act_ialu_add_ff) begin
             ialu_res = src1_ff + src2_mod;
+        end
+
+        // Integer multiplication
+        else if (act_ialu_mul_ff) begin
+           ialu_res = src1_ff * src2_mod;
         end
 
         // Shift left logically
