@@ -21,13 +21,13 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
              input                         in_act_ialu_sll,  // shift left logically
              input                         in_act_ialu_sra,  // shift right arithmetically
              input                         in_act_ialu_srl,  // shift right logically
+             input                         in_act_ialu_write_src2_to_res,
              input                         in_act_ialu_xor,
              input                         in_act_incr_pc_is_res,
              input                         in_act_jump_to_ialu_res,
              input                         in_act_load_dmem,
              input                         in_act_store_dmem,
              input                         in_act_write_res_to_reg,
-             input                         in_act_write_src2_to_res,
              input                  [2:0]  in_cycle_in_instr,
              input                         in_flush,
              input  [PMEM_WORD_WIDTH-1:0]  in_instr,
@@ -64,13 +64,13 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     reg                                act_ialu_sll_ff;
     reg                                act_ialu_sra_ff;
     reg                                act_ialu_srl_ff;
+    reg                                act_ialu_write_src2_to_res_ff;
     reg                                act_ialu_xor_ff;
     reg                                act_incr_pc_is_res_ff;
     reg                                act_jump_to_ialu_res_ff;
     reg                                act_load_dmem_ff;
     reg                                act_store_dmem_ff;
     reg                                act_write_res_to_reg_ff;
-    reg                                act_write_src2_to_res_ff;
     reg                         [2:0]  cycle_in_instr_ff;
     reg                                flush_ff;
     reg         [PMEM_WORD_WIDTH-1:0]  instr_ff;
@@ -105,13 +105,13 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             act_ialu_sll_ff               <= in_act_ialu_sll;
             act_ialu_sra_ff               <= in_act_ialu_sra;
             act_ialu_srl_ff               <= in_act_ialu_srl;
+            act_ialu_write_src2_to_res_ff <= in_act_ialu_write_src2_to_res;
             act_ialu_xor_ff               <= in_act_ialu_xor;
             act_incr_pc_is_res_ff         <= in_act_incr_pc_is_res;
             act_jump_to_ialu_res_ff       <= in_act_jump_to_ialu_res;
             act_load_dmem_ff              <= in_act_load_dmem;
             act_store_dmem_ff             <= in_act_store_dmem;
             act_write_res_to_reg_ff       <= in_act_write_res_to_reg;
-            act_write_src2_to_res_ff      <= in_act_write_src2_to_res;
             cycle_in_instr_ff             <= in_cycle_in_instr;
             flush_ff                      <= in_flush;
             instr_ff                      <= in_instr;
@@ -133,13 +133,13 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             act_ialu_sll_ff               <= 0;
             act_ialu_sra_ff               <= 0;
             act_ialu_srl_ff               <= 0;
+            act_ialu_write_src2_to_res_ff <= 0;
             act_ialu_xor_ff               <= 0;
             act_incr_pc_is_res_ff         <= 0;
             act_jump_to_ialu_res_ff       <= 0;
             act_load_dmem_ff              <= 0;
             act_store_dmem_ff             <= 0;
             act_write_res_to_reg_ff       <= 0;
-            act_write_src2_to_res_ff      <= 0;
             cycle_in_instr_ff             <= 0;
             flush_ff                      <= 0;
             instr_ff                      <= 0;
@@ -228,8 +228,8 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             ialu_res = src1_ff ^ src2_mod;
         end
 
-        // Forward src2 directly to res
-        else if (act_write_src2_to_res_ff) begin
+        // Forward src2 directly to ALU res
+        else if (act_ialu_write_src2_to_res_ff) begin
             ialu_res = src2_mod;
         end
         
@@ -354,10 +354,15 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
         end
     end
     
-    // Multiplexer: forward either IALU result or (to be defined) to result output port
+    // Multiplexer: forward either IALU result or incremented PC to result output port
     always @(*)
     begin
-        out_res = ialu_res;           
+        if (act_incr_pc_is_res_ff) begin
+            out_res = pc_ff+PC_INCREMENT;
+        end
+        else begin
+            out_res = ialu_res;           
+        end
     end
 
 endmodule

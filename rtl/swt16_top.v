@@ -52,6 +52,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
    wire                         act_ialu_sll_DC_EX;
    wire                         act_ialu_sra_DC_EX;
    wire                         act_ialu_srl_DC_EX;
+   wire                         act_ialu_write_src2_to_res_DC_EX;
    wire                         act_ialu_xor_DC_EX;
    wire                         act_incr_pc_is_res_DC_EX;
    wire                         act_jump_to_ialu_res_DC_EX;
@@ -70,7 +71,6 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
    wire                         act_load_dmem_EX_MEM;
    wire                         act_store_dmem_EX_MEM;
    wire                         act_write_res_to_reg_EX_MEM;
-   wire                         act_write_src2_to_res_DC_EX;
    wire [DMEM_ADDR_WIDTH-1 : 0] dmem_rd_addr_EX_MEM;
    wire [DMEM_ADDR_WIDTH-1 : 0] dmem_wr_addr_EX_MEM;
    wire [DMEM_WORD_WIDTH-1 : 0] dmem_wr_word_EX_MEM;
@@ -178,13 +178,13 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
       .out_act_ialu_sll               ( act_ialu_sll_DC_EX ),
       .out_act_ialu_sra               ( act_ialu_sra_DC_EX ),
       .out_act_ialu_srl               ( act_ialu_srl_DC_EX ),
+      .out_act_ialu_write_src2_to_res ( act_ialu_write_src2_to_res_DC_EX ),
       .out_act_ialu_xor               ( act_ialu_xor_DC_EX ),
       .out_act_incr_pc_is_res         ( act_incr_pc_is_res_DC_EX ),
       .out_act_jump_to_ialu_res       ( act_jump_to_ialu_res_DC_EX ),
       .out_act_load_dmem              ( act_load_dmem_DC_EX ),
       .out_act_store_dmem             ( act_store_dmem_DC_EX ),
       .out_act_write_res_to_reg       ( act_write_res_to_reg_DC_EX ),
-      .out_act_write_src2_to_res      ( act_write_src2_to_res_DC_EX ),
       .out_cycle_in_instr             ( cycle_in_instr_DC_EX ),
       .out_instr                      ( instr_DC_EX ),
       .out_pc                         ( pc_DC_EX ),
@@ -220,13 +220,13 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
        .in_act_ialu_sll               ( act_ialu_sll_DC_EX ),
        .in_act_ialu_sra               ( act_ialu_sra_DC_EX ),
        .in_act_ialu_srl               ( act_ialu_srl_DC_EX ),
+       .in_act_ialu_write_src2_to_res ( act_ialu_write_src2_to_res_DC_EX ),
        .in_act_ialu_xor               ( act_ialu_xor_DC_EX ),
        .in_act_incr_pc_is_res         ( act_incr_pc_is_res_DC_EX ),
        .in_act_jump_to_ialu_res       ( act_jump_to_ialu_res_DC_EX ),
        .in_act_load_dmem              ( act_load_dmem_DC_EX ),
        .in_act_store_dmem             ( act_store_dmem_DC_EX ),
        .in_act_write_res_to_reg       ( act_write_res_to_reg_DC_EX ),
-       .in_act_write_src2_to_res      ( act_write_src2_to_res_DC_EX ),
        .in_cycle_in_instr             ( cycle_in_instr_DC_EX ),
        .in_flush                      ( flush_pipeline ),
        .in_instr                      ( instr_DC_EX ),
