@@ -3,10 +3,12 @@ A sweet 16 bit processor
 
 ## Overview
 This project contains a register transfer level (RTL) description of a 16-bit processor with a classic five stage RISC pipeline.
+The RTL description is done in Verilog.
+
 The pipeline stages are instruction fetch (FE), decode (DC), execute (EX), memory access (MEM), and register writeback (WB).
 Regarding memory interfaces, the processor is designed according to the Harvard architecture, i.e., it has separate program and data memories.
 More information on the classic five stage pipeline on [Wikipedia](https://en.wikipedia.org/wiki/Classic_RISC_pipeline).
-The RTL description is done in Verilog.
+Currently, the processor design implements neither pipeline stalling nor bypassing/forwarding, but both are planned.
 
 This project also contains a simulator for the RTL design.
 The RTL simulator is built using [Verilator](https://www.veripool.org/).
