@@ -10,6 +10,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
        input                         in_flush,                          // flushes decode stage, i.e., zeros all outputs (from EX stage)
        input  [PMEM_WORD_WIDTH-1:0]  in_instr,                          // instruction (from FE stage)
        input  [       PC_WIDTH-1:0]  in_pc,                             // program counter (from FE stage)
+       input  [IALU_WORD_WIDTH-1:0]  in_res_EX,                         // result from EX stage (for bypassing)
+       input  [IALU_WORD_WIDTH-1:0]  in_res_MEM,                        // result from MEM stage (for bypassing)
+       input  [  REG_IDX_WIDTH-1:0]  in_res_reg_idx_EX,                 // result register index from EX stage (for bypassing)
+       input  [  REG_IDX_WIDTH-1:0]  in_res_reg_idx_MEM,                // result register index from MEM stage (for bypassing)
+       input                         in_res_valid_EX,                   // the result of the EX stage is valid (can be forwarded from there)
        input  [IALU_WORD_WIDTH-1:0]  in_src1,                           // 1st input (from regfile)
        input  [IALU_WORD_WIDTH-1:0]  in_src2,                           // 2nd input (from regfile)
        output                        out_act_branch_ialu_res_ff_eq0,    // branch if registered IALU result is equal to zero
@@ -65,10 +70,10 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     localparam [OPCODE_WIDTH-1:0] OPCODE_XOR    = 4'b1110; // R-Type: logical xor
 
     // S-TYPE
-    localparam [ FUNC1_WIDTH-1:0] FUNC1_BEQ     = 4'b0000;
-    localparam [ FUNC1_WIDTH-1:0] FUNC1_BNEQ    = 4'b0001;
-    localparam [ FUNC1_WIDTH-1:0] FUNC1_BGE     = 4'b0010;
-    localparam [ FUNC1_WIDTH-1:0] FUNC1_BLT     = 4'b0011;
+    localparam [ FUNC1_WIDTH-1:0] FUNC1_BEQ     = 4'b0000; // Branch if equal
+    localparam [ FUNC1_WIDTH-1:0] FUNC1_BNEQ    = 4'b0001; // Branch if not equal
+    localparam [ FUNC1_WIDTH-1:0] FUNC1_BGE     = 4'b0010; // Branch if greater or equal
+    localparam [ FUNC1_WIDTH-1:0] FUNC1_BLT     = 4'b0011; // Branch if less than
     localparam [ FUNC1_WIDTH-1:0] FUNC1_SH      = 4'b0100; // Store half (i.e., 16-bit)
     localparam [ FUNC1_WIDTH-1:0] FUNC1_SHO     = 4'b0101; // Store half (i.e., 16-bit) with offset
     
@@ -81,18 +86,21 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     localparam [ FUNC2_WIDTH-1:0] FUNC2_JALR    = 4'b0001;
     
     
+    reg  [                2:0]  cycle_in_instr_next;
+    reg  [                2:0]  cycle_in_instr_ff;
+
     reg                         flush_ff;
     wire [PMEM_WORD_WIDTH-1:0]  instr_1st_word;  // Holds first word of instruction (also for multi-cycle instructions)
     reg  [PMEM_WORD_WIDTH-1:0]  instr_ff;        // Current instruction word
     reg  [PMEM_WORD_WIDTH-1:0]  instr_ff2;       // Instruction word before current word instruction
 
+    reg  [PMEM_ADDR_WIDTH-1:0]  jump_offset;
+
     reg  [       PC_WIDTH-1:0]  pc_ff;
     reg  [       PC_WIDTH-1:0]  pc_ff2;
 
-    reg  [PMEM_ADDR_WIDTH-1:0]  jump_offset;
-
-    reg  [                2:0]  cycle_in_instr_next;
-    reg  [                2:0]  cycle_in_instr_ff;
+    reg  [IALU_WORD_WIDTH-1:0]  src1_mod;  // Holds src1 input to EX stage (either from regfile or bypassed)
+    reg  [IALU_WORD_WIDTH-1:0]  src2_mod;  // Holds src2 input to EX stage (either from regfile or bypassed)
 
     
     // Instruction segments
@@ -153,6 +161,46 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
 
     // Multiplexer: Hold first instruction word in case of 2-cycle instruction
     assign instr_1st_word = (cycle_in_instr_ff == 0) ? instr_ff : instr_ff2;
+
+    // Bypassing logic: obtain src1 from pipeline, if it is present in there as valid results.
+    always @(*)
+    begin
+        // Bypass from EX
+        if ((src1_reg_idx == in_res_reg_idx_EX) && in_res_valid_EX)
+        begin
+            src1_mod = in_res_EX;
+        end
+        // Bypass from MEM
+        else if ( src1_reg_idx == in_res_reg_idx_MEM )
+        begin
+            src1_mod = in_res_MEM;
+        end
+        // Get data from regfile
+        else
+        begin
+            src1_mod = in_src1;
+        end
+    end
+
+    // Bypassing logic: obtain src2 from pipeline, if it is present in there as valid results.
+    always @(*)
+    begin
+        // Bypass from EX
+        if ((src2_reg_idx == in_res_reg_idx_EX) && in_res_valid_EX)
+        begin
+            src2_mod = in_res_EX;
+        end
+        // Bypass from MEM
+        else if ( src2_reg_idx == in_res_reg_idx_MEM )
+        begin
+            src2_mod = in_res_MEM;
+        end
+        // Get data from regfile
+        else
+        begin
+            src2_mod = in_src2;
+        end
+    end
 
     // Helper function: set all output to zero
     task zero_outputs;
@@ -295,8 +343,8 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                     if (cycle_in_instr_ff == 0) begin
                         cycle_in_instr_next                    = 1;
                         out_act_ialu_neg_src2                  = 1;
-                        out_src1                               = in_src1;
-                        out_src2                               = in_src2;
+                        out_src1                               = src1_mod;
+                        out_src2                               = src2_mod;
                         out_src3                               = 0;
                     end
                     // 2nd cycle (compute branch target address)
@@ -337,8 +385,8 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                     if (cycle_in_instr_ff == 0) begin
                         cycle_in_instr_next                    = 1;
                         out_act_ialu_neg_src2                  = 1;
-                        out_src1                               = in_src1;
-                        out_src2                               = in_src2;
+                        out_src1                               = src1_mod;
+                        out_src2                               = src2_mod;
                         out_src3                               = 0;
                     end
                     // 2nd cycle (compute branch target address)
@@ -379,8 +427,8 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                     if (cycle_in_instr_ff == 0) begin
                         cycle_in_instr_next                    = 1;
                         out_act_ialu_neg_src2                  = 1;
-                        out_src1                               = in_src1;
-                        out_src2                               = in_src2;
+                        out_src1                               = src1_mod;
+                        out_src2                               = src2_mod;
                         out_src3                               = 0;
                     end
                     // 2nd cycle (compute branch target address)
@@ -421,8 +469,8 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                     if (cycle_in_instr_ff == 0) begin
                         cycle_in_instr_next                    = 1;
                         out_act_ialu_neg_src2                  = 1;
-                        out_src1                               = in_src1;
-                        out_src2                               = in_src2;
+                        out_src1                               = src1_mod;
+                        out_src2                               = src2_mod;
                         out_src3                               = 0;
                     end
                     // 2nd cycle (compute branch target address)
@@ -459,9 +507,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 1;
                         out_act_write_res_to_reg               = 0;
-                        out_src1                               = 0;        // base addr
-                        out_src2                               = in_src2;  // offset
-                        out_src3                               = in_src1;  // value;
+                        out_src1                               = 0;          // base addr
+                        out_src2                               = src2_mod;  // offset
+                        out_src3                               = src1_mod;  // value;
                 end
 
                 // Store half (16bit) with offset to DMEM
@@ -487,9 +535,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 1;
                         out_act_write_res_to_reg               = 0;
-                        out_src1                               = immB;     // base addr
-                        out_src2                               = in_src2;  // offset
-                        out_src3                               = in_src1;  // value
+                        out_src1                               = immB;      // base addr
+                        out_src2                               = src2_mod;  // offset
+                        out_src3                               = src1_mod;  // value
                     end
                     else begin
                         cycle_in_instr_next                    = 1;
@@ -568,7 +616,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
                         out_act_write_res_to_reg               = 1;
-                        out_src1                               = in_src1;
+                        out_src1                               = src1_mod;
                         out_src2[PC_WIDTH-1:0]                 = pc_ff;
                         out_src2[IALU_WORD_WIDTH-1:PC_WIDTH]   = 0;
                         out_src3                               = 0;
@@ -607,7 +655,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_store_dmem                     = 0;
                 out_act_write_res_to_reg               = 1;
                 out_src1                               = 0;
-                out_src2                               = in_src1;      // address (yes, strange to write src1 to src2, but srcX_to_res only exists for src2)
+                out_src2                               = src1_mod;      // address (yes, strange to write src1 to src2, but srcX_to_res only exists for src2)
                 out_src3                               = 0;
         end
 
@@ -634,7 +682,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_load_dmem                      = 1;
                 out_act_store_dmem                     = 0;
                 out_act_write_res_to_reg               = 1;
-                out_src1                               = in_src1;
+                out_src1                               = src1_mod;
                 out_src2                               = immB;
                 out_src3                               = 0;
 
@@ -667,8 +715,8 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
                 out_act_write_res_to_reg               = 1;
-                out_src1                               = in_src1;      // argument 1
-                out_src2                               = in_src2;      // argument 2
+                out_src1                               = src1_mod;      // argument 1
+                out_src2                               = src2_mod;      // argument 2
                 out_src3                               = 0;
         end
         
@@ -693,8 +741,8 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
                 out_act_write_res_to_reg               = 1;
-                out_src1                               = in_src1;      // argument 1
-                out_src2                               = in_src2;      // argument 2
+                out_src1                               = src1_mod;      // argument 1
+                out_src2                               = src2_mod;      // argument 2
                 out_src3                               = 0;
         end
         
@@ -719,8 +767,8 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
                 out_act_write_res_to_reg               = 1;
-                out_src1                               = in_src1;      // argument 1
-                out_src2                               = in_src2;      // argument 2
+                out_src1                               = src1_mod;      // argument 1
+                out_src2                               = src2_mod;      // argument 2
                 out_src3                               = 0;
         end
         
@@ -745,8 +793,8 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
                 out_act_write_res_to_reg               = 1;
-                out_src1                               = in_src1;      // argument 1
-                out_src2                               = in_src2;      // argument 2
+                out_src1                               = src1_mod;      // argument 1
+                out_src2                               = src2_mod;      // argument 2
                 out_src3                               = 0;
         end
         
@@ -771,8 +819,8 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
                 out_act_write_res_to_reg               = 1;
-                out_src1                               = in_src1;      // argument 1
-                out_src2                               = in_src2;      // argument 2
+                out_src1                               = src1_mod;      // argument 1
+                out_src2                               = src2_mod;      // argument 2
                 out_src3                               = 0;
         end
         
@@ -797,8 +845,8 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
                 out_act_write_res_to_reg               = 1;
-                out_src1                               = in_src1;      // argument 1
-                out_src2                               = in_src2;      // argument 2
+                out_src1                               = src1_mod;      // argument 1
+                out_src2                               = src2_mod;      // argument 2
                 out_src3                               = 0;
         end
         
@@ -823,8 +871,8 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
                 out_act_write_res_to_reg               = 1;
-                out_src1                               = in_src1;      // argument 1
-                out_src2                               = in_src2;      // argument 2
+                out_src1                               = src1_mod;      // argument 1
+                out_src2                               = src2_mod;      // argument 2
                 out_src3                               = 0;
         end
         
@@ -849,8 +897,8 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
                 out_act_write_res_to_reg               = 1;
-                out_src1                               = in_src1;      // argument 1
-                out_src2                               = in_src2;      // argument 2
+                out_src1                               = src1_mod;      // argument 1
+                out_src2                               = src2_mod;      // argument 2
                 out_src3                               = 0;
         end
 
@@ -875,8 +923,8 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
                 out_act_write_res_to_reg               = 1;
-                out_src1                               = in_src1;      // argument 1
-                out_src2                               = in_src2;      // argument 2
+                out_src1                               = src1_mod;      // argument 1
+                out_src2                               = src2_mod;      // argument 2
                 out_src3                               = 0;
         end
         

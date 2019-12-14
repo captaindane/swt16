@@ -49,6 +49,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
              output [       PC_WIDTH-1:0]  out_pc,
              output [IALU_WORD_WIDTH-1:0]  out_res,
              output [  REG_IDX_WIDTH-1:0]  out_res_reg_idx,
+             output                        out_res_valid,
              output                        out_set_pc
              );
 
@@ -174,6 +175,27 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             out_pc                   = 0;
             out_res_reg_idx          = 0;
 
+        end
+    end
+
+    
+    //==============================================
+    // BYPASSING / FORWARDING LOGIC
+    // - indicate if output can be forwarded to DC
+    //==============================================
+    always @(*)
+    begin
+        if (   act_branch_ialu_res_ff_eq0_ff
+            || act_branch_ialu_res_ff_gt0_ff
+            || act_branch_ialu_res_ff_lt0_ff
+            || act_load_dmem_ff
+            || act_store_dmem_ff
+           )
+        begin
+            out_res_valid = 0;
+        end
+        else begin
+            out_res_valid = 1;
         end
     end
 

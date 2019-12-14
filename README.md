@@ -8,7 +8,7 @@ The RTL description is done in Verilog.
 The pipeline stages are instruction fetch (FE), decode (DC), execute (EX), memory access (MEM), and register writeback (WB).
 Regarding memory interfaces, the processor is designed according to the Harvard architecture, i.e., it has separate program and data memories.
 More information on the classic five stage pipeline on [Wikipedia](https://en.wikipedia.org/wiki/Classic_RISC_pipeline).
-Currently, the processor design implements neither pipeline stalling nor bypassing/forwarding, but both are planned.
+Currently, the processor design implements bypassing/forwarding, but does not implement pipeline stalling (it is planned, though).
 
 This project also contains a simulator for the RTL design.
 The RTL simulator is built using [Verilator](https://www.veripool.org/).
@@ -57,7 +57,7 @@ Example state inspection with GTKWAVE:
 Currently, this project contains no tooling to generate machine code for the processor (not even an assembler/disassembler).
 This means, the programmer has to write the machine code themselves.
 For a limited-size ISA like the one used for this project, this is actually still feasible (and sometimes even fun!).
-Examples can be found in the [prog] directory.
+Examples progams can be found in the [prog] directory. They contain extensive comments that help to understand the machine code.
 Refer to [doc/ISA.odt] for an overview of the current state of the ISA.
 
 ## Note

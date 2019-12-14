@@ -95,6 +95,9 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
    wire [ REG_WORD_WIDTH-1 : 0] src1;
    wire [ REG_WORD_WIDTH-1 : 0] src2;
 
+   // Connections: Bypassing
+   wire                         res_valid_EX_DC;
+
    // Register file
    regfile #(.IDX_WIDTH(REG_IDX_WIDTH), .WORD_WIDTH(IALU_WORD_WIDTH)) regfile_inst
    (
@@ -165,6 +168,11 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
       .in_flush                       ( flush_pipeline ),
       .in_instr                       ( instr_IF_DC ),
       .in_pc                          ( pc_IF_DC ),
+      .in_res_EX                      ( res_EX_MEM ),
+      .in_res_MEM                     ( res_MEM_WB ),
+      .in_res_reg_idx_EX              ( res_reg_idx_EX_MEM ),
+      .in_res_reg_idx_MEM             ( res_reg_idx_MEM_WB ),
+      .in_res_valid_EX                ( res_valid_EX_DC ),
       .in_src1                        ( src1 ),
       .in_src2                        ( src2 ),
       .out_act_branch_ialu_res_ff_eq0 ( act_branch_ialu_res_ff_eq0_DC_EX ),
@@ -248,6 +256,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
        .out_pc                        ( pc_EX_MEM ),
        .out_res                       ( res_EX_MEM ),
        .out_res_reg_idx               ( res_reg_idx_EX_MEM ),
+       .out_res_valid                 ( res_valid_EX_DC ),
        .out_set_pc                    ( set_pc )
    );
 
