@@ -44,7 +44,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
              output [DMEM_ADDR_WIDTH-1:0]  out_dmem_wr_addr,
              output [DMEM_WORD_WIDTH-1:0]  out_dmem_wr_word,
              output                        out_flush,
-             output                        out_flush_FE,
+             output                        out_flush_IF,
              output [PMEM_WORD_WIDTH-1:0]  out_instr,
              output [       PC_WIDTH-1:0]  out_pc,
              output [IALU_WORD_WIDTH-1:0]  out_res,
@@ -288,7 +288,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
         // Output zero if stage should be flushed
         if (flush_ff == 1) begin
             out_flush       = 0;
-            out_flush_FE    = 0;
+            out_flush_IF    = 0;
             out_set_pc      = 0;
             out_branch_pc   = 0;
         end
@@ -296,7 +296,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
         // Trigger jump after getting 2nd instruction word with immedate target address
         else if (act_jump_to_ialu_res_ff) begin
             out_flush     = 1;
-            out_flush_FE  = 1;
+            out_flush_IF  = 1;
             out_set_pc    = 1;
             out_branch_pc = ialu_res[PMEM_ADDR_WIDTH-1:0];
         end
@@ -311,7 +311,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
                 )
         begin
             out_flush     = 0;
-            out_flush_FE  = 1;
+            out_flush_IF  = 1;
             out_set_pc    = 0;
             out_branch_pc = 0;
         end
@@ -324,7 +324,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
                 )
         begin
             out_flush     = 1;
-            out_flush_FE  = 1;
+            out_flush_IF  = 1;
             out_set_pc    = 1;
             out_branch_pc = ialu_res[PMEM_ADDR_WIDTH-1:0];
         end
@@ -332,7 +332,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
         // default: do nothing
         else begin
             out_flush     = 0;
-            out_flush_FE  = 0;
+            out_flush_IF  = 0;
             out_set_pc    = 0;
             out_branch_pc = 0;
         end
