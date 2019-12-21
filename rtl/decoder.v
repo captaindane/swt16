@@ -171,16 +171,16 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     // Bypassing logic: obtain src1 from pipeline, if it is present in there as valid results.
     always @(*)
     begin
-        // Bypass from MEM
-        if ( src1_reg_idx == in_res_reg_idx_MEM )
-        begin
-            src1_mod = in_res_MEM;
-            src1_stall = 0;
-        end
         // Bypass from EX
-        else if ((src1_reg_idx == in_res_reg_idx_EX) && in_res_valid_EX)
+        if ((src1_reg_idx == in_res_reg_idx_EX) && in_res_valid_EX)
         begin
             src1_mod = in_res_EX;
+            src1_stall = 0;
+        end
+        // Bypass from MEM
+        else if ( src1_reg_idx == in_res_reg_idx_MEM )
+        begin
+            src1_mod = in_res_MEM;
             src1_stall = 0;
         end
         // Data cannot be forwarded and instruction is still in EX stage (memory load)
@@ -199,16 +199,16 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     // Bypassing logic: obtain src2 from pipeline, if it is present in there as valid results.
     always @(*)
     begin
-        // Bypass from MEM
-        if ( src2_reg_idx == in_res_reg_idx_MEM )
-        begin
-            src2_mod = in_res_MEM;
-            src2_stall = 0;
-        end
         // Bypass from EX
-        else if ((src2_reg_idx == in_res_reg_idx_EX) && in_res_valid_EX)
+        if ((src2_reg_idx == in_res_reg_idx_EX) && in_res_valid_EX)
         begin
             src2_mod = in_res_EX;
+            src2_stall = 0;
+        end
+        // Bypass from MEM
+        else if ( src2_reg_idx == in_res_reg_idx_MEM )
+        begin
+            src2_mod = in_res_MEM;
             src2_stall = 0;
         end
         // Data cannot be forwarded and instruction is still in EX stage (memory load)
