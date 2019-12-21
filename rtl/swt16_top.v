@@ -61,6 +61,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
    wire                         act_write_res_to_reg_DC_EX;
    wire                 [2 : 0] cycle_in_instr_DC_EX;
    wire [PMEM_WORD_WIDTH-1 : 0] instr_DC_EX;
+   wire                         instr_is_bubble_DC_EX;
    wire [PMEM_ADDR_WIDTH-1 : 0] pc_DC_EX;
    wire [  REG_IDX_WIDTH-1 : 0] res_reg_idx_DC_EX;
    wire [IALU_WORD_WIDTH-1 : 0] src1_DC_EX;
@@ -197,6 +198,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
       .out_act_write_res_to_reg       ( act_write_res_to_reg_DC_EX ),
       .out_cycle_in_instr             ( cycle_in_instr_DC_EX ),
       .out_instr                      ( instr_DC_EX ),
+      .out_instr_is_bubble            ( instr_is_bubble_DC_EX ),
       .out_pc                         ( pc_DC_EX ),
       .out_res_reg_idx                ( res_reg_idx_DC_EX ),
       .out_src1                       ( src1_DC_EX ),
@@ -241,6 +243,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
        .in_cycle_in_instr             ( cycle_in_instr_DC_EX ),
        .in_flush                      ( flush_pipeline ),
        .in_instr                      ( instr_DC_EX ),
+       .in_instr_is_bubble            ( instr_is_bubble_DC_EX ),
        .in_pc                         ( pc_DC_EX ),
        .in_res_reg_idx                ( res_reg_idx_DC_EX ),
        .in_src1                       ( src1_DC_EX ),

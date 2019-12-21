@@ -31,6 +31,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
              input                  [2:0]  in_cycle_in_instr,
              input                         in_flush,
              input  [PMEM_WORD_WIDTH-1:0]  in_instr,
+             input                         in_instr_is_bubble,
              input  [       PC_WIDTH-1:0]  in_pc,
              input  [  REG_IDX_WIDTH-1:0]  in_res_reg_idx,
              input  [IALU_WORD_WIDTH-1:0]  in_src1,
@@ -75,6 +76,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     reg                         [2:0]  cycle_in_instr_ff;
     reg                                flush_ff;
     reg         [PMEM_WORD_WIDTH-1:0]  instr_ff;
+    reg                                instr_is_bubble_ff;
     reg         [       PC_WIDTH-1:0]  pc_ff;
     reg         [  REG_IDX_WIDTH-1:0]  res_reg_idx_ff;
     reg  signed [IALU_WORD_WIDTH-1:0]  src1_ff;
@@ -116,6 +118,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             cycle_in_instr_ff             <= in_cycle_in_instr;
             flush_ff                      <= in_flush;
             instr_ff                      <= in_instr;
+            instr_is_bubble_ff            <= in_instr_is_bubble;
             pc_ff                         <= in_pc;
             res_reg_idx_ff                <= in_res_reg_idx;
             src1_ff                       <= in_src1;
@@ -144,6 +147,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             cycle_in_instr_ff             <= 0;
             flush_ff                      <= 0;
             instr_ff                      <= 0;
+            instr_is_bubble_ff            <= 0;
             pc_ff                         <= 0;
             res_reg_idx_ff                <= 0;
             src1_ff                       <= 0;
@@ -190,6 +194,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             || act_branch_ialu_res_ff_lt0_ff
             || act_load_dmem_ff
             || act_store_dmem_ff
+            || instr_is_bubble_ff
            )
         begin
             out_res_valid = 0;
