@@ -40,12 +40,11 @@ module fetch #(parameter PC_WIDTH=12, PMEM_WIDTH=16, PC_INCREMENT=2)
     reg  [  PC_WIDTH-1:0] pc_next_int;
     wire [  PC_WIDTH-1:0] pc_next_ext;
     reg  [  PC_WIDTH-1:0] pc_ff;
-    reg  [  PC_WIDTH-1:0] pc_ff2;
    
     localparam MAX_PC = ((1<<PC_WIDTH)-PC_INCREMENT);
     
     assign pc_next_ext   = in_branch_pc;
-    assign out_pc        = in_stall ? pc_ff2 : pc_ff; // TODO: put me in figure
+    assign out_pc        = pc_ff;
     assign out_pmem_addr = pc_next;
     
     // Register: sample next PC, instr
@@ -54,12 +53,10 @@ module fetch #(parameter PC_WIDTH=12, PMEM_WIDTH=16, PC_INCREMENT=2)
         if (!reset) begin
             instr_ff <= in_instr;
             pc_ff    <= pc_next;
-            pc_ff2   <= pc_ff;
         end
         else begin
             instr_ff <= 0;
             pc_ff    <= MAX_PC;
-            pc_ff2   <= 0;
         end
     end
 
@@ -69,7 +66,10 @@ module fetch #(parameter PC_WIDTH=12, PMEM_WIDTH=16, PC_INCREMENT=2)
         pc_next_int = pc_ff + PC_INCREMENT;
     end
 
-    // Multiplexer: select internal or external next PC or keep it the same (when stalling)
+    // Multiplexer: select next PC
+    // - when not branching: internal (i.e., incremented past value)
+    // - when     branching: external next PC
+    // - when     stalling : keep it the same as the previous value
     always @(*)
     begin
         if (in_stall) begin
