@@ -59,7 +59,7 @@ module fetch #(parameter PC_WIDTH=12, PMEM_WIDTH=16, PC_INCREMENT=2)
     localparam MAX_PC = ((1<<PC_WIDTH)-PC_INCREMENT);
     
     assign pc_next_ext   = in_branch_pc;
-    assign out_pc        = in_stall ? pc_ff2 : pc_ff; // TODO: put me in figure
+    assign out_pc        = in_stall ? pc_ff2 : pc_ff;
     assign out_pmem_addr = pc_next;
     
     // Register: sample next PC, instr
