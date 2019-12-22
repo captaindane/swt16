@@ -37,13 +37,15 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
        output                        out_act_write_res_to_reg,          // activate writeback to regfile in WB stage
        output                 [2:0]  out_cycle_in_instr,                // for multi-cycle instructions: which cycle are we in?
        output [PMEM_WORD_WIDTH-1:0]  out_instr,                         // forward instruction to EX stage
+       output                        out_instr_is_bubble,               // instruction is a bubble, NOP
        output [       PC_WIDTH-1:0]  out_pc,                            // forward program counter to EX stage
        output [  REG_IDX_WIDTH-1:0]  out_res_reg_idx,                   // index of register that the result from EX is written to one it reaches WB
        output [IALU_WORD_WIDTH-1:0]  out_src1,                          // forward 1st input from regfile to EX stage
        output [  REG_IDX_WIDTH-1:0]  out_src1_reg_idx,                  // inform register file which register we want as src1 input to EX stage
        output [IALU_WORD_WIDTH-1:0]  out_src2,                          // forward 2nd input from regfile to EX stage
        output [  REG_IDX_WIDTH-1:0]  out_src2_reg_idx,                  // inform register file which register we want as src2 input to EX stage
-       output [IALU_WORD_WIDTH-1:0]  out_src3                           // 3rd input to EX stage. only used by SH and SHO instructions
+       output [IALU_WORD_WIDTH-1:0]  out_src3,                          // 3rd input to EX stage. only used by SH and SHO instructions
+       output                        out_stall                          // stalls the FE stage so no new instruction is loaded from PMEM
        );
 
     localparam IMMA_WIDTH  = 4;
@@ -84,6 +86,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     // J-Type
     localparam [ FUNC2_WIDTH-1:0] FUNC2_JAL     = 4'b0000;
     localparam [ FUNC2_WIDTH-1:0] FUNC2_JALR    = 4'b0001;
+
+    // Special instructions
+    localparam [PMEM_WORD_WIDTH-1:0] INSTR_NOP  = {{12{1'b0}}, OPCODE_NOP};
     
     
     reg  [                2:0]  cycle_in_instr_next;
@@ -99,8 +104,12 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     reg  [       PC_WIDTH-1:0]  pc_ff;
     reg  [       PC_WIDTH-1:0]  pc_ff2;
 
-    reg  [IALU_WORD_WIDTH-1:0]  src1_mod;  // Holds src1 input to EX stage (either from regfile or bypassed)
-    reg  [IALU_WORD_WIDTH-1:0]  src2_mod;  // Holds src2 input to EX stage (either from regfile or bypassed)
+    reg  [IALU_WORD_WIDTH-1:0]  src1_mod;        // Holds src1 input to EX stage (either from regfile or bypassed)
+    reg                         src1_stall;      // Do we have to stall because src1 is unavailable?
+    reg                         src1_used;       // Is a valid operand assigned to src1?
+    reg  [IALU_WORD_WIDTH-1:0]  src2_mod;        // Holds src2 input to EX stage (either from regfile or bypassed)
+    reg                         src2_stall;      // Do we have to stall because src2 is unavailable?
+    reg                         src2_used;       // Is a valid operand assigned to src2?
 
     
     // Instruction segments
@@ -115,12 +124,14 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
 
     
     // Connecting signals to output ports
-    assign out_cycle_in_instr = cycle_in_instr_ff; 
-    assign out_instr          = instr_ff;
-    assign out_pc             = pc_ff;
-    assign out_res_reg_idx    = instr_1st_word[7:4];
-    assign out_src1_reg_idx   = src1_reg_idx; // TODO: null me when i am not needed
-    assign out_src2_reg_idx   = src2_reg_idx; // TODO: null me when i am not needed
+    assign out_cycle_in_instr  = cycle_in_instr_ff; 
+    assign out_instr           = (src1_stall || src2_stall) ? INSTR_NOP : instr_ff; // if stalled, forward NOP instruction to EX stage
+    assign out_instr_is_bubble = (out_instr[OPCODE_WIDTH-1:0] == OPCODE_NOP) ? 1 : 0;
+    assign out_pc              = pc_ff;
+    assign out_res_reg_idx     = instr_1st_word[7:4];
+    assign out_src1_reg_idx    = src1_reg_idx; // TODO: null me when i am not needed
+    assign out_src2_reg_idx    = src2_reg_idx; // TODO: null me when i am not needed
+    assign out_stall           = src1_stall | src2_stall;
 
     // Register: hold sampled inputs
     always @(posedge clock or posedge reset)
@@ -169,16 +180,24 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         if ((src1_reg_idx == in_res_reg_idx_EX) && in_res_valid_EX)
         begin
             src1_mod = in_res_EX;
+            src1_stall = 0;
         end
         // Bypass from MEM
         else if ( src1_reg_idx == in_res_reg_idx_MEM )
         begin
             src1_mod = in_res_MEM;
+            src1_stall = 0;
+        end
+        // Instruction with desired result is in EX stage but result is invalid (memory load)
+        else if ((src1_reg_idx == in_res_reg_idx_EX) && !in_res_valid_EX && src1_used) begin
+            src1_mod   = 0;
+            src1_stall = 1;
         end
         // Get data from regfile
         else
         begin
             src1_mod = in_src1;
+            src1_stall = 0;
         end
     end
 
@@ -189,16 +208,24 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         if ((src2_reg_idx == in_res_reg_idx_EX) && in_res_valid_EX)
         begin
             src2_mod = in_res_EX;
+            src2_stall = 0;
         end
         // Bypass from MEM
         else if ( src2_reg_idx == in_res_reg_idx_MEM )
         begin
             src2_mod = in_res_MEM;
+            src2_stall = 0;
+        end
+        // Instruction with desired result is in EX stage but result is invalid (memory load)
+        else if ((src2_reg_idx == in_res_reg_idx_EX) && !in_res_valid_EX && src2_used) begin
+            src2_mod   = 0;
+            src2_stall = 1;
         end
         // Get data from regfile
         else
         begin
             src2_mod = in_src2;
+            src2_stall = 0;
         end
     end
 
@@ -227,11 +254,48 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         out_src3                        = 0;
     endtask;
 
+    // Set validity of src1, src2 (needed for stalling)
+    always @(*)
+    begin
+        case (opcode)
+            OPCODE_S_TYPE,
+            OPCODE_ADD,
+            OPCODE_SUB,
+            OPCODE_MUL,
+            OPCODE_SLL,
+            OPCODE_SRL,
+            OPCODE_SRA,
+            OPCODE_AND,
+            OPCODE_OR ,
+            OPCODE_XOR:
+            begin
+                src1_used = 1;
+                src2_used = 1;
+            end
+
+            OPCODE_J_TYPE,
+            OPCODE_LH,
+            OPCODE_LHO:
+            begin
+                src1_used = 1;
+                src2_used = 0;
+            end
+
+            default:
+            begin
+                src1_used = 0;
+                src2_used = 0;
+            end
+
+        endcase
+    end
+    
+    
     // Decode instruction word
     always @(*)
     begin
-        // Flush
-        if (flush_ff == 1) begin
+        // Flush or stall
+        if (flush_ff == 1 || src1_stall == 1 || src2_stall == 1) begin
             cycle_in_instr_next      = 0;
             zero_outputs();
         end

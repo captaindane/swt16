@@ -21,8 +21,8 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
 );
 
    wire                         set_pc;
-   wire                         flush_FE;
-   wire                         flush_pipeline; // TODO: better name. differentiate from flush_FE.
+   wire                         flush_IF;
+   wire                         flush_pipeline; // TODO: better name. differentiate from flush_IF.
    wire [PMEM_ADDR_WIDTH-1 : 0] branch_pc;
    
    // Connections: PMEM
@@ -61,6 +61,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
    wire                         act_write_res_to_reg_DC_EX;
    wire                 [2 : 0] cycle_in_instr_DC_EX;
    wire [PMEM_WORD_WIDTH-1 : 0] instr_DC_EX;
+   wire                         instr_is_bubble_DC_EX;
    wire [PMEM_ADDR_WIDTH-1 : 0] pc_DC_EX;
    wire [  REG_IDX_WIDTH-1 : 0] res_reg_idx_DC_EX;
    wire [IALU_WORD_WIDTH-1 : 0] src1_DC_EX;
@@ -95,8 +96,9 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
    wire [ REG_WORD_WIDTH-1 : 0] src1;
    wire [ REG_WORD_WIDTH-1 : 0] src2;
 
-   // Connections: Bypassing
+   // Connections: Bypassing, stalling
    wire                         res_valid_EX_DC;
+   wire                         stall_DC_IF;
 
    // Register file
    regfile #(.IDX_WIDTH(REG_IDX_WIDTH), .WORD_WIDTH(IALU_WORD_WIDTH)) regfile_inst
@@ -148,8 +150,9 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
       .reset         ( reset ),
       .in_branch_pc  ( branch_pc ),
       .in_set_pc     ( set_pc ),
-      .in_flush      ( flush_FE ),
+      .in_flush      ( flush_IF ),
       .in_instr      ( pmem_word ),
+      .in_stall      ( stall_DC_IF ),
       .out_instr     ( instr_IF_DC ),
       .out_pc        ( pc_IF_DC ),
       .out_pmem_addr ( pmem_addr )
@@ -195,13 +198,15 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
       .out_act_write_res_to_reg       ( act_write_res_to_reg_DC_EX ),
       .out_cycle_in_instr             ( cycle_in_instr_DC_EX ),
       .out_instr                      ( instr_DC_EX ),
+      .out_instr_is_bubble            ( instr_is_bubble_DC_EX ),
       .out_pc                         ( pc_DC_EX ),
       .out_res_reg_idx                ( res_reg_idx_DC_EX ),
       .out_src1                       ( src1_DC_EX ),
       .out_src1_reg_idx               ( src1_idx ),
       .out_src2                       ( src2_DC_EX ),
       .out_src2_reg_idx               ( src2_idx ),
-      .out_src3                       ( src3_DC_EX )
+      .out_src3                       ( src3_DC_EX ),
+      .out_stall                      ( stall_DC_IF )
    );
 
    // Execution stage
@@ -238,6 +243,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
        .in_cycle_in_instr             ( cycle_in_instr_DC_EX ),
        .in_flush                      ( flush_pipeline ),
        .in_instr                      ( instr_DC_EX ),
+       .in_instr_is_bubble            ( instr_is_bubble_DC_EX ),
        .in_pc                         ( pc_DC_EX ),
        .in_res_reg_idx                ( res_reg_idx_DC_EX ),
        .in_src1                       ( src1_DC_EX ),
@@ -251,7 +257,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
        .out_dmem_wr_addr              ( dmem_wr_addr_EX_MEM ),
        .out_dmem_wr_word              ( dmem_wr_word_EX_MEM ),
        .out_flush                     ( flush_pipeline ),
-       .out_flush_FE                  ( flush_FE ),
+       .out_flush_IF                  ( flush_IF ),
        .out_instr                     ( instr_EX_MEM ),
        .out_pc                        ( pc_EX_MEM ),
        .out_res                       ( res_EX_MEM ),
