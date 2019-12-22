@@ -7,8 +7,9 @@ The RTL description is done in Verilog.
 
 The pipeline stages are instruction fetch (FE), decode (DC), execute (EX), memory access (MEM), and register writeback (WB).
 Regarding memory interfaces, the processor is designed according to the Harvard architecture, i.e., it has separate program and data memories.
-More information on the classic five stage pipeline on [Wikipedia](https://en.wikipedia.org/wiki/Classic_RISC_pipeline).
-Currently, the processor design implements bypassing/forwarding, but does not implement pipeline stalling (it is planned, though).
+More information on the classic five stage pipeline can be found on [Wikipedia](https://en.wikipedia.org/wiki/Classic_RISC_pipeline).
+The processor design implements bypassing/forwarding.
+When a read-after-write (RAW) data hazard cannot be resolved by bypassing/forwarding, the pipeline stalls.
 
 This project also contains a simulator for the RTL design.
 The RTL simulator is built using [Verilator](https://www.veripool.org/).
