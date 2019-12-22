@@ -44,8 +44,9 @@ module fetch #(parameter PC_WIDTH=12, PMEM_WIDTH=16, PC_INCREMENT=2)
    
     localparam MAX_PC = ((1<<PC_WIDTH)-PC_INCREMENT);
     
-    assign pc_next_ext = in_branch_pc;
-    assign out_pc      = in_stall ? pc_ff2 : pc_ff; // TODO: put me in figure
+    assign pc_next_ext   = in_branch_pc;
+    assign out_pc        = in_stall ? pc_ff2 : pc_ff; // TODO: put me in figure
+    assign out_pmem_addr = pc_next;
     
     // Register: sample next PC, instr
     always @(posedge clock or posedge reset)
@@ -80,18 +81,6 @@ module fetch #(parameter PC_WIDTH=12, PMEM_WIDTH=16, PC_INCREMENT=2)
         else begin
             pc_next = pc_next_int;
         end
-    end
-
-    // Multiplexer: if we are setting external PC, send it directly to output
-    //              otherwise: send incremented PC to output
-    always @(*)
-    begin
-//      if (in_set_pc ==1)
-//          out_pmem_addr = pc_next_ext;
-//      else
-//          out_pmem_addr = pc_next_int;
-
-        out_pmem_addr = pc_next;
     end
 
     // Multiplexer: if pipeline is being flushed, send out nop (0x0). Otherwise send out instruction from pmem
