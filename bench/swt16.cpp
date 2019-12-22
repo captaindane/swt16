@@ -107,6 +107,12 @@ void parseCmdLine (int argc, char**argv, cmdLineArgs_t& cmdLineArgs)
 	    {
 	        cmdLineArgs.simTime = std::stoi(std::string(argv[++parIdx]));
 	    }
+
+        else
+        {
+            std::cout << "ERROR: unknown parameter " << par << std::endl;
+            abort();
+        }
         
     }
 
