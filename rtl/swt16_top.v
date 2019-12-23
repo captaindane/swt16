@@ -65,6 +65,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
    wire [PMEM_ADDR_WIDTH-1 : 0] pc_DC_EX;
    wire [  REG_IDX_WIDTH-1 : 0] res_reg_idx_DC_EX;
    wire                         res_valid_EX_DC_EX;
+   wire                         res_valid_MEM_DC_EX;
    wire [IALU_WORD_WIDTH-1 : 0] src1_DC_EX;
    wire [IALU_WORD_WIDTH-1 : 0] src2_DC_EX;
    wire [IALU_WORD_WIDTH-1 : 0] src3_DC_EX;
@@ -80,6 +81,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
    wire [PMEM_ADDR_WIDTH-1 : 0] pc_EX_MEM;
    wire [IALU_WORD_WIDTH-1 : 0] res_EX_MEM;
    wire [  REG_IDX_WIDTH-1 : 0] res_reg_idx_EX_MEM;
+   wire                         res_valid_MEM_EX_MEM;
 
    // Connections: MEM stage -> WB stage
    wire                         act_write_res_to_reg_MEM_WB;
@@ -99,6 +101,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
 
    // Connections: Bypassing, stalling
    wire                         res_valid_EX_DC;
+   wire                         res_valid_MEM_DC;
    wire                         stall_DC_IF;
 
    // Register file
@@ -177,6 +180,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
       .in_res_reg_idx_EX              ( res_reg_idx_EX_MEM ),
       .in_res_reg_idx_MEM             ( res_reg_idx_MEM_WB ),
       .in_res_valid_EX                ( res_valid_EX_DC ),
+      .in_res_valid_MEM               ( res_valid_MEM_DC ),
       .in_src1                        ( src1 ),
       .in_src2                        ( src2 ),
       .out_act_branch_ialu_res_ff_eq0 ( act_branch_ialu_res_ff_eq0_DC_EX ),
@@ -203,6 +207,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
       .out_pc                         ( pc_DC_EX ),
       .out_res_reg_idx                ( res_reg_idx_DC_EX ),
       .out_res_valid_EX               ( res_valid_EX_DC_EX ),
+      .out_res_valid_MEM              ( res_valid_MEM_DC_EX ),
       .out_src1                       ( src1_DC_EX ),
       .out_src1_reg_idx               ( src1_idx ),
       .out_src2                       ( src2_DC_EX ),
@@ -249,6 +254,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
        .in_pc                         ( pc_DC_EX ),
        .in_res_reg_idx                ( res_reg_idx_DC_EX ),
        .in_res_valid_EX               ( res_valid_EX_DC_EX ),
+       .in_res_valid_MEM              ( res_valid_MEM_DC_EX ),
        .in_src1                       ( src1_DC_EX ),
        .in_src2                       ( src2_DC_EX ),
        .in_src3                       ( src3_DC_EX ),
@@ -265,7 +271,8 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
        .out_pc                        ( pc_EX_MEM ),
        .out_res                       ( res_EX_MEM ),
        .out_res_reg_idx               ( res_reg_idx_EX_MEM ),
-       .out_res_valid                 ( res_valid_EX_DC ),
+       .out_res_valid_EX              ( res_valid_EX_DC ),
+       .out_res_valid_MEM             ( res_valid_MEM_EX_MEM ),
        .out_set_pc                    ( set_pc )
    );
 
@@ -292,6 +299,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
        .in_pc                    ( pc_EX_MEM ),
        .in_res                   ( res_EX_MEM ),
        .in_res_reg_idx           ( res_reg_idx_EX_MEM ),
+       .in_res_valid_MEM         ( res_valid_MEM_EX_MEM ),
        .out_act_write_res_to_reg ( act_write_res_to_reg_MEM_WB ),
        .out_instr                ( instr_MEM_WB ),
        .out_mem_rd_addr          ( dmem_rd_addr ),
@@ -300,7 +308,8 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
        .out_mem_write_en         ( dmem_write_en ),
        .out_pc                   ( pc_MEM_WB ),
        .out_res                  ( res_MEM_WB ),
-       .out_res_reg_idx          ( res_reg_idx_MEM_WB )
+       .out_res_reg_idx          ( res_reg_idx_MEM_WB ),
+       .out_res_valid_MEM        ( res_valid_MEM_DC )
    );
 
    // Writeback stage

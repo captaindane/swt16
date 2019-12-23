@@ -35,6 +35,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
              input  [       PC_WIDTH-1:0]  in_pc,
              input  [  REG_IDX_WIDTH-1:0]  in_res_reg_idx,
              input                         in_res_valid_EX,
+             input                         in_res_valid_MEM,
              input  [IALU_WORD_WIDTH-1:0]  in_src1,
              input  [IALU_WORD_WIDTH-1:0]  in_src2,
              input  [IALU_WORD_WIDTH-1:0]  in_src3,
@@ -51,7 +52,8 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
              output [       PC_WIDTH-1:0]  out_pc,
              output [IALU_WORD_WIDTH-1:0]  out_res,
              output [  REG_IDX_WIDTH-1:0]  out_res_reg_idx,
-             output                        out_res_valid,
+             output                        out_res_valid_EX,
+             output                        out_res_valid_MEM,
              output                        out_set_pc
              );
 
@@ -81,6 +83,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     reg         [       PC_WIDTH-1:0]  pc_ff;
     reg         [  REG_IDX_WIDTH-1:0]  res_reg_idx_ff;
     reg                                res_valid_EX_ff;
+    reg                                res_valid_MEM_ff;
     reg  signed [IALU_WORD_WIDTH-1:0]  src1_ff;
     reg  signed [IALU_WORD_WIDTH-1:0]  src2_ff;
     reg         [IALU_WORD_WIDTH-1:0]  src3_ff;
@@ -90,7 +93,8 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     assign src2_mod = (act_ialu_neg_src2_ff == 0) ? src2_ff : (~src2_ff + 1'b1);
 
     // Inform DC stage whether or not the result of EX stage is valid
-    assign out_res_valid = res_valid_EX_ff;
+    assign out_res_valid_EX  = res_valid_EX_ff;
+    assign out_res_valid_MEM = res_valid_MEM_ff;
 
     // ALU regs
     reg  [IALU_WORD_WIDTH-1:0]  ialu_res;
@@ -127,6 +131,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             pc_ff                         <= in_pc;
             res_reg_idx_ff                <= in_res_reg_idx;
             res_valid_EX_ff               <= in_res_valid_EX;
+            res_valid_MEM_ff              <= in_res_valid_MEM;
             src1_ff                       <= in_src1;
             src2_ff                       <= in_src2;
             src3_ff                       <= in_src3;
@@ -157,6 +162,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             pc_ff                         <= 0;
             res_reg_idx_ff                <= 0;
             res_valid_EX_ff               <= 0;
+            res_valid_MEM_ff              <= 0;
             src1_ff                       <= 0;
             src2_ff                       <= 0;
             src3_ff                       <= 0;
