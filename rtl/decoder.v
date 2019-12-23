@@ -193,7 +193,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
             src1_stall = 0;
         end
         // Instruction with desired result is in EX stage but result is invalid (memory load)
-        else if ((src1_reg_idx == in_res_reg_idx_EX) && !in_res_valid_EX && in_res_valid_MEM && src1_used)
+        else if ((src1_reg_idx == in_res_reg_idx_EX) && !in_res_valid_EX && in_res_valid_MEM && cycle_in_instr_ff == 0 && src1_used)
         begin
             src1_mod   = 0;
             src1_stall = 1;
@@ -222,7 +222,8 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
             src2_stall = 0;
         end
         // Instruction with desired result is in EX stage but result is invalid (memory load)
-        else if ((src2_reg_idx == in_res_reg_idx_EX) && !in_res_valid_EX && in_res_valid_MEM && src2_used) begin
+        else if ((src2_reg_idx == in_res_reg_idx_EX) && !in_res_valid_EX && in_res_valid_MEM && cycle_in_instr_ff == 0 && src2_used)
+        begin
             src2_mod   = 0;
             src2_stall = 1;
         end
