@@ -33,13 +33,14 @@ function run_test ()
         echo "FAILURE."
     fi
     
-    echo "---------------------------------------"
-
     return $SUCCESS
 }
 
 NUM_FAILED=0
 run_test "hex_test_bypass_stall";  NUM_FAILED=$(($NUM_FAILED + $?))
+run_test "hex_test_arith";         NUM_FAILED=$(($NUM_FAILED + $?))
+
+echo "======================================="
 
 if [ "$NUM_FAILED" = "0" ]; then
     echo "SUCCESS: ALL TESTS PASSED."
