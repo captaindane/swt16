@@ -40,6 +40,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
        output                        out_instr_is_bubble,               // instruction is a bubble, NOP
        output [       PC_WIDTH-1:0]  out_pc,                            // forward program counter to EX stage
        output [  REG_IDX_WIDTH-1:0]  out_res_reg_idx,                   // index of register that the result from EX is written to one it reaches WB
+       output                        out_res_valid_EX,                  // result in EX stage can be bypassed back as input to DC stage
        output [IALU_WORD_WIDTH-1:0]  out_src1,                          // forward 1st input from regfile to EX stage
        output [  REG_IDX_WIDTH-1:0]  out_src1_reg_idx,                  // inform register file which register we want as src1 input to EX stage
        output [IALU_WORD_WIDTH-1:0]  out_src2,                          // forward 2nd input from regfile to EX stage
@@ -104,6 +105,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     reg  [       PC_WIDTH-1:0]  pc_ff;
     reg  [       PC_WIDTH-1:0]  pc_ff2;
 
+    reg                         res_used;        // Is valid result assgined to result field in instruction?
     reg  [IALU_WORD_WIDTH-1:0]  src1_mod;        // Holds src1 input to EX stage (either from regfile or bypassed)
     reg                         src1_stall;      // Do we have to stall because src1 is unavailable?
     reg                         src1_used;       // Is a valid operand assigned to src1?
@@ -128,7 +130,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     assign out_instr           = (src1_stall || src2_stall) ? INSTR_NOP : instr_ff; // if stalled, forward NOP instruction to EX stage
     assign out_instr_is_bubble = (out_instr[OPCODE_WIDTH-1:0] == OPCODE_NOP) ? 1 : 0;
     assign out_pc              = pc_ff;
-    assign out_res_reg_idx     = instr_1st_word[7:4];
+    assign out_res_reg_idx     = (res_used) ? instr_1st_word[7:4] : 0; // forward result register index only if the field is valid in current instruction
     assign out_src1_reg_idx    = src1_reg_idx; // TODO: null me when i am not needed
     assign out_src2_reg_idx    = src2_reg_idx; // TODO: null me when i am not needed
     assign out_stall           = src1_stall | src2_stall;
@@ -189,7 +191,8 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
             src1_stall = 0;
         end
         // Instruction with desired result is in EX stage but result is invalid (memory load)
-        else if ((src1_reg_idx == in_res_reg_idx_EX) && !in_res_valid_EX && src1_used) begin
+        else if ((src1_reg_idx == in_res_reg_idx_EX) && !in_res_valid_EX && src1_used)
+        begin
             src1_mod   = 0;
             src1_stall = 1;
         end
@@ -249,12 +252,14 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         out_act_load_dmem               = 0;
         out_act_store_dmem              = 0;
         out_act_write_res_to_reg        = 0;
+        out_res_valid_EX                = 0;
         out_src1                        = 0;
         out_src2                        = 0;
         out_src3                        = 0;
     endtask;
 
-    // Set validity of src1, src2 (needed for stalling)
+    // Set validity of src1, src2 in current instruction: is the field in the instruction used?
+    // This is needed for stalling, since we only stall if there is an actual data dependency
     always @(*)
     begin
         case (opcode)
@@ -289,9 +294,28 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
 
         endcase
     end
+
+    // Set validity of res in current instruction: is the field in the instruction used?
+    // This is needed for stalling, since we only stall if there is an actual data dependency
+    always @(*)
+    begin
+        case (opcode)
+            OPCODE_S_TYPE:
+            begin
+                res_used = 0;
+            end
+
+            default:
+            begin
+                res_used = 1;
+            end
+        endcase
+    end
     
     
+    //==============================================
     // Decode instruction word
+    //==============================================
     always @(*)
     begin
         // Flush or stall
@@ -327,6 +351,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
                         out_act_write_res_to_reg               = 1;
+                        out_res_valid_EX                       = 1;    // result can be bypassed from EX
                         out_src1                               = 0;
                         out_src2                               = immB;
                         out_src3                               = 0;
@@ -359,6 +384,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
                         out_act_write_res_to_reg               = 1;
+                        out_res_valid_EX                       = 1;    // result can be bypassed from EX
                         out_src1                               = 0;
                         out_src2[IMMA_WIDTH-1:0]               = immA;
                         out_src2[IALU_WORD_WIDTH-1:IMMA_WIDTH] = 0;
@@ -402,6 +428,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
                         out_act_write_res_to_reg               = 0;
+                        out_res_valid_EX                       = 0;    // result cannot be bypassed from EX
                     
                     // 1st cycle (evaluate branch condition)
                     if (cycle_in_instr_ff == 0) begin
@@ -444,6 +471,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
                         out_act_write_res_to_reg               = 0;
+                        out_res_valid_EX                       = 0;    // result cannot be bypassed from EX
                     
                     // 1st cycle (evaluate branch condition)
                     if (cycle_in_instr_ff == 0) begin
@@ -486,6 +514,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
                         out_act_write_res_to_reg               = 0;
+                        out_res_valid_EX                       = 0;    // result cannot be bypassed from EX
                     
                     // 1st cycle (evaluate branch condition)
                     if (cycle_in_instr_ff == 0) begin
@@ -528,6 +557,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
                         out_act_write_res_to_reg               = 0;
+                        out_res_valid_EX                       = 0;    // result cannot be bypassed from EX
                     
                     // 1st cycle (evaluate branch condition)
                     if (cycle_in_instr_ff == 0) begin
@@ -571,7 +601,8 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 1;
                         out_act_write_res_to_reg               = 0;
-                        out_src1                               = 0;          // base addr
+                        out_res_valid_EX                       = 0;         // result cannot be bypassed from EX
+                        out_src1                               = 0;         // base addr
                         out_src2                               = src2_mod;  // offset
                         out_src3                               = src1_mod;  // value;
                 end
@@ -599,6 +630,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 1;
                         out_act_write_res_to_reg               = 0;
+                        out_res_valid_EX                       = 0;         // result cannot be bypassed from EX
                         out_src1                               = immB;      // base addr
                         out_src2                               = src2_mod;  // offset
                         out_src3                               = src1_mod;  // value
@@ -647,6 +679,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
                         out_act_write_res_to_reg               = 1;
+                        out_res_valid_EX                       = 0;    // result cannot be bypassed from EX
                         out_src1                               = immB;
                         out_src2[PC_WIDTH-1:0]                 = pc_ff2;
                         out_src2[IALU_WORD_WIDTH-1:PC_WIDTH]   = 0;
@@ -680,6 +713,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
                         out_act_write_res_to_reg               = 1;
+                        out_res_valid_EX                       = 0;    // result cannot be bypassed from EX
                         out_src1                               = src1_mod;
                         out_src2[PC_WIDTH-1:0]                 = pc_ff;
                         out_src2[IALU_WORD_WIDTH-1:PC_WIDTH]   = 0;
@@ -718,6 +752,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_load_dmem                      = 1;
                 out_act_store_dmem                     = 0;
                 out_act_write_res_to_reg               = 1;
+                out_res_valid_EX                       = 0;             // result cannot be bypassed from EX
                 out_src1                               = 0;
                 out_src2                               = src1_mod;      // address (yes, strange to write src1 to src2, but srcX_to_res only exists for src2)
                 out_src3                               = 0;
@@ -746,6 +781,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_load_dmem                      = 1;
                 out_act_store_dmem                     = 0;
                 out_act_write_res_to_reg               = 1;
+                out_res_valid_EX                       = 0;             // result cannot be bypassed from EX
                 out_src1                               = src1_mod;
                 out_src2                               = immB;
                 out_src3                               = 0;
@@ -779,6 +815,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
                 out_act_write_res_to_reg               = 1;
+                out_res_valid_EX                       = 1;             // result can be bypassed from EX
                 out_src1                               = src1_mod;      // argument 1
                 out_src2                               = src2_mod;      // argument 2
                 out_src3                               = 0;
@@ -805,6 +842,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
                 out_act_write_res_to_reg               = 1;
+                out_res_valid_EX                       = 1;             // result can be bypassed from EX
                 out_src1                               = src1_mod;      // argument 1
                 out_src2                               = src2_mod;      // argument 2
                 out_src3                               = 0;
@@ -831,6 +869,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
                 out_act_write_res_to_reg               = 1;
+                out_res_valid_EX                       = 1;             // result can be bypassed from EX
                 out_src1                               = src1_mod;      // argument 1
                 out_src2                               = src2_mod;      // argument 2
                 out_src3                               = 0;
@@ -857,6 +896,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
                 out_act_write_res_to_reg               = 1;
+                out_res_valid_EX                       = 1;             // result can be bypassed from EX
                 out_src1                               = src1_mod;      // argument 1
                 out_src2                               = src2_mod;      // argument 2
                 out_src3                               = 0;
@@ -883,6 +923,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
                 out_act_write_res_to_reg               = 1;
+                out_res_valid_EX                       = 1;             // result can be bypassed from EX
                 out_src1                               = src1_mod;      // argument 1
                 out_src2                               = src2_mod;      // argument 2
                 out_src3                               = 0;
@@ -909,6 +950,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
                 out_act_write_res_to_reg               = 1;
+                out_res_valid_EX                       = 1;             // result can be bypassed from EX
                 out_src1                               = src1_mod;      // argument 1
                 out_src2                               = src2_mod;      // argument 2
                 out_src3                               = 0;
@@ -935,6 +977,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
                 out_act_write_res_to_reg               = 1;
+                out_res_valid_EX                       = 1;             // result can be bypassed from EX
                 out_src1                               = src1_mod;      // argument 1
                 out_src2                               = src2_mod;      // argument 2
                 out_src3                               = 0;
@@ -961,6 +1004,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
                 out_act_write_res_to_reg               = 1;
+                out_res_valid_EX                       = 1;             // result can be bypassed from EX
                 out_src1                               = src1_mod;      // argument 1
                 out_src2                               = src2_mod;      // argument 2
                 out_src3                               = 0;
@@ -987,6 +1031,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
                 out_act_write_res_to_reg               = 1;
+                out_res_valid_EX                       = 1;             // result can be bypassed from EX
                 out_src1                               = src1_mod;      // argument 1
                 out_src2                               = src2_mod;      // argument 2
                 out_src3                               = 0;

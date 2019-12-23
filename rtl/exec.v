@@ -34,6 +34,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
              input                         in_instr_is_bubble,
              input  [       PC_WIDTH-1:0]  in_pc,
              input  [  REG_IDX_WIDTH-1:0]  in_res_reg_idx,
+             input                         in_res_valid_EX,
              input  [IALU_WORD_WIDTH-1:0]  in_src1,
              input  [IALU_WORD_WIDTH-1:0]  in_src2,
              input  [IALU_WORD_WIDTH-1:0]  in_src3,
@@ -79,6 +80,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     reg                                instr_is_bubble_ff;
     reg         [       PC_WIDTH-1:0]  pc_ff;
     reg         [  REG_IDX_WIDTH-1:0]  res_reg_idx_ff;
+    reg                                res_valid_EX_ff;
     reg  signed [IALU_WORD_WIDTH-1:0]  src1_ff;
     reg  signed [IALU_WORD_WIDTH-1:0]  src2_ff;
     reg         [IALU_WORD_WIDTH-1:0]  src3_ff;
@@ -86,6 +88,9 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     // Modified version of src1, src2 (potentially negated)
     wire [IALU_WORD_WIDTH-1:0]  src2_mod;
     assign src2_mod = (act_ialu_neg_src2_ff == 0) ? src2_ff : (~src2_ff + 1'b1);
+
+    // Inform DC stage whether or not the result of EX stage is valid
+    assign out_res_valid = res_valid_EX_ff;
 
     // ALU regs
     reg  [IALU_WORD_WIDTH-1:0]  ialu_res;
@@ -121,6 +126,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             instr_is_bubble_ff            <= in_instr_is_bubble;
             pc_ff                         <= in_pc;
             res_reg_idx_ff                <= in_res_reg_idx;
+            res_valid_EX_ff               <= in_res_valid_EX;
             src1_ff                       <= in_src1;
             src2_ff                       <= in_src2;
             src3_ff                       <= in_src3;
@@ -150,6 +156,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             instr_is_bubble_ff            <= 0;
             pc_ff                         <= 0;
             res_reg_idx_ff                <= 0;
+            res_valid_EX_ff               <= 0;
             src1_ff                       <= 0;
             src2_ff                       <= 0;
             src3_ff                       <= 0;
@@ -183,27 +190,6 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     end
 
     
-    //==============================================
-    // BYPASSING / FORWARDING LOGIC
-    // - indicate if output can be forwarded to DC
-    //==============================================
-    always @(*)
-    begin
-        if (   act_branch_ialu_res_ff_eq0_ff
-            || act_branch_ialu_res_ff_gt0_ff
-            || act_branch_ialu_res_ff_lt0_ff
-            || act_load_dmem_ff
-            || act_store_dmem_ff
-            || instr_is_bubble_ff
-           )
-        begin
-            out_res_valid = 0;
-        end
-        else begin
-            out_res_valid = 1;
-        end
-    end
-
     //==============================================
     // ALU
     // - write ialu_res
