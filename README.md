@@ -21,7 +21,8 @@ Verilator is open source. It can be downloaded from Github or obtained from the 
 ├── doc          : ISA documentation
 ├── prog         : Example / test programs
 ├── README.md    : This readme
-└── rtl          : Processor description in Verilog
+├── rtl          : Processor description in Verilog
+└── utils        : Utilities: automated tests
 ```
 ## Prerequisites
 Make sure Verilator is installed before attempting to run or build the simulator.
@@ -44,7 +45,16 @@ Example simulation run:
 
 In this example, `--simTime <timeUnits>` specifies the number of time units for which the simulation is run.
 The option `--pmemFile <filename>` specifies the program file that is loaded into the program memory.
-Similarly, `--dmemFile <filename>` specifies the data file that is loaded into the data memory. 
+Similarly, `--dmemFile <filename>` specifies the data file that is loaded into the data memory.
+
+## Running automated tests
+In order to make sure the processor behaves as it should (e.g., after making changes to the RTL description),
+this project comes with test programs located in [test].
+To run all tests and check for correctness, run the shell script below
+
+`cd utils && ./run_automated_tests.sh`
+
+For each test program, this script dumps the contents of the data memory and compares it against a golden reference.
 
 ## Examining the processor state over time
 When running, the simulation generates a VCD file that tracks the changes of the internal state of the processor over time.
@@ -62,4 +72,4 @@ Examples progams can be found in the [prog] directory. They contain extensive co
 Refer to [doc/ISA.odt] for an overview of the current state of the ISA.
 
 ## Note
-This project is developed and tested using Ubuntu.
+This project is developed and tested using Ubuntu Linux.
