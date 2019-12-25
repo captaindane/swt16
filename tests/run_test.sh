@@ -40,6 +40,7 @@ NUM_FAILED=0
 run_test "hex_test_bypass_stall";  NUM_FAILED=$(($NUM_FAILED + $?))
 run_test "hex_test_arith";         NUM_FAILED=$(($NUM_FAILED + $?))
 run_test "hex_test_branch";        NUM_FAILED=$(($NUM_FAILED + $?))
+run_test "hex_test_jmp";           NUM_FAILED=$(($NUM_FAILED + $?))
 
 echo "======================================="
 
