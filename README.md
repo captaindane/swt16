@@ -1,5 +1,5 @@
 # swt16
-A sweet 16 bit processor
+A sweet 16-bit RISC processor.
 
 ## Overview
 This project contains a register transfer level (RTL) description of a 16-bit processor with a classic five stage RISC pipeline.
