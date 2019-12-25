@@ -20,6 +20,7 @@ module mem #(parameter DMEM_ADDR_WIDTH = 12,
            input  [       PC_WIDTH-1:0]  in_pc,
            input  [IALU_WORD_WIDTH-1:0]  in_res,
            input  [  REG_IDX_WIDTH-1:0]  in_res_reg_idx,
+           input                         in_res_valid_MEM,
            output                        out_act_write_res_to_reg,
            output [PMEM_WORD_WIDTH-1:0]  out_instr,
            output [DMEM_ADDR_WIDTH-1:0]  out_mem_rd_addr,
@@ -28,7 +29,8 @@ module mem #(parameter DMEM_ADDR_WIDTH = 12,
            output                        out_mem_write_en,
            output [       PC_WIDTH-1:0]  out_pc,
            output [IALU_WORD_WIDTH-1:0]  out_res,
-           output [  REG_IDX_WIDTH-1:0]  out_res_reg_idx
+           output [  REG_IDX_WIDTH-1:0]  out_res_reg_idx,
+           output                        out_res_valid_MEM
            );
 
     // Sampled CTRL inputs
@@ -58,6 +60,7 @@ module mem #(parameter DMEM_ADDR_WIDTH = 12,
             out_act_write_res_to_reg <= in_act_write_res_to_reg;
             out_instr                <= in_instr;
             out_res_reg_idx          <= in_res_reg_idx;
+            out_res_valid_MEM        <= in_res_valid_MEM;
             pc_ff                    <= in_pc;
         end
         else begin
@@ -66,6 +69,7 @@ module mem #(parameter DMEM_ADDR_WIDTH = 12,
             out_act_write_res_to_reg <= 0;
             out_instr                <= 0;
             out_res_reg_idx          <= 0;
+            out_res_valid_MEM        <= 0;
             pc_ff                    <= 0;
         end
     end
