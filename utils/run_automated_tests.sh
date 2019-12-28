@@ -43,6 +43,13 @@ function run_test ()
 # Build simulator
 cd $BENCH_DIR && make
 
+# Exit if simulator build failed
+if [ "$?" != "0" ]; then
+    echo "FAILURE: SIMULATOR BUILD FAILED."
+    exit 1 # terminate and indicate error
+fi
+
+
 # Runt tests
 NUM_FAILED=0
 run_test "hex_test_bypass_stall";  NUM_FAILED=$(($NUM_FAILED + $?))
