@@ -8,8 +8,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
        input                         clock,
        input                         reset,
        input                         in_flush,                          // flushes decode stage, i.e., zeros all outputs (from EX stage)
-       input  [PMEM_WORD_WIDTH-1:0]  in_instr,                          // instruction (from FE stage)
-       input  [       PC_WIDTH-1:0]  in_pc,                             // program counter (from FE stage)
+       input  [PMEM_WORD_WIDTH-1:0]  in_instr,                          // instruction (from IF stage)
+       input                         in_instr_is_bubble,                // instruction coming from IF stage was a bubble (i.e., IF was flushed, nop was inserted)
+       input  [       PC_WIDTH-1:0]  in_pc,                             // program counter (from IF stage)
        input  [IALU_WORD_WIDTH-1:0]  in_res_EX,                         // result from EX stage (for bypassing)
        input  [IALU_WORD_WIDTH-1:0]  in_res_MEM,                        // result from MEM stage (for bypassing)
        input  [  REG_IDX_WIDTH-1:0]  in_res_reg_idx_EX,                 // result register index from EX stage (for bypassing)
@@ -48,7 +49,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
        output [IALU_WORD_WIDTH-1:0]  out_src2,                          // forward 2nd input from regfile to EX stage
        output [  REG_IDX_WIDTH-1:0]  out_src2_reg_idx,                  // inform register file which register we want as src2 input to EX stage
        output [IALU_WORD_WIDTH-1:0]  out_src3,                          // 3rd input to EX stage. only used by SH and SHO instructions
-       output                        out_stall                          // stalls the FE stage so no new instruction is loaded from PMEM
+       output                        out_stall                          // stalls the IF stage so no new instruction is loaded from PMEM
        );
 
     localparam IMMA_WIDTH  = 4;
@@ -98,22 +99,23 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     reg  [                2:0]  cycle_in_instr_ff;
 
     reg                         flush_ff;
-    wire [PMEM_WORD_WIDTH-1:0]  instr_1st_word;  // Holds first word of instruction (also for multi-cycle instructions)
-    reg  [PMEM_WORD_WIDTH-1:0]  instr_ff;        // Current instruction word
-    reg  [PMEM_WORD_WIDTH-1:0]  instr_ff2;       // Instruction word before current word instruction
+    wire [PMEM_WORD_WIDTH-1:0]  instr_1st_word;     // Holds first word of instruction (also for multi-cycle instructions)
+    reg  [PMEM_WORD_WIDTH-1:0]  instr_ff;           // Current instruction word
+    reg  [PMEM_WORD_WIDTH-1:0]  instr_ff2;          // Instruction word before current word instruction
+    reg                         instr_is_bubble_ff;
 
     reg  [PMEM_ADDR_WIDTH-1:0]  jump_offset;
 
     reg  [       PC_WIDTH-1:0]  pc_ff;
     reg  [       PC_WIDTH-1:0]  pc_ff2;
 
-    reg                         res_used;        // Is valid result assgined to result field in instruction?
-    reg  [IALU_WORD_WIDTH-1:0]  src1_mod;        // Holds src1 input to EX stage (either from regfile or bypassed)
-    reg                         src1_stall;      // Do we have to stall because src1 is unavailable?
-    reg                         src1_used;       // Is a valid operand assigned to src1?
-    reg  [IALU_WORD_WIDTH-1:0]  src2_mod;        // Holds src2 input to EX stage (either from regfile or bypassed)
-    reg                         src2_stall;      // Do we have to stall because src2 is unavailable?
-    reg                         src2_used;       // Is a valid operand assigned to src2?
+    reg                         res_used;           // Is valid result assgined to result field in instruction?
+    reg  [IALU_WORD_WIDTH-1:0]  src1_mod;           // Holds src1 input to EX stage (either from regfile or bypassed)
+    reg                         src1_stall;         // Do we have to stall because src1 is unavailable?
+    reg                         src1_used;          // Is a valid operand assigned to src1?
+    reg  [IALU_WORD_WIDTH-1:0]  src2_mod;           // Holds src2 input to EX stage (either from regfile or bypassed)
+    reg                         src2_stall;         // Do we have to stall because src2 is unavailable?
+    reg                         src2_used;          // Is a valid operand assigned to src2?
 
     
     // Instruction segments
@@ -130,54 +132,50 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     // Connecting signals to output ports
     assign out_cycle_in_instr  = cycle_in_instr_ff; 
     assign out_instr           = (src1_stall || src2_stall) ? INSTR_NOP : instr_ff; // if stalled, forward NOP instruction to EX stage
-    assign out_instr_is_bubble = (out_instr[OPCODE_WIDTH-1:0] == OPCODE_NOP) ? 1 : 0;
+    
+    // The output of DC is a bubble if one of the following holds
+    // - DC is issuing a stall to EX because of unobtainable src1, src2 (src1_stall, src2_stall)
+    // - DC is being flushed (flush_ff)
+    // - Incoming operand from IF is result of a flush (instr_is_bubble_ff)
+    assign out_instr_is_bubble = (src1_stall || src2_stall || flush_ff || instr_is_bubble_ff ) ? 1 : 0;
+    
     assign out_pc              = pc_ff;
     assign out_res_reg_idx     = (res_used) ? instr_1st_word[7:4] : 0; // forward result register index only if the field is valid in current instruction
     assign out_src1_reg_idx    = src1_reg_idx; // TODO: null me when i am not needed
     assign out_src2_reg_idx    = src2_reg_idx; // TODO: null me when i am not needed
     assign out_stall           = src1_stall | src2_stall;
 
-    // Register: hold sampled inputs
+    //==============================================
+    // Register: sampled inputs
+    //==============================================
     always @(posedge clock or posedge reset)
     begin
         if (!reset) begin
-            flush_ff  <= in_flush;
-            instr_ff  <= in_instr;
-            pc_ff     <= in_pc;
+            cycle_in_instr_ff  <= cycle_in_instr_next;
+            flush_ff           <= in_flush;
+            instr_ff           <= in_instr;
+            instr_ff2          <= instr_ff;
+            instr_is_bubble_ff <= in_instr_is_bubble;
+            pc_ff              <= in_pc;
+            pc_ff2             <= pc_ff;
         end
         else begin
-            flush_ff  <= 0;
-            instr_ff  <= 0;
-            pc_ff     <= 0;
-        end
-    end
-
-    // Register: index of the current cycle within a multi-cycle instruction
-    always @(posedge clock or posedge reset)
-    begin
-        if (!reset)
-            cycle_in_instr_ff <= cycle_in_instr_next;
-        else
-            cycle_in_instr_ff <= 0;
-    end
-
-    // Register: holds the last sampled instruction and pc for two-cycle instructions
-    always @(posedge clock or posedge reset)
-    begin
-        if (!reset) begin
-            instr_ff2 <= instr_ff;
-            pc_ff2    <= pc_ff;
-        end
-        else begin
-            instr_ff2 <= 0;
-            pc_ff2    <= 0;
+            cycle_in_instr_ff  <= 0;
+            flush_ff           <= 0;
+            instr_ff           <= 0;
+            instr_ff2          <= 0;
+            instr_is_bubble_ff <= 0;
+            pc_ff              <= 0;
+            pc_ff2             <= 0;
         end
     end
 
     // Multiplexer: Hold first instruction word in case of 2-cycle instruction
     assign instr_1st_word = (cycle_in_instr_ff == 0) ? instr_ff : instr_ff2;
 
-    // Bypassing logic: obtain src1 from pipeline, if it is present in there as valid results.
+    //==============================================
+    // Bypassing / Stalling Logic: src1
+    //==============================================
     always @(*)
     begin
         // Bypass from EX
@@ -206,7 +204,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         end
     end
 
-    // Bypassing logic: obtain src2 from pipeline, if it is present in there as valid results.
+    //==============================================
+    // Bypassing / Stalling Logic: src2
+    //==============================================
     always @(*)
     begin
         // Bypass from EX

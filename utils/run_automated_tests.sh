@@ -14,7 +14,7 @@ function run_test ()
     
     # Generate simulator command
     SIM="../bench/swt16/Vswt16_top"
-    SIM_CMD="${SIM} --simTime $((2*$NUM_CYCLES)) --pmemFile ${PMEM} --dmemFile ${DMEM_IN} --dmemDump"
+    SIM_CMD="${SIM} --exitOnNop --pmemFile ${PMEM} --dmemFile ${DMEM_IN} --dmemDump"
     
     # Run simulation
     echo "======================================="
