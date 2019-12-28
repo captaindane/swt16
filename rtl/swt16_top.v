@@ -1,3 +1,5 @@
+`include "opcodes.v"
+
 module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12, 
                               DMEM_WORD_WIDTH = 16,
                               DMEM_NUM_WORDS  = 2048,
@@ -111,7 +113,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
    wire                         stall_DC_IF;
 
    // Testing, debugging
-   assign out_nop_in_WB = (instr_MEM_WB == 0 && instr_is_bubble_MEM_WB == 0 && cycle_in_instr_MEM_WB == 0) ? 1 : 0;
+   assign out_nop_in_WB = (instr_MEM_WB == `INSTR_NOP && instr_is_bubble_MEM_WB == 0 && cycle_in_instr_MEM_WB == 0) ? 1 : 0;
 
    // Register file
    regfile #(.IDX_WIDTH(REG_IDX_WIDTH), .WORD_WIDTH(IALU_WORD_WIDTH)) regfile_inst

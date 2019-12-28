@@ -1,3 +1,5 @@
+`include "opcodes.v"
+
 module decoder #(parameter OPCODE_WIDTH    =  4,
                            PMEM_ADDR_WIDTH = 12,
                            PMEM_WORD_WIDTH = 16,
@@ -58,43 +60,6 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     localparam FUNC2_WIDTH = 4;
     localparam FUNC3_WIDTH = 4;
     
-    // Root opcode
-    localparam [OPCODE_WIDTH-1:0] OPCODE_NOP    = 4'b0000; 
-    localparam [OPCODE_WIDTH-1:0] OPCODE_U_TYPE = 4'b0001;
-    localparam [OPCODE_WIDTH-1:0] OPCODE_J_TYPE = 4'b0010;
-    localparam [OPCODE_WIDTH-1:0] OPCODE_S_TYPE = 4'b0011;
-    localparam [OPCODE_WIDTH-1:0] OPCODE_LH     = 4'b0100; // I-Type: Load half
-    localparam [OPCODE_WIDTH-1:0] OPCODE_LHO    = 4'b0101; // I-Type: Load half with offset
-    localparam [OPCODE_WIDTH-1:0] OPCODE_ADD    = 4'b0110; // R-Type: integer addition
-    localparam [OPCODE_WIDTH-1:0] OPCODE_SUB    = 4'b0111; // R-Type: integer subtraction
-    localparam [OPCODE_WIDTH-1:0] OPCODE_MUL    = 4'b1000; // R-Type: integer multiplication
-    localparam [OPCODE_WIDTH-1:0] OPCODE_SLL    = 4'b1001; // R-Type: shift left logically
-    localparam [OPCODE_WIDTH-1:0] OPCODE_SRL    = 4'b1010; // R-Type: shift right logically
-    localparam [OPCODE_WIDTH-1:0] OPCODE_SRA    = 4'b1011; // R-Type: shift right arithmetically
-    localparam [OPCODE_WIDTH-1:0] OPCODE_AND    = 4'b1100; // R-Type: logical and
-    localparam [OPCODE_WIDTH-1:0] OPCODE_OR     = 4'b1101; // R-Type: logical or
-    localparam [OPCODE_WIDTH-1:0] OPCODE_XOR    = 4'b1110; // R-Type: logical xor
-
-    // S-TYPE
-    localparam [ FUNC1_WIDTH-1:0] FUNC1_BEQ     = 4'b0000; // Branch if equal
-    localparam [ FUNC1_WIDTH-1:0] FUNC1_BNEQ    = 4'b0001; // Branch if not equal
-    localparam [ FUNC1_WIDTH-1:0] FUNC1_BGE     = 4'b0010; // Branch if greater or equal
-    localparam [ FUNC1_WIDTH-1:0] FUNC1_BLT     = 4'b0011; // Branch if less than
-    localparam [ FUNC1_WIDTH-1:0] FUNC1_SH      = 4'b0100; // Store half (i.e., 16-bit)
-    localparam [ FUNC1_WIDTH-1:0] FUNC1_SHO     = 4'b0101; // Store half (i.e., 16-bit) with offset
-    
-    // U-TYPE
-    localparam [ FUNC2_WIDTH-1:0] FUNC2_LI      = 4'b0011;
-    localparam [ FUNC2_WIDTH-1:0] FUNC2_LIL     = 4'b0100;
-
-    // J-Type
-    localparam [ FUNC2_WIDTH-1:0] FUNC2_JAL     = 4'b0000;
-    localparam [ FUNC2_WIDTH-1:0] FUNC2_JALR    = 4'b0001;
-
-    // Special instructions
-    localparam [PMEM_WORD_WIDTH-1:0] INSTR_NOP  = {{12{1'b0}}, OPCODE_NOP};
-    
-    
     reg  [                2:0]  cycle_in_instr_next;
     reg  [                2:0]  cycle_in_instr_ff;
 
@@ -131,11 +96,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     
     // Connecting signals to output ports
     assign out_cycle_in_instr  = cycle_in_instr_ff; 
-    assign out_instr           = (src1_stall || src2_stall) ? INSTR_NOP : instr_ff; // if stalled, forward NOP instruction to EX stage
+    assign out_instr           = (src1_stall || src2_stall) ? `INSTR_NOP : instr_ff; // if stalled, forward NOP instruction to EX stage
     
     // The output of DC is a bubble if one of the following holds
     // - DC is issuing a stall to EX because of unobtainable src1, src2 (src1_stall, src2_stall)
-    // - DC is being flushed (flush_ff)
+    // - DC is being flushed because a branch was taken (flush_ff)
     // - Incoming operand from IF is result of a flush (instr_is_bubble_ff)
     assign out_instr_is_bubble = (src1_stall || src2_stall || flush_ff || instr_is_bubble_ff ) ? 1 : 0;
     
@@ -267,24 +232,24 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     always @(*)
     begin
         case (opcode)
-            OPCODE_S_TYPE,
-            OPCODE_ADD,
-            OPCODE_SUB,
-            OPCODE_MUL,
-            OPCODE_SLL,
-            OPCODE_SRL,
-            OPCODE_SRA,
-            OPCODE_AND,
-            OPCODE_OR ,
-            OPCODE_XOR:
+            `OPCODE_S_TYPE,
+            `OPCODE_ADD,
+            `OPCODE_SUB,
+            `OPCODE_MUL,
+            `OPCODE_SLL,
+            `OPCODE_SRL,
+            `OPCODE_SRA,
+            `OPCODE_AND,
+            `OPCODE_OR ,
+            `OPCODE_XOR:
             begin
                 src1_used = 1;
                 src2_used = 1;
             end
 
-            OPCODE_J_TYPE,
-            OPCODE_LH,
-            OPCODE_LHO:
+            `OPCODE_J_TYPE,
+            `OPCODE_LH,
+            `OPCODE_LHO:
             begin
                 src1_used = 1;
                 src2_used = 0;
@@ -304,7 +269,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     always @(*)
     begin
         case (opcode)
-            OPCODE_S_TYPE:
+            `OPCODE_S_TYPE:
             begin
                 res_used = 0;
             end
@@ -329,11 +294,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         end
         
         // U-Type instructions
-        else if (opcode == OPCODE_U_TYPE)
+        else if (opcode == `OPCODE_U_TYPE)
         begin
             case (func2)
                 // Load 16-bit immediate value
-                FUNC2_LI:
+                `FUNC2_LI:
                 begin
                     if (cycle_in_instr_ff == 1) begin
                         cycle_in_instr_next                    = 0;
@@ -368,7 +333,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 end
                 
                 // Load immediate value to 4 LSBs (no sign extension)
-                FUNC2_LIL:
+                `FUNC2_LIL:
                 begin
                         cycle_in_instr_next                    = 0;
                         out_act_branch_ialu_res_ff_eq0         = 0;
@@ -409,12 +374,12 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         end  // else if (opcode == OPCODE_U_TYPE)
 
         // S-Type instructions
-        else if (opcode == OPCODE_S_TYPE)
+        else if (opcode == `OPCODE_S_TYPE)
         begin
             case (func1)
                 
                 // Branch if equal
-                FUNC1_BEQ:
+                `FUNC1_BEQ:
                 begin
                     // 1st and 2nd cycle
                         out_act_branch_ialu_res_ff_eq0         = 1;
@@ -458,7 +423,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 end
 
                 // Branch if not equal
-                FUNC1_BNEQ:
+                `FUNC1_BNEQ:
                 begin
                     // 1st and 2nd cycle
                         out_act_branch_ialu_res_ff_eq0         = 0;
@@ -502,7 +467,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 end
 
                 // Branch if greater equal
-                FUNC1_BGE:
+                `FUNC1_BGE:
                 begin
                     // 1st and 2nd cycle
                         out_act_branch_ialu_res_ff_eq0         = 1;
@@ -546,7 +511,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 end
                 
                 // Branch if less than
-                FUNC1_BLT:
+                `FUNC1_BLT:
                 begin
                     // 1st and 2nd cycle
                         out_act_branch_ialu_res_ff_eq0         = 0;
@@ -590,7 +555,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 end
                 
                 // Store half (16bit) to DMEM
-                FUNC1_SH:
+                `FUNC1_SH:
                 begin
                         cycle_in_instr_next                    = 0;
                         out_act_branch_ialu_res_ff_eq0         = 0;
@@ -619,7 +584,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 end
 
                 // Store half (16bit) with offset to DMEM
-                FUNC1_SHO:
+                `FUNC1_SHO:
                 begin
                     if (cycle_in_instr_ff == 1) begin
                         cycle_in_instr_next                    = 0;
@@ -664,12 +629,12 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
             endcase
         end
 
-        else if (opcode == OPCODE_J_TYPE)
+        else if (opcode == `OPCODE_J_TYPE)
         begin
             case (func3)
                 
                 // Jump and link by immediate
-                FUNC2_JAL:
+                `FUNC2_JAL:
                 begin
                     if (cycle_in_instr_ff == 1) begin
                         cycle_in_instr_next                    = 0;
@@ -705,7 +670,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 end
                 
                 // Jump and link by register
-                FUNC2_JALR:
+                `FUNC2_JALR:
                 begin
                         cycle_in_instr_next                    = 0;
                         out_act_branch_ialu_res_ff_eq0         = 0;
@@ -746,7 +711,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         end
     
         // Load half word from DMEM
-        else if (opcode == OPCODE_LH) begin
+        else if (opcode == `OPCODE_LH) begin
                 cycle_in_instr_next                    = 0;
                 out_act_branch_ialu_res_ff_eq0         = 0;
                 out_act_branch_ialu_res_ff_gt0         = 0;
@@ -774,7 +739,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         end
 
         // Load half word with offset from DMEM
-        else if (opcode == OPCODE_LHO) begin
+        else if (opcode == `OPCODE_LHO) begin
             
             if (cycle_in_instr_ff == 1) begin
                 cycle_in_instr_next                    = 0;
@@ -811,7 +776,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         end
 
         // Integer addition
-        else if (opcode == OPCODE_ADD) begin
+        else if (opcode == `OPCODE_ADD) begin
                 cycle_in_instr_next                    = 0;
                 out_act_branch_ialu_res_ff_eq0         = 0;
                 out_act_branch_ialu_res_ff_gt0         = 0;
@@ -839,7 +804,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         end
         
         // Integer subtraction
-        else if (opcode == OPCODE_SUB) begin
+        else if (opcode == `OPCODE_SUB) begin
                 cycle_in_instr_next                    = 0;
                 out_act_branch_ialu_res_ff_eq0         = 0;
                 out_act_branch_ialu_res_ff_gt0         = 0;
@@ -867,7 +832,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         end
         
         // Integer multiplication
-        else if (opcode == OPCODE_MUL) begin
+        else if (opcode == `OPCODE_MUL) begin
                 cycle_in_instr_next                    = 0;
                 out_act_branch_ialu_res_ff_eq0         = 0;
                 out_act_branch_ialu_res_ff_gt0         = 0;
@@ -895,7 +860,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         end
         
         // Shift left logically
-        else if (opcode == OPCODE_SLL) begin
+        else if (opcode == `OPCODE_SLL) begin
                 cycle_in_instr_next                    = 0;
                 out_act_branch_ialu_res_ff_eq0         = 0;
                 out_act_branch_ialu_res_ff_gt0         = 0;
@@ -923,7 +888,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         end
         
         // Shift right logically
-        else if (opcode == OPCODE_SRL) begin
+        else if (opcode == `OPCODE_SRL) begin
                 cycle_in_instr_next                    = 0;
                 out_act_branch_ialu_res_ff_eq0         = 0;
                 out_act_branch_ialu_res_ff_gt0         = 0;
@@ -951,7 +916,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         end
         
         // Shift right arithmetically
-        else if (opcode == OPCODE_SRA) begin
+        else if (opcode == `OPCODE_SRA) begin
                 cycle_in_instr_next                    = 0;
                 out_act_branch_ialu_res_ff_eq0         = 0;
                 out_act_branch_ialu_res_ff_gt0         = 0;
@@ -979,7 +944,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         end
         
         // Bitwise logical and
-        else if (opcode == OPCODE_AND) begin
+        else if (opcode == `OPCODE_AND) begin
                 cycle_in_instr_next                    = 0;
                 out_act_branch_ialu_res_ff_eq0         = 0;
                 out_act_branch_ialu_res_ff_gt0         = 0;
@@ -1007,7 +972,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         end
         
         // Bitwise logical or
-        else if (opcode == OPCODE_OR) begin
+        else if (opcode == `OPCODE_OR) begin
                 cycle_in_instr_next                    = 0;
                 out_act_branch_ialu_res_ff_eq0         = 0;
                 out_act_branch_ialu_res_ff_gt0         = 0;
@@ -1035,7 +1000,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         end
 
         // Bitwise logical xor
-        else if (opcode == OPCODE_XOR) begin
+        else if (opcode == `OPCODE_XOR) begin
                 cycle_in_instr_next                    = 0;
                 out_act_branch_ialu_res_ff_eq0         = 0;
                 out_act_branch_ialu_res_ff_gt0         = 0;
@@ -1063,7 +1028,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         end
         
         // No operation
-        else if (opcode == OPCODE_NOP) begin
+        else if (opcode == `OPCODE_NOP) begin
             cycle_in_instr_next       = 0;
             zero_outputs();
         end

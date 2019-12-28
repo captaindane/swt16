@@ -94,8 +94,9 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     wire [IALU_WORD_WIDTH-1:0]  src2_mod;
     assign src2_mod = (act_ialu_neg_src2_ff == 0) ? src2_ff : (~src2_ff + 1'b1);
 
-    // Current instruction is a bubble if it was marked so by DC
-    // or EX just flushed itself.
+    // Current instruction is a bubble if
+    // - it was marked so by DC
+    // - EX issued a self-flush in the previous cycle
     assign out_instr_is_bubble = (instr_is_bubble_ff | flush_ff);
     
     // Inform DC stage whether or not the result of EX stage is valid
