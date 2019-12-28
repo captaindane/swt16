@@ -310,7 +310,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
         end
         
         // All conditional branch instructions (1st cycle)
-        // - Flush FE, stage in next cycle.
+        // - Flush IF stage in next cycle.
         // - Do not flush DC, EX stage in next cycle. We still have to compute the branch address.
         // - Do not branch, yet.
         else if (    ((cycle_in_instr_ff == 0) && (act_branch_ialu_res_ff_eq0_ff == 1) && (ialu_res == 0))
