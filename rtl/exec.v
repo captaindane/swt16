@@ -388,7 +388,8 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     always @(*)
     begin
         if (act_incr_pc_is_res_ff) begin
-            out_res = pc_ff+PC_INCREMENT;
+            out_res[IALU_WORD_WIDTH-1:PC_WIDTH] = 0;
+            out_res[       PC_WIDTH-1:       0] = pc_ff+PC_INCREMENT;
         end
         else begin
             out_res = ialu_res;           
