@@ -1,3 +1,7 @@
+#!/bin/bash
+
+BENCH_DIR="../bench"
+
 function run_test ()
 {
     # Generate names of memory files
@@ -36,6 +40,10 @@ function run_test ()
     return $SUCCESS
 }
 
+# Build simulator
+cd $BENCH_DIR && make
+
+# Runt tests
 NUM_FAILED=0
 run_test "hex_test_bypass_stall";  NUM_FAILED=$(($NUM_FAILED + $?))
 run_test "hex_test_arith";         NUM_FAILED=$(($NUM_FAILED + $?))
