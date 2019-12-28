@@ -43,12 +43,14 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
              output                        out_act_store_dmem,
              output                        out_act_write_res_to_reg,
              output [PMEM_ADDR_WIDTH-1:0]  out_branch_pc,
+             output                 [2:0]  out_cycle_in_instr,
              output [DMEM_ADDR_WIDTH-1:0]  out_dmem_rd_addr,
              output [DMEM_ADDR_WIDTH-1:0]  out_dmem_wr_addr,
              output [DMEM_WORD_WIDTH-1:0]  out_dmem_wr_word,
-             output                        out_flush,
+             output                        out_flush_DC_and_EX,
              output                        out_flush_IF,
              output [PMEM_WORD_WIDTH-1:0]  out_instr,
+             output                        out_instr_is_bubble,
              output [       PC_WIDTH-1:0]  out_pc,
              output [IALU_WORD_WIDTH-1:0]  out_res,
              output [  REG_IDX_WIDTH-1:0]  out_res_reg_idx,
@@ -92,9 +94,17 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     wire [IALU_WORD_WIDTH-1:0]  src2_mod;
     assign src2_mod = (act_ialu_neg_src2_ff == 0) ? src2_ff : (~src2_ff + 1'b1);
 
+    // Current instruction is a bubble if
+    // - it was marked so by DC
+    // - EX issued a self-flush in the previous cycle
+    assign out_instr_is_bubble = (instr_is_bubble_ff | flush_ff);
+    
     // Inform DC stage whether or not the result of EX stage is valid
-    assign out_res_valid_EX  = res_valid_EX_ff;
-    assign out_res_valid_MEM = res_valid_MEM_ff;
+    assign out_res_valid_EX    = res_valid_EX_ff;
+    assign out_res_valid_MEM   = res_valid_MEM_ff;
+
+    // Forwarding ctrl signals
+    assign out_cycle_in_instr  = cycle_in_instr_ff;
 
     // ALU regs
     reg  [IALU_WORD_WIDTH-1:0]  ialu_res;
@@ -276,7 +286,8 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     
     //==============================================
     // Jump / Branch
-    // - writes: out_flush
+    // - writes: out_flush_DC_and_EX
+    //           out_flush_IF
     //           out_set_pc
     //           out_branch_pc
     //==============================================
@@ -284,18 +295,18 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     begin
         // Output zero if stage should be flushed
         if (flush_ff == 1) begin
-            out_flush       = 0;
-            out_flush_IF    = 0;
-            out_set_pc      = 0;
-            out_branch_pc   = 0;
+            out_flush_DC_and_EX = 0;
+            out_flush_IF        = 0;
+            out_set_pc          = 0;
+            out_branch_pc       = 0;
         end
 
         // Trigger jump after getting 2nd instruction word with immedate target address
         else if (act_jump_to_ialu_res_ff) begin
-            out_flush     = 1;
-            out_flush_IF  = 1;
-            out_set_pc    = 1;
-            out_branch_pc = ialu_res[PMEM_ADDR_WIDTH-1:0];
+            out_flush_DC_and_EX = 1;
+            out_flush_IF        = 1;
+            out_set_pc          = 1;
+            out_branch_pc       = ialu_res[PMEM_ADDR_WIDTH-1:0];
         end
         
         // All conditional branch instructions (1st cycle)
@@ -307,10 +318,10 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
                   || ((cycle_in_instr_ff == 0) && (act_branch_ialu_res_ff_lt0_ff == 1) && (ialu_res[IALU_WORD_WIDTH-1] == 1'b1))
                 )
         begin
-            out_flush     = 0;
-            out_flush_IF  = 1;
-            out_set_pc    = 0;
-            out_branch_pc = 0;
+            out_flush_DC_and_EX = 0;
+            out_flush_IF        = 1;
+            out_set_pc          = 0;
+            out_branch_pc       = 0;
         end
         
         // All conditional branch instructions (2nd cycle)
@@ -320,18 +331,18 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
                   || ((cycle_in_instr_ff == 1) && (act_branch_ialu_res_ff_lt0_ff == 1) && (ialu_res_ff[IALU_WORD_WIDTH-1] == 1'b1))
                 )
         begin
-            out_flush     = 1;
-            out_flush_IF  = 1;
-            out_set_pc    = 1;
-            out_branch_pc = ialu_res[PMEM_ADDR_WIDTH-1:0];
+            out_flush_DC_and_EX = 1;
+            out_flush_IF        = 1;
+            out_set_pc          = 1;
+            out_branch_pc       = ialu_res[PMEM_ADDR_WIDTH-1:0];
         end
         
         // default: do nothing
         else begin
-            out_flush     = 0;
-            out_flush_IF  = 0;
-            out_set_pc    = 0;
-            out_branch_pc = 0;
+            out_flush_DC_and_EX = 0;
+            out_flush_IF        = 0;
+            out_set_pc          = 0;
+            out_branch_pc       = 0;
         end
     end
 

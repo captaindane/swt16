@@ -39,6 +39,7 @@ typedef struct cmdLineArgs_t
     bool        dmemFileSpecified;
 
     std::string execName;
+    bool        exitOnNop;
     
     std::string pmemFile;
     bool        pmemFileSpecified;
@@ -56,6 +57,7 @@ void printHelp (cmdLineArgs_t& cmdLineArgs)
     std::cout << cmdLineArgs.execName << std::endl \
               << "        --dmemFile <hex file containing init values for data memory>" << std::endl \
               << "        --dmemDump" << std::endl \
+              << "        --exitOnNop" << std::endl \
               << "        --pmemFile <hex file containing contents of program memory>" << std::endl \
               << "        --simTime  <simulation time in time units>" << std::endl \
               << "        --help" << std::endl;
@@ -70,6 +72,7 @@ void parseCmdLine (int argc, char**argv, cmdLineArgs_t& cmdLineArgs)
     cmdLineArgs.abort             = false;
     cmdLineArgs.dmemDump          = false;
     cmdLineArgs.dmemFileSpecified = false;
+    cmdLineArgs.exitOnNop         = false;
     cmdLineArgs.pmemFileSpecified = false;
     cmdLineArgs.simTime           = 100;
 
@@ -86,10 +89,16 @@ void parseCmdLine (int argc, char**argv, cmdLineArgs_t& cmdLineArgs)
         {
             cmdLineArgs.dmemDump = true;
         }
+        
         else if (par == "--dmemFile")
         {
             cmdLineArgs.dmemFile          = std::string(argv[++parIdx]);
             cmdLineArgs.dmemFileSpecified = true;
+        }
+
+        else if (par == "--exitOnNop")
+        {
+            cmdLineArgs.exitOnNop = true;
         }
 	    
         else if (par == "--help")
@@ -138,6 +147,9 @@ void parseCmdLine (int argc, char**argv, cmdLineArgs_t& cmdLineArgs)
 // Main function. Runs simulator loop.
 int main(int argc, char** argv)
 {
+    // Depth of the RISC pipeline
+    size_t const   pipeDepth = 5;
+    
     // Turn on trace or not?
     bool           vcdTrace   = true;
     VerilatedVcdC* pVcdTracer = NULL;
@@ -190,7 +202,8 @@ int main(int argc, char** argv)
     main_time++;
 
     // Run for specified amount of time
-    while (main_time < cmdLineArgs.simTime)
+    while (   (cmdLineArgs.exitOnNop == false && (main_time < cmdLineArgs.simTime))
+           || (cmdLineArgs.exitOnNop == true  && !(uut->out_nop_in_WB && main_time > 2*pipeDepth)) )
     {
         // Toggle clock
         uut->clock = uut->clock ? 0 : 1;
@@ -219,7 +232,7 @@ int main(int argc, char** argv)
         delete pVcdTracer;
     }
 
-    std::cout << "Finished simulation of " << cmdLineArgs.simTime << " time units." << std::endl;
+    std::cout << "Finished simulation of " << main_time << " time units." << std::endl;
 
     delete uut;
 

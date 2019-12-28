@@ -36,16 +36,17 @@
 //        (not out_pmem_addr, which is one cycle ahead).
 module fetch #(parameter PC_WIDTH=12, PMEM_WIDTH=16, PC_INCREMENT=2)
            (
-            input                    clock,
-            input                    reset,
-            input  [  PC_WIDTH-1:0]  in_branch_pc, // New program counter that we want to jump to
-            input                    in_flush,     // Output out_instr is tied to 0 if this input is1
-            input  [PMEM_WIDTH-1:0]  in_instr,     // Current instruction received from PMEM
-            input                    in_set_pc,    // Are we setting a new PC via "in_branch_pc"?
-            input                    in_stall,     // Keep program counter from advancing
-            output [PMEM_WIDTH-1:0]  out_instr,    // Forward instruction to DC stage
-            output [  PC_WIDTH-1:0]  out_pc,       // This goes to the pipeline (i.e., DC stage)
-            output [  PC_WIDTH-1:0]  out_pmem_addr // This goes to the program memory
+            input                        clock,
+            input                        reset,
+            input      [  PC_WIDTH-1:0]  in_branch_pc,        // New program counter that we want to jump to
+            input                        in_flush,            // Output out_instr is tied to 0 if this input is1
+            input      [PMEM_WIDTH-1:0]  in_instr,            // Current instruction received from PMEM
+            input                        in_set_pc,           // Are we setting a new PC via "in_branch_pc"?
+            input                        in_stall,            // Keep program counter from advancing
+            output     [PMEM_WIDTH-1:0]  out_instr,           // Forward instruction to DC stage
+            output reg                   out_instr_is_bubble, // Is the current instruction a bubble (i.e., was IF just flushed?)
+            output     [  PC_WIDTH-1:0]  out_pc,              // This goes to the pipeline (i.e., DC stage)
+            output     [  PC_WIDTH-1:0]  out_pmem_addr        // This goes to the program memory
            );
 
     reg  [PMEM_WIDTH-1:0]  instr_ff;
@@ -62,7 +63,9 @@ module fetch #(parameter PC_WIDTH=12, PMEM_WIDTH=16, PC_INCREMENT=2)
     assign out_pc        = in_stall ? pc_ff2 : pc_ff;
     assign out_pmem_addr = pc_next;
     
+    //==============================================
     // Register: sample next PC, instr
+    //==============================================
     always @(posedge clock or posedge reset)
     begin
         if (!reset) begin
@@ -77,6 +80,19 @@ module fetch #(parameter PC_WIDTH=12, PMEM_WIDTH=16, PC_INCREMENT=2)
         end
     end
 
+    //==============================================
+    // Register: pass through
+    //==============================================
+    always @(posedge clock or posedge reset)
+    begin
+        if (!reset) begin
+            out_instr_is_bubble <= in_flush;
+        end
+        else begin
+            out_instr_is_bubble <= 0;
+        end
+    end
+    
     // Adder: add increment to sampled PC
     always @(*)
     begin

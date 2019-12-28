@@ -1,3 +1,7 @@
+#!/bin/bash
+
+BENCH_DIR="../bench"
+
 function run_test ()
 {
     # Generate names of memory files
@@ -14,7 +18,7 @@ function run_test ()
     
     # Generate simulator command
     SIM="../bench/swt16/Vswt16_top"
-    SIM_CMD="${SIM} --simTime $((2*$NUM_CYCLES)) --pmemFile ${PMEM} --dmemFile ${DMEM_IN} --dmemDump"
+    SIM_CMD="${SIM} --exitOnNop --pmemFile ${PMEM} --dmemFile ${DMEM_IN} --dmemDump"
     
     # Run simulation
     echo "======================================="
@@ -36,6 +40,10 @@ function run_test ()
     return $SUCCESS
 }
 
+# Build simulator
+cd $BENCH_DIR && make
+
+# Runt tests
 NUM_FAILED=0
 run_test "hex_test_bypass_stall";  NUM_FAILED=$(($NUM_FAILED + $?))
 run_test "hex_test_arith";         NUM_FAILED=$(($NUM_FAILED + $?))
