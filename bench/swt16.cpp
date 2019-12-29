@@ -217,7 +217,7 @@ int main(int argc, char** argv)
     // Dump contents of dmem
     if (cmdLineArgs.dmemDump == true)
     {
-        uut->dmem_dbg_dump = 1;
+        uut->in_dmem_dump = 1;
         uut->eval();
         if (pVcdTracer != NULL) { pVcdTracer->dump (main_time); }
         main_time++;
