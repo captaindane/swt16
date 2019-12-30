@@ -106,8 +106,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     
     assign out_pc              = pc_ff;
     assign out_res_reg_idx     = res_reg_idx;
-    assign out_src1_reg_idx    = src1_reg_idx; // TODO: null me when i am not needed
-    assign out_src2_reg_idx    = src2_reg_idx; // TODO: null me when i am not needed
+    assign out_src1_reg_idx    = src1_reg_idx;
+    
+    // For U-TYPE instructions, the result register is also the 2nd source
+    assign out_src2_reg_idx    = (opcode != `OPCODE_U_TYPE) ? src2_reg_idx : res_reg_idx;
+    
     assign out_stall           = src1_stall | src2_stall;
 
     //==============================================
@@ -282,6 +285,36 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 // Increment by 16-bit immediate value
                 `FUNC2_INC:
                 begin
+                    if (cycle_in_instr_ff == 1) begin
+                        cycle_in_instr_next                    = 0;
+                        out_act_branch_ialu_res_ff_eq0         = 0;
+                        out_act_branch_ialu_res_ff_gt0         = 0;
+                        out_act_branch_ialu_res_ff_lt0         = 0;
+                        out_act_ialu_add                       = 1;
+                        out_act_ialu_and                       = 0;
+                        out_act_ialu_mul                       = 0;
+                        out_act_ialu_neg_src2                  = 0;
+                        out_act_ialu_or                        = 0;
+                        out_act_ialu_sll                       = 0; 
+                        out_act_ialu_sra                       = 0; 
+                        out_act_ialu_srl                       = 0; 
+                        out_act_ialu_write_src2_to_res         = 0;
+                        out_act_ialu_xor                       = 0;
+                        out_act_incr_pc_is_res                 = 0;
+                        out_act_jump_to_ialu_res               = 0;
+                        out_act_load_dmem                      = 0;
+                        out_act_store_dmem                     = 0;
+                        out_act_write_res_to_reg               = 1;
+                        out_res_valid_EX                       = 1;         // result can be bypassed from EX
+                        out_res_valid_MEM                      = 1;         // result can be bypassed from MEM
+                        out_src1                               = immB;      // sign extended version of immA
+                        out_src2                               = src2_mod;  // result that is to be incremented
+                        out_src3                               = 0;
+                    end
+                    else begin
+                        cycle_in_instr_next                    = 1;
+                        zero_outputs();
+                    end
 
                 end
 
@@ -307,10 +340,10 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
                         out_act_write_res_to_reg               = 1;
-                        out_res_valid_EX                       = 1;             // result can be bypassed from EX
-                        out_res_valid_MEM                      = 1;             // result can be bypassed from MEM
-//                      out_src1                               =                // result that is to be incremented
-//                      out_src2                               =                // sign extended version of immA
+                        out_res_valid_EX                       = 1;                      // result can be bypassed from EX
+                        out_res_valid_MEM                      = 1;                      // result can be bypassed from MEM
+                        out_src1                               = {{12{immA[3]}}, immA};  // sign extended version of immA
+                        out_src2                               = src2_mod;               // result that is to be incremented
                         out_src3                               = 0;
                 
                 end
