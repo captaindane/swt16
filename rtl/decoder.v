@@ -74,7 +74,6 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     reg  [       PC_WIDTH-1:0]  pc_ff;
     reg  [       PC_WIDTH-1:0]  pc_ff2;
 
-    reg                         res_used;           // Is valid result assgined to result field in instruction?
     reg  [IALU_WORD_WIDTH-1:0]  src1_mod;           // Holds src1 input to EX stage (either from regfile or bypassed)
     reg                         src1_stall;         // Do we have to stall because src1 is unavailable?
     reg                         src1_used;          // Is a valid operand assigned to src1?
@@ -85,6 +84,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     
     // Instruction segments
     wire [   OPCODE_WIDTH-1:0]  opcode       = instr_1st_word [OPCODE_WIDTH-1:0];
+    wire [  REG_IDX_WIDTH-1:0]  res_reg_idx  = instr_1st_word [7:4];
     wire [  REG_IDX_WIDTH-1:0]  src1_reg_idx = instr_1st_word [11:8];
     wire [  REG_IDX_WIDTH-1:0]  src2_reg_idx = instr_1st_word [15:12];
     wire [    FUNC1_WIDTH-1:0]  func1        = instr_1st_word [7:4];
@@ -105,9 +105,12 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     assign out_instr_is_bubble = (src1_stall || src2_stall || flush_ff || instr_is_bubble_ff ) ? 1 : 0;
     
     assign out_pc              = pc_ff;
-    assign out_res_reg_idx     = (res_used) ? instr_1st_word[7:4] : 0; // forward result register index only if the field is valid in current instruction
-    assign out_src1_reg_idx    = src1_reg_idx; // TODO: null me when i am not needed
-    assign out_src2_reg_idx    = src2_reg_idx; // TODO: null me when i am not needed
+    assign out_res_reg_idx     = res_reg_idx;
+    assign out_src1_reg_idx    = src1_reg_idx;
+    
+    // For U-TYPE instructions, the result register is also the 2nd source
+    assign out_src2_reg_idx    = (opcode != `OPCODE_U_TYPE) ? src2_reg_idx : res_reg_idx;
+    
     assign out_stall           = src1_stall | src2_stall;
 
     //==============================================
@@ -264,24 +267,6 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         endcase
     end
 
-    // Set validity of res in current instruction: is the field in the instruction used?
-    // This is needed for stalling, since we only stall if there is an actual data dependency
-    always @(*)
-    begin
-        case (opcode)
-            `OPCODE_S_TYPE:
-            begin
-                res_used = 0;
-            end
-
-            default:
-            begin
-                res_used = 1;
-            end
-        endcase
-    end
-    
-    
     //==============================================
     // Decode instruction word
     //==============================================
@@ -297,6 +282,72 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         else if (opcode == `OPCODE_U_TYPE)
         begin
             case (func2)
+                // Increment by 16-bit immediate value
+                `FUNC2_INC:
+                begin
+                    if (cycle_in_instr_ff == 1) begin
+                        cycle_in_instr_next                    = 0;
+                        out_act_branch_ialu_res_ff_eq0         = 0;
+                        out_act_branch_ialu_res_ff_gt0         = 0;
+                        out_act_branch_ialu_res_ff_lt0         = 0;
+                        out_act_ialu_add                       = 1;
+                        out_act_ialu_and                       = 0;
+                        out_act_ialu_mul                       = 0;
+                        out_act_ialu_neg_src2                  = 0;
+                        out_act_ialu_or                        = 0;
+                        out_act_ialu_sll                       = 0; 
+                        out_act_ialu_sra                       = 0; 
+                        out_act_ialu_srl                       = 0; 
+                        out_act_ialu_write_src2_to_res         = 0;
+                        out_act_ialu_xor                       = 0;
+                        out_act_incr_pc_is_res                 = 0;
+                        out_act_jump_to_ialu_res               = 0;
+                        out_act_load_dmem                      = 0;
+                        out_act_store_dmem                     = 0;
+                        out_act_write_res_to_reg               = 1;
+                        out_res_valid_EX                       = 1;         // result can be bypassed from EX
+                        out_res_valid_MEM                      = 1;         // result can be bypassed from MEM
+                        out_src1                               = immB;      // sign extended version of immA
+                        out_src2                               = src2_mod;  // result that is to be incremented
+                        out_src3                               = 0;
+                    end
+                    else begin
+                        cycle_in_instr_next                    = 1;
+                        zero_outputs();
+                    end
+
+                end
+
+                // Increment by sign-extended 4-bit immediate value
+                `FUNC2_INCL:
+                begin
+                        cycle_in_instr_next                    = 0;
+                        out_act_branch_ialu_res_ff_eq0         = 0;
+                        out_act_branch_ialu_res_ff_gt0         = 0;
+                        out_act_branch_ialu_res_ff_lt0         = 0;
+                        out_act_ialu_add                       = 1;
+                        out_act_ialu_and                       = 0;
+                        out_act_ialu_mul                       = 0;
+                        out_act_ialu_neg_src2                  = 0;
+                        out_act_ialu_or                        = 0;
+                        out_act_ialu_sll                       = 0; 
+                        out_act_ialu_sra                       = 0; 
+                        out_act_ialu_srl                       = 0; 
+                        out_act_ialu_write_src2_to_res         = 0;
+                        out_act_ialu_xor                       = 0;
+                        out_act_incr_pc_is_res                 = 0;
+                        out_act_jump_to_ialu_res               = 0;
+                        out_act_load_dmem                      = 0;
+                        out_act_store_dmem                     = 0;
+                        out_act_write_res_to_reg               = 1;
+                        out_res_valid_EX                       = 1;                      // result can be bypassed from EX
+                        out_res_valid_MEM                      = 1;                      // result can be bypassed from MEM
+                        out_src1                               = {{12{immA[3]}}, immA};  // sign extended version of immA
+                        out_src2                               = src2_mod;               // result that is to be incremented
+                        out_src3                               = 0;
+                
+                end
+                
                 // Load 16-bit immediate value
                 `FUNC2_LI:
                 begin
@@ -634,7 +685,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
             case (func3)
                 
                 // Jump and link by immediate
-                `FUNC2_JAL:
+                `FUNC3_JAL:
                 begin
                     if (cycle_in_instr_ff == 1) begin
                         cycle_in_instr_next                    = 0;
@@ -670,7 +721,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 end
                 
                 // Jump and link by register
-                `FUNC2_JALR:
+                `FUNC3_JALR:
                 begin
                         cycle_in_instr_next                    = 0;
                         out_act_branch_ialu_res_ff_eq0         = 0;
