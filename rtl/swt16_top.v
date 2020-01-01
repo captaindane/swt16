@@ -56,7 +56,7 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
    wire                         act_ialu_sll_DC_EX;
    wire                         act_ialu_sra_DC_EX;
    wire                         act_ialu_srl_DC_EX;
-   wire                         act_ialu_write_src2_to_res_DC_EX;
+   wire                         act_ialu_src2_is_res_DC_EX;
    wire                         act_ialu_xor_DC_EX;
    wire                         act_incr_pc_is_res_DC_EX;
    wire                         act_jump_to_ialu_res_DC_EX;
@@ -206,8 +206,8 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
       .out_act_ialu_or                ( act_ialu_or_DC_EX ),
       .out_act_ialu_sll               ( act_ialu_sll_DC_EX ),
       .out_act_ialu_sra               ( act_ialu_sra_DC_EX ),
+      .out_act_ialu_src2_is_res       ( act_ialu_src2_is_res_DC_EX ),
       .out_act_ialu_srl               ( act_ialu_srl_DC_EX ),
-      .out_act_ialu_write_src2_to_res ( act_ialu_write_src2_to_res_DC_EX ),
       .out_act_ialu_xor               ( act_ialu_xor_DC_EX ),
       .out_act_incr_pc_is_res         ( act_incr_pc_is_res_DC_EX ),
       .out_act_jump_to_ialu_res       ( act_jump_to_ialu_res_DC_EX ),
@@ -252,8 +252,8 @@ module swt16_top  #(parameter DMEM_ADDR_WIDTH = 12,
        .in_act_ialu_or                ( act_ialu_or_DC_EX ),
        .in_act_ialu_sll               ( act_ialu_sll_DC_EX ),
        .in_act_ialu_sra               ( act_ialu_sra_DC_EX ),
+       .in_act_ialu_src2_is_res       ( act_ialu_src2_is_res_DC_EX ),
        .in_act_ialu_srl               ( act_ialu_srl_DC_EX ),
-       .in_act_ialu_write_src2_to_res ( act_ialu_write_src2_to_res_DC_EX ),
        .in_act_ialu_xor               ( act_ialu_xor_DC_EX ),
        .in_act_incr_pc_is_res         ( act_incr_pc_is_res_DC_EX ),
        .in_act_jump_to_ialu_res       ( act_jump_to_ialu_res_DC_EX ),

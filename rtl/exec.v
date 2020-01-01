@@ -20,8 +20,8 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
              input                         in_act_ialu_or,
              input                         in_act_ialu_sll,  // shift left logically
              input                         in_act_ialu_sra,  // shift right arithmetically
+             input                         in_act_ialu_src2_is_res,
              input                         in_act_ialu_srl,  // shift right logically
-             input                         in_act_ialu_write_src2_to_res,
              input                         in_act_ialu_xor,
              input                         in_act_incr_pc_is_res,
              input                         in_act_jump_to_ialu_res,
@@ -71,7 +71,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     reg                                act_ialu_sll_ff;
     reg                                act_ialu_sra_ff;
     reg                                act_ialu_srl_ff;
-    reg                                act_ialu_write_src2_to_res_ff;
+    reg                                act_ialu_src2_is_res_ff;
     reg                                act_ialu_xor_ff;
     reg                                act_incr_pc_is_res_ff;
     reg                                act_jump_to_ialu_res_ff;
@@ -126,8 +126,8 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             act_ialu_or_ff                <= in_act_ialu_or;
             act_ialu_sll_ff               <= in_act_ialu_sll;
             act_ialu_sra_ff               <= in_act_ialu_sra;
+            act_ialu_src2_is_res_ff       <= in_act_ialu_src2_is_res;
             act_ialu_srl_ff               <= in_act_ialu_srl;
-            act_ialu_write_src2_to_res_ff <= in_act_ialu_write_src2_to_res;
             act_ialu_xor_ff               <= in_act_ialu_xor;
             act_incr_pc_is_res_ff         <= in_act_incr_pc_is_res;
             act_jump_to_ialu_res_ff       <= in_act_jump_to_ialu_res;
@@ -157,8 +157,8 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             act_ialu_or_ff                <= 0;
             act_ialu_sll_ff               <= 0;
             act_ialu_sra_ff               <= 0;
+            act_ialu_src2_is_res_ff       <= 0;
             act_ialu_srl_ff               <= 0;
-            act_ialu_write_src2_to_res_ff <= 0;
             act_ialu_xor_ff               <= 0;
             act_incr_pc_is_res_ff         <= 0;
             act_jump_to_ialu_res_ff       <= 0;
@@ -258,7 +258,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
         end
 
         // Forward src2 directly to ALU res
-        else if (act_ialu_write_src2_to_res_ff) begin
+        else if (act_ialu_src2_is_res_ff) begin
             ialu_res = src2_mod;
         end
         
