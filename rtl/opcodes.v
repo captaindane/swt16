@@ -7,18 +7,12 @@
 `define OPCODE_J_TYPE  4'b0010 
 `define OPCODE_S_TYPE  4'b0011 
 
-// I-TYPE
-// +-------+-------+-------+-------+
-// |  immA |  rs1  |   rd  |  opc  |
-// +-------+-------+-------+-------+
-// TODO: convert to J-TYPE and delete
-`define OPCODE_LH      4'b0100  // I-Type: Load half
-`define OPCODE_LHO     4'b0101  // I-Type: Load half with offset
-
 // R-TYPE
 // +-------+-------+-------+-------+
 // |  rs2  |  rs1  |   rd  |  opc  |
 // +-------+-------+-------+-------+
+// reserved            4'b0100
+// reserved            4'b0101
 `define OPCODE_ADD     4'b0110  // R-Type: integer addition
 `define OPCODE_SUB     4'b0111  // R-Type: integer subtraction
 `define OPCODE_MUL     4'b1000  // R-Type: integer multiplication
@@ -28,6 +22,7 @@
 `define OPCODE_AND     4'b1100  // R-Type: logical and
 `define OPCODE_OR      4'b1101  // R-Type: logical or
 `define OPCODE_XOR     4'b1110  // R-Type: logical xor
+// reserved            4'b1111
 
 // S-TYPE
 // +-------+-------+-------+-------+
@@ -61,6 +56,8 @@
 // +-------+-------+-------+-------+
 `define FUNC3_JAL      4'b0000  // Jump and link (absolute addressing)
 `define FUNC3_JALR     4'b0001  // Jump and link with address from register (absolute addressing)
+`define FUNC3_LH       4'b0010  // Load half word from address in register
+`define FUNC3_LHO      4'b0011  // Load half word from address in register plus offset to dmem address
 
 // Special instructions
 `define INSTR_NOP      {{12{1'b0}}, `OPCODE_NOP}
