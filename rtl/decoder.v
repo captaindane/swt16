@@ -24,6 +24,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
        output                        out_act_branch_ialu_res_ff_eq0,    // branch if registered IALU result is equal to zero
        output                        out_act_branch_ialu_res_ff_gt0,    // branch if registered IALU result is greater zero
        output                        out_act_branch_ialu_res_ff_lt0,    // branch if registered IALU result is less than zero
+       output                        out_act_ex_incr_pc_is_res,         // incremented pc becomes result of EX stage (not of IALU)
        output                        out_act_ialu_add,                  // integer add
        output                        out_act_ialu_and,                  // logic and
        output                        out_act_ialu_mul,                  // integer multiply
@@ -31,10 +32,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
        output                        out_act_ialu_or,                   // logic or
        output                        out_act_ialu_sll,                  // shift left logically
        output                        out_act_ialu_sra,                  // shift right arithmetically
+       output                        out_act_ialu_src2_is_res,          // make src2 the result if the IALU without any actual calculation
        output                        out_act_ialu_srl,                  // shift right logically
-       output                        out_act_ialu_write_src2_to_res,    // make src2 the result if the IALU without any actual calculation
        output                        out_act_ialu_xor,                  // logic xor
-       output                        out_act_incr_pc_is_res,            // incremented pc becomes result of EX stage (not of IALU)
        output                        out_act_jump_to_ialu_res,          // jump to the result of the IALU 
        output                        out_act_load_dmem,                 // load data from dmem into register
        output                        out_act_store_dmem,                // store date from register in dmem
@@ -208,6 +208,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         out_act_branch_ialu_res_ff_eq0  = 0;
         out_act_branch_ialu_res_ff_gt0  = 0;
         out_act_branch_ialu_res_ff_lt0  = 0;
+        out_act_ex_incr_pc_is_res       = 0;
         out_act_ialu_add                = 0;
         out_act_ialu_and                = 0;
         out_act_ialu_mul                = 0;
@@ -215,10 +216,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         out_act_ialu_or                 = 0;
         out_act_ialu_sll                = 0; 
         out_act_ialu_sra                = 0; 
+        out_act_ialu_src2_is_res        = 0;
         out_act_ialu_srl                = 0; 
-        out_act_ialu_write_src2_to_res  = 0;
         out_act_ialu_xor                = 0;
-        out_act_incr_pc_is_res          = 0;
         out_act_jump_to_ialu_res        = 0;
         out_act_load_dmem               = 0;
         out_act_store_dmem              = 0;
@@ -290,6 +290,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_branch_ialu_res_ff_eq0         = 0;
                         out_act_branch_ialu_res_ff_gt0         = 0;
                         out_act_branch_ialu_res_ff_lt0         = 0;
+                        out_act_ex_incr_pc_is_res              = 0;
                         out_act_ialu_add                       = 1;
                         out_act_ialu_and                       = 0;
                         out_act_ialu_mul                       = 0;
@@ -297,10 +298,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_or                        = 0;
                         out_act_ialu_sll                       = 0; 
                         out_act_ialu_sra                       = 0; 
+                        out_act_ialu_src2_is_res               = 0;
                         out_act_ialu_srl                       = 0; 
-                        out_act_ialu_write_src2_to_res         = 0;
                         out_act_ialu_xor                       = 0;
-                        out_act_incr_pc_is_res                 = 0;
                         out_act_jump_to_ialu_res               = 0;
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
@@ -325,6 +325,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_branch_ialu_res_ff_eq0         = 0;
                         out_act_branch_ialu_res_ff_gt0         = 0;
                         out_act_branch_ialu_res_ff_lt0         = 0;
+                        out_act_ex_incr_pc_is_res              = 0;
                         out_act_ialu_add                       = 1;
                         out_act_ialu_and                       = 0;
                         out_act_ialu_mul                       = 0;
@@ -332,10 +333,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_or                        = 0;
                         out_act_ialu_sll                       = 0; 
                         out_act_ialu_sra                       = 0; 
+                        out_act_ialu_src2_is_res               = 0;
                         out_act_ialu_srl                       = 0; 
-                        out_act_ialu_write_src2_to_res         = 0;
                         out_act_ialu_xor                       = 0;
-                        out_act_incr_pc_is_res                 = 0;
                         out_act_jump_to_ialu_res               = 0;
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
@@ -356,6 +356,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_branch_ialu_res_ff_eq0         = 0;
                         out_act_branch_ialu_res_ff_gt0         = 0;
                         out_act_branch_ialu_res_ff_lt0         = 0;
+                        out_act_ex_incr_pc_is_res              = 0;
                         out_act_ialu_add                       = 0;
                         out_act_ialu_and                       = 0;
                         out_act_ialu_mul                       = 0;
@@ -363,10 +364,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_or                        = 0;
                         out_act_ialu_sll                       = 0; 
                         out_act_ialu_sra                       = 0; 
+                        out_act_ialu_src2_is_res               = 1;
                         out_act_ialu_srl                       = 0; 
-                        out_act_ialu_write_src2_to_res         = 1;
                         out_act_ialu_xor                       = 0;
-                        out_act_incr_pc_is_res                 = 0;
                         out_act_jump_to_ialu_res               = 0;
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
@@ -390,6 +390,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_branch_ialu_res_ff_eq0         = 0;
                         out_act_branch_ialu_res_ff_gt0         = 0;
                         out_act_branch_ialu_res_ff_lt0         = 0;
+                        out_act_ex_incr_pc_is_res              = 0;
                         out_act_ialu_add                       = 0;
                         out_act_ialu_and                       = 0;
                         out_act_ialu_mul                       = 0;
@@ -397,10 +398,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_or                        = 0;
                         out_act_ialu_sll                       = 0; 
                         out_act_ialu_sra                       = 0; 
+                        out_act_ialu_src2_is_res               = 1;
                         out_act_ialu_srl                       = 0; 
-                        out_act_ialu_write_src2_to_res         = 1;
                         out_act_ialu_xor                       = 0;
-                        out_act_incr_pc_is_res                 = 0;
                         out_act_jump_to_ialu_res               = 0;
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
@@ -429,23 +429,23 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         begin
             case (func1)
                 
-                // Branch if equal
+                // Branch if equal (PC-relative addressing)
                 `FUNC1_BEQ:
                 begin
                     // 1st and 2nd cycle
                         out_act_branch_ialu_res_ff_eq0         = 1;
                         out_act_branch_ialu_res_ff_gt0         = 0;
                         out_act_branch_ialu_res_ff_lt0         = 0;
+                        out_act_ex_incr_pc_is_res              = 0;
                         out_act_ialu_add                       = 1;
                         out_act_ialu_and                       = 0;
                         out_act_ialu_mul                       = 0;
                         out_act_ialu_or                        = 0;
                         out_act_ialu_sll                       = 0; 
                         out_act_ialu_sra                       = 0; 
+                        out_act_ialu_src2_is_res               = 0;
                         out_act_ialu_srl                       = 0; 
-                        out_act_ialu_write_src2_to_res         = 0;
                         out_act_ialu_xor                       = 0;
-                        out_act_incr_pc_is_res                 = 0;
                         out_act_jump_to_ialu_res               = 0;
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
@@ -473,23 +473,23 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
 
                 end
 
-                // Branch if not equal
+                // Branch if not equal (PC-relative addressing)
                 `FUNC1_BNEQ:
                 begin
                     // 1st and 2nd cycle
                         out_act_branch_ialu_res_ff_eq0         = 0;
                         out_act_branch_ialu_res_ff_gt0         = 1;
                         out_act_branch_ialu_res_ff_lt0         = 1;
+                        out_act_ex_incr_pc_is_res              = 0;
                         out_act_ialu_add                       = 1;
                         out_act_ialu_and                       = 0;
                         out_act_ialu_mul                       = 0;
                         out_act_ialu_or                        = 0;
                         out_act_ialu_sll                       = 0; 
                         out_act_ialu_sra                       = 0; 
+                        out_act_ialu_src2_is_res               = 0;
                         out_act_ialu_srl                       = 0; 
-                        out_act_ialu_write_src2_to_res         = 0;
                         out_act_ialu_xor                       = 0;
-                        out_act_incr_pc_is_res                 = 0;
                         out_act_jump_to_ialu_res               = 0;
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
@@ -517,23 +517,23 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
 
                 end
 
-                // Branch if greater equal
+                // Branch if greater equal (PC-relative addressing)
                 `FUNC1_BGE:
                 begin
                     // 1st and 2nd cycle
                         out_act_branch_ialu_res_ff_eq0         = 1;
                         out_act_branch_ialu_res_ff_gt0         = 1;
                         out_act_branch_ialu_res_ff_lt0         = 0;
+                        out_act_ex_incr_pc_is_res              = 0;
                         out_act_ialu_add                       = 1;
                         out_act_ialu_and                       = 0;
                         out_act_ialu_mul                       = 0;
                         out_act_ialu_or                        = 0;
                         out_act_ialu_sll                       = 0; 
                         out_act_ialu_sra                       = 0; 
+                        out_act_ialu_src2_is_res               = 0;
                         out_act_ialu_srl                       = 0; 
-                        out_act_ialu_write_src2_to_res         = 0;
                         out_act_ialu_xor                       = 0;
-                        out_act_incr_pc_is_res                 = 0;
                         out_act_jump_to_ialu_res               = 0;
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
@@ -561,23 +561,23 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
 
                 end
                 
-                // Branch if less than
+                // Branch if less than (PC-relative addressing)
                 `FUNC1_BLT:
                 begin
                     // 1st and 2nd cycle
                         out_act_branch_ialu_res_ff_eq0         = 0;
                         out_act_branch_ialu_res_ff_gt0         = 0;
                         out_act_branch_ialu_res_ff_lt0         = 1;
+                        out_act_ex_incr_pc_is_res              = 0;
                         out_act_ialu_add                       = 1;
                         out_act_ialu_and                       = 0;
                         out_act_ialu_mul                       = 0;
                         out_act_ialu_or                        = 0;
                         out_act_ialu_sll                       = 0; 
                         out_act_ialu_sra                       = 0; 
+                        out_act_ialu_src2_is_res               = 0;
                         out_act_ialu_srl                       = 0; 
-                        out_act_ialu_write_src2_to_res         = 0;
                         out_act_ialu_xor                       = 0;
-                        out_act_incr_pc_is_res                 = 0;
                         out_act_jump_to_ialu_res               = 0;
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
@@ -612,6 +612,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_branch_ialu_res_ff_eq0         = 0;
                         out_act_branch_ialu_res_ff_gt0         = 0;
                         out_act_branch_ialu_res_ff_lt0         = 0;
+                        out_act_ex_incr_pc_is_res              = 0;
                         out_act_ialu_add                       = 0;
                         out_act_ialu_and                       = 0;
                         out_act_ialu_mul                       = 0;
@@ -619,10 +620,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_or                        = 0;
                         out_act_ialu_sll                       = 0; 
                         out_act_ialu_sra                       = 0; 
+                        out_act_ialu_src2_is_res               = 1;
                         out_act_ialu_srl                       = 0; 
-                        out_act_ialu_write_src2_to_res         = 1;
                         out_act_ialu_xor                       = 0;
-                        out_act_incr_pc_is_res                 = 0;
                         out_act_jump_to_ialu_res               = 0;
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 1;
@@ -642,6 +642,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_branch_ialu_res_ff_eq0         = 0;
                         out_act_branch_ialu_res_ff_gt0         = 0;
                         out_act_branch_ialu_res_ff_lt0         = 0;
+                        out_act_ex_incr_pc_is_res              = 0;
                         out_act_ialu_add                       = 1;
                         out_act_ialu_and                       = 0;
                         out_act_ialu_mul                       = 0;
@@ -649,10 +650,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_or                        = 0;
                         out_act_ialu_sll                       = 0; 
                         out_act_ialu_sra                       = 0; 
+                        out_act_ialu_src2_is_res               = 0;
                         out_act_ialu_srl                       = 0; 
-                        out_act_ialu_write_src2_to_res         = 0;
                         out_act_ialu_xor                       = 0;
-                        out_act_incr_pc_is_res                 = 0;
                         out_act_jump_to_ialu_res               = 0;
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 1;
@@ -684,7 +684,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         begin
             case (func3)
                 
-                // Jump and link by immediate
+                // Jump and link by immediate (absolute addressing)
                 `FUNC3_JAL:
                 begin
                     if (cycle_in_instr_ff == 1) begin
@@ -692,26 +692,25 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_branch_ialu_res_ff_eq0         = 0;
                         out_act_branch_ialu_res_ff_gt0         = 0;
                         out_act_branch_ialu_res_ff_lt0         = 0;
-                        out_act_ialu_add                       = 1;
+                        out_act_ex_incr_pc_is_res              = 1;
+                        out_act_ialu_add                       = 0;
                         out_act_ialu_and                       = 0;
                         out_act_ialu_mul                       = 0;
                         out_act_ialu_neg_src2                  = 0;
                         out_act_ialu_or                        = 0;
                         out_act_ialu_sll                       = 0; 
                         out_act_ialu_sra                       = 0; 
+                        out_act_ialu_src2_is_res               = 1;
                         out_act_ialu_srl                       = 0; 
-                        out_act_ialu_write_src2_to_res         = 0;
                         out_act_ialu_xor                       = 0;
-                        out_act_incr_pc_is_res                 = 1;
                         out_act_jump_to_ialu_res               = 1;
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
                         out_act_write_res_to_reg               = 1;
                         out_res_valid_EX                       = 0;    // result cannot be bypassed from EX
-                        out_res_valid_MEM                      = 0;
-                        out_src1                               = immB;
-                        out_src2[PC_WIDTH-1:0]                 = pc_ff2;
-                        out_src2[IALU_WORD_WIDTH-1:PC_WIDTH]   = 0;
+                        out_res_valid_MEM                      = 0;    // result cannot be bypassed from MEM
+                        out_src1                               = 0;
+                        out_src2                               = immB;
                         out_src3                               = 0;
                     end
                     else begin
@@ -720,33 +719,32 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                     end
                 end
                 
-                // Jump and link by register
+                // Jump and link by register (absolute addressing)
                 `FUNC3_JALR:
                 begin
                         cycle_in_instr_next                    = 0;
                         out_act_branch_ialu_res_ff_eq0         = 0;
                         out_act_branch_ialu_res_ff_gt0         = 0;
                         out_act_branch_ialu_res_ff_lt0         = 0;
-                        out_act_ialu_add                       = 1;
+                        out_act_ex_incr_pc_is_res              = 1;
+                        out_act_ialu_add                       = 0;
                         out_act_ialu_and                       = 0;
                         out_act_ialu_mul                       = 0;
                         out_act_ialu_neg_src2                  = 0;
                         out_act_ialu_or                        = 0;
                         out_act_ialu_sll                       = 0; 
                         out_act_ialu_sra                       = 0; 
+                        out_act_ialu_src2_is_res               = 1;
                         out_act_ialu_srl                       = 0; 
-                        out_act_ialu_write_src2_to_res         = 0;
                         out_act_ialu_xor                       = 0;
-                        out_act_incr_pc_is_res                 = 1;
                         out_act_jump_to_ialu_res               = 1;
                         out_act_load_dmem                      = 0;
                         out_act_store_dmem                     = 0;
                         out_act_write_res_to_reg               = 1;
                         out_res_valid_EX                       = 0;    // result cannot be bypassed from EX
-                        out_res_valid_MEM                      = 0;
-                        out_src1                               = src1_mod;
-                        out_src2[PC_WIDTH-1:0]                 = pc_ff;
-                        out_src2[IALU_WORD_WIDTH-1:PC_WIDTH]   = 0;
+                        out_res_valid_MEM                      = 0;    // result cannot be bypassed from MEM
+                        out_src1                               = 0;
+                        out_src2                               = src1_mod;
                         out_src3                               = 0;
                 end
 
@@ -767,6 +765,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_branch_ialu_res_ff_eq0         = 0;
                 out_act_branch_ialu_res_ff_gt0         = 0;
                 out_act_branch_ialu_res_ff_lt0         = 0;
+                out_act_ex_incr_pc_is_res              = 0;
                 out_act_ialu_add                       = 0;
                 out_act_ialu_and                       = 0;
                 out_act_ialu_mul                       = 0;
@@ -774,10 +773,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_ialu_or                        = 0;
                 out_act_ialu_sll                       = 0; 
                 out_act_ialu_sra                       = 0; 
+                out_act_ialu_src2_is_res               = 1;
                 out_act_ialu_srl                       = 0; 
-                out_act_ialu_write_src2_to_res         = 1;
                 out_act_ialu_xor                       = 0;
-                out_act_incr_pc_is_res                 = 0;
                 out_act_jump_to_ialu_res               = 0;
                 out_act_load_dmem                      = 1;
                 out_act_store_dmem                     = 0;
@@ -797,6 +795,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_branch_ialu_res_ff_eq0         = 0;
                 out_act_branch_ialu_res_ff_gt0         = 0;
                 out_act_branch_ialu_res_ff_lt0         = 0;
+                out_act_ex_incr_pc_is_res              = 0;
                 out_act_ialu_add                       = 1;
                 out_act_ialu_and                       = 0;
                 out_act_ialu_mul                       = 0;
@@ -804,10 +803,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_ialu_or                        = 0;
                 out_act_ialu_sll                       = 0; 
                 out_act_ialu_sra                       = 0; 
+                out_act_ialu_src2_is_res               = 0;
                 out_act_ialu_srl                       = 0; 
-                out_act_ialu_write_src2_to_res         = 0;
                 out_act_ialu_xor                       = 0;
-                out_act_incr_pc_is_res                 = 0;
                 out_act_jump_to_ialu_res               = 0;
                 out_act_load_dmem                      = 1;
                 out_act_store_dmem                     = 0;
@@ -832,6 +830,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_branch_ialu_res_ff_eq0         = 0;
                 out_act_branch_ialu_res_ff_gt0         = 0;
                 out_act_branch_ialu_res_ff_lt0         = 0;
+                out_act_ex_incr_pc_is_res              = 0;
                 out_act_ialu_add                       = 1;
                 out_act_ialu_and                       = 0;
                 out_act_ialu_mul                       = 0;
@@ -839,10 +838,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_ialu_or                        = 0;
                 out_act_ialu_sll                       = 0; 
                 out_act_ialu_sra                       = 0; 
+                out_act_ialu_src2_is_res               = 0;
                 out_act_ialu_srl                       = 0; 
-                out_act_ialu_write_src2_to_res         = 0;
                 out_act_ialu_xor                       = 0;
-                out_act_incr_pc_is_res                 = 0;
                 out_act_jump_to_ialu_res               = 0;
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
@@ -860,6 +858,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_branch_ialu_res_ff_eq0         = 0;
                 out_act_branch_ialu_res_ff_gt0         = 0;
                 out_act_branch_ialu_res_ff_lt0         = 0;
+                out_act_ex_incr_pc_is_res              = 0;
                 out_act_ialu_add                       = 1;
                 out_act_ialu_and                       = 0;
                 out_act_ialu_mul                       = 0;
@@ -867,10 +866,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_ialu_or                        = 0;
                 out_act_ialu_sll                       = 0; 
                 out_act_ialu_sra                       = 0; 
+                out_act_ialu_src2_is_res               = 0;
                 out_act_ialu_srl                       = 0; 
-                out_act_ialu_write_src2_to_res         = 0;
                 out_act_ialu_xor                       = 0;
-                out_act_incr_pc_is_res                 = 0;
                 out_act_jump_to_ialu_res               = 0;
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
@@ -888,6 +886,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_branch_ialu_res_ff_eq0         = 0;
                 out_act_branch_ialu_res_ff_gt0         = 0;
                 out_act_branch_ialu_res_ff_lt0         = 0;
+                out_act_ex_incr_pc_is_res              = 0;
                 out_act_ialu_add                       = 0;
                 out_act_ialu_and                       = 0;
                 out_act_ialu_mul                       = 1;
@@ -895,10 +894,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_ialu_or                        = 0;
                 out_act_ialu_sll                       = 0; 
                 out_act_ialu_sra                       = 0; 
+                out_act_ialu_src2_is_res               = 0;
                 out_act_ialu_srl                       = 0; 
-                out_act_ialu_write_src2_to_res         = 0;
                 out_act_ialu_xor                       = 0;
-                out_act_incr_pc_is_res                 = 0;
                 out_act_jump_to_ialu_res               = 0;
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
@@ -916,6 +914,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_branch_ialu_res_ff_eq0         = 0;
                 out_act_branch_ialu_res_ff_gt0         = 0;
                 out_act_branch_ialu_res_ff_lt0         = 0;
+                out_act_ex_incr_pc_is_res              = 0;
                 out_act_ialu_add                       = 0;
                 out_act_ialu_and                       = 0;
                 out_act_ialu_mul                       = 0;
@@ -923,10 +922,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_ialu_or                        = 0;
                 out_act_ialu_sll                       = 1; 
                 out_act_ialu_sra                       = 0; 
+                out_act_ialu_src2_is_res               = 0;
                 out_act_ialu_srl                       = 0; 
-                out_act_ialu_write_src2_to_res         = 0;
                 out_act_ialu_xor                       = 0;
-                out_act_incr_pc_is_res                 = 0;
                 out_act_jump_to_ialu_res               = 0;
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
@@ -944,6 +942,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_branch_ialu_res_ff_eq0         = 0;
                 out_act_branch_ialu_res_ff_gt0         = 0;
                 out_act_branch_ialu_res_ff_lt0         = 0;
+                out_act_ex_incr_pc_is_res              = 0;
                 out_act_ialu_add                       = 0;
                 out_act_ialu_and                       = 0;
                 out_act_ialu_mul                       = 0;
@@ -951,10 +950,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_ialu_or                        = 0;
                 out_act_ialu_sll                       = 0; 
                 out_act_ialu_sra                       = 0; 
+                out_act_ialu_src2_is_res               = 0;
                 out_act_ialu_srl                       = 1; 
-                out_act_ialu_write_src2_to_res         = 0;
                 out_act_ialu_xor                       = 0;
-                out_act_incr_pc_is_res                 = 0;
                 out_act_jump_to_ialu_res               = 0;
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
@@ -972,6 +970,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_branch_ialu_res_ff_eq0         = 0;
                 out_act_branch_ialu_res_ff_gt0         = 0;
                 out_act_branch_ialu_res_ff_lt0         = 0;
+                out_act_ex_incr_pc_is_res              = 0;
                 out_act_ialu_add                       = 0;
                 out_act_ialu_and                       = 0;
                 out_act_ialu_mul                       = 0;
@@ -979,10 +978,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_ialu_or                        = 0;
                 out_act_ialu_sll                       = 0; 
                 out_act_ialu_sra                       = 1; 
+                out_act_ialu_src2_is_res               = 0;
                 out_act_ialu_srl                       = 0; 
-                out_act_ialu_write_src2_to_res         = 0;
                 out_act_ialu_xor                       = 0;
-                out_act_incr_pc_is_res                 = 0;
                 out_act_jump_to_ialu_res               = 0;
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
@@ -1000,6 +998,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_branch_ialu_res_ff_eq0         = 0;
                 out_act_branch_ialu_res_ff_gt0         = 0;
                 out_act_branch_ialu_res_ff_lt0         = 0;
+                out_act_ex_incr_pc_is_res              = 0;
                 out_act_ialu_add                       = 0;
                 out_act_ialu_and                       = 1;
                 out_act_ialu_mul                       = 0;
@@ -1007,10 +1006,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_ialu_or                        = 0;
                 out_act_ialu_sll                       = 0; 
                 out_act_ialu_sra                       = 0; 
+                out_act_ialu_src2_is_res               = 0;
                 out_act_ialu_srl                       = 0; 
-                out_act_ialu_write_src2_to_res         = 0;
                 out_act_ialu_xor                       = 0;
-                out_act_incr_pc_is_res                 = 0;
                 out_act_jump_to_ialu_res               = 0;
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
@@ -1028,6 +1026,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_branch_ialu_res_ff_eq0         = 0;
                 out_act_branch_ialu_res_ff_gt0         = 0;
                 out_act_branch_ialu_res_ff_lt0         = 0;
+                out_act_ex_incr_pc_is_res              = 0;
                 out_act_ialu_add                       = 0;
                 out_act_ialu_and                       = 0;
                 out_act_ialu_mul                       = 0;
@@ -1035,10 +1034,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_ialu_or                        = 1;
                 out_act_ialu_sll                       = 0; 
                 out_act_ialu_sra                       = 0; 
+                out_act_ialu_src2_is_res               = 0;
                 out_act_ialu_srl                       = 0; 
-                out_act_ialu_write_src2_to_res         = 0;
                 out_act_ialu_xor                       = 0;
-                out_act_incr_pc_is_res                 = 0;
                 out_act_jump_to_ialu_res               = 0;
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
@@ -1056,6 +1054,7 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_branch_ialu_res_ff_eq0         = 0;
                 out_act_branch_ialu_res_ff_gt0         = 0;
                 out_act_branch_ialu_res_ff_lt0         = 0;
+                out_act_ex_incr_pc_is_res              = 0;
                 out_act_ialu_add                       = 0;
                 out_act_ialu_and                       = 0;
                 out_act_ialu_mul                       = 0;
@@ -1063,10 +1062,9 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_ialu_or                        = 0;
                 out_act_ialu_sll                       = 0; 
                 out_act_ialu_sra                       = 0; 
+                out_act_ialu_src2_is_res               = 0;
                 out_act_ialu_srl                       = 0; 
-                out_act_ialu_write_src2_to_res         = 0;
                 out_act_ialu_xor                       = 1;
-                out_act_incr_pc_is_res                 = 0;
                 out_act_jump_to_ialu_res               = 0;
                 out_act_load_dmem                      = 0;
                 out_act_store_dmem                     = 0;
