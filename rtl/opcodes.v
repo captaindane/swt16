@@ -35,10 +35,10 @@
 // +-------+-------+-------+-------+
 // |        immB (optional)        |
 // +-------+-------+-------+-------+
-`define FUNC1_BEQ      4'b0000  // Branch if equal
-`define FUNC1_BNEQ     4'b0001  // Branch if not equal
-`define FUNC1_BGE      4'b0010  // Branch if greater or equal
-`define FUNC1_BLT      4'b0011  // Branch if less than
+`define FUNC1_BEQ      4'b0000  // Branch if equal (PC-relative addressing)
+`define FUNC1_BNEQ     4'b0001  // Branch if not equal (PC-relative addressing)
+`define FUNC1_BGE      4'b0010  // Branch if greater or equal (PC-relative addressing)
+`define FUNC1_BLT      4'b0011  // Branch if less than (PC-relative addressing)
 `define FUNC1_SH       4'b0100  // Store half (i.e., 16-bit)
 `define FUNC1_SHO      4'b0101  // Store half (i.e., 16-bit) with offset
 
@@ -59,8 +59,8 @@
 // +-------+-------+-------+-------+
 // |        immB (optional)        |
 // +-------+-------+-------+-------+
-`define FUNC3_JAL      4'b0000  // Jump and link
-`define FUNC3_JALR     4'b0001  // Jump and link with address from register
+`define FUNC3_JAL      4'b0000  // Jump and link (absolute addressing)
+`define FUNC3_JALR     4'b0001  // Jump and link with address from register (absolute addressing)
 
 // Special instructions
 `define INSTR_NOP      {{12{1'b0}}, `OPCODE_NOP}
