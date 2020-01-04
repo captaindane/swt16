@@ -43,10 +43,11 @@
 // +-------+-------+-------+-------+
 // |        immB (optional)        |
 // +-------+-------+-------+-------+
-`define FUNC2_INC      4'b0001  // Increment result by 16-bit immediate value
-`define FUNC2_INCL     4'b0010  // Increment result by sign-extended 4-bit immediate value
-`define FUNC2_LI       4'b0011  // Load immediate value
-`define FUNC2_LIL      4'b0100  // Load LSBs from 4-bit immedate value
+`define FUNC2_INC      4'b0001  // Increment result by 16-bit immediate value (immB)
+`define FUNC2_INCL     4'b0010  // Increment result by sign-extended 4-bit immediate value (immA)
+`define FUNC2_LI       4'b0011  // Load immediate value (immB)
+`define FUNC2_LIL      4'b0100  // Load LSBs from 4-bit immedate value (immA)
+`define FUNC2_ADDPCI   4'b0101  // Add PC to 16-bit immediate value (immB)
 
 // J-Type
 // +-------+-------+-------+-------+
@@ -58,6 +59,7 @@
 `define FUNC3_JALR     4'b0001  // Jump and link with address from register (absolute addressing)
 `define FUNC3_LH       4'b0010  // Load half word from address in register
 `define FUNC3_LHO      4'b0011  // Load half word from address in register plus offset to dmem address
+`define FUNC3_ADDPC    4'b0100  // Add PC to register
 
 // Special instructions
 `define INSTR_NOP      {{12{1'b0}}, `OPCODE_NOP}
