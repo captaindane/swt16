@@ -1,29 +1,28 @@
-1411    // lil r1 , 2                  : r1  <- 2          : number of which factorial is currently calculated
+2411    // lil r1 , 2                  : r1  <- 2          : number of which factorial is currently calculated
 8421    // lil r2 , 8                  : r2  <- 8          : highest number of which factorial is calculated
-1431    // lil r3 , 1                  : r3  <- 1          : constant
-        // addpci r14, 0x14            : r14 <- _factorial : position independent code to compute absolute address of _factorial
-        // ... 
+1431    // lil r3 , 1                  : r3  <- 1          : constant, used to decrement 
+05E1    // addpci r14, 0x14            : r14 <- _factorial : position independent code to compute absolute address of _factorial
+0014    // ... 
 04F1    // lil r15, 0                                      : writeback address in dmem
 //=========================================
-// _loop_start (zzzz):
+// _loop_start:
 //=========================================
-0022    // jalr r4 , r1                                    : jump to factorial function (address is in r14)
-xxxx    // ...
-1211    // incl r1 , 1
-22F1    // incl r15, 2
+1E42    // jalr r4 , r14               : r4  <- pc  + 4    : jump to factorial function (address is in r14)
+1211    // incl r1 , 1                 : r1  <- r1  + 1    : increment number we want the factorial of
+22F1    // incl r15, 2                 : r15 <- r15 + 2    : increment address we want the factorial stored at
 1233    // blt  r2, r1, _end                               : while loop condition check and potential exit
-0014    // ... offset (+20)
-0003    // beq r0, r0, _loop_start                         : while loop jump back
-fff4    // ... offset (-12)
+0018    // ... offset (+24)
+0003    // beq r0, r0, _loop_start                         : while loop jump back (unconditioned)
+fff6    // ... offset (-10)
 //=========================================
-// _factorial (xxxx):
+// _factorial:
 //=========================================
 0156    // add  r5, r1, r0             : r5 <- r1          : will hold the result
-3163    // sub  r6, r1, r3             : r6 <- r1 - 1      : factor variable
+3167    // sub  r6, r1, r3             : r6 <- r1 - 1      : factor variable
 6558    // mul  r5, r5, r6             : r5 <- r5 * r6
 F261    // incl r6, -1                 : r6 <- r6 - 1
 0613    // bneq r6, r0, -4                                 : loop until r6 is zero
 FFFC    // ...
 F543    // sh r5, [r15]                : dmem[r15] <- r5   : write result to memory
-1402    // jalr r0, r4
-0000    // _end (yyyy):
+1402    // jalr r0, r4                 :                   : jump back to main loop (address in r4)
+0000    // _end
