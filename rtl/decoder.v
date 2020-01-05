@@ -83,15 +83,16 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
 
     
     // Instruction segments
-    wire [   OPCODE_WIDTH-1:0]  opcode       = instr_1st_word [OPCODE_WIDTH-1:0];
-    wire [  REG_IDX_WIDTH-1:0]  res_reg_idx  = instr_1st_word [7:4];
-    wire [  REG_IDX_WIDTH-1:0]  src1_reg_idx = instr_1st_word [11:8];
-    wire [  REG_IDX_WIDTH-1:0]  src2_reg_idx = instr_1st_word [15:12];
-    wire [    FUNC1_WIDTH-1:0]  func1        = instr_1st_word [7:4];
-    wire [    FUNC2_WIDTH-1:0]  func2        = instr_1st_word [11:8];
-    wire [    FUNC3_WIDTH-1:0]  func3        = instr_1st_word [15:12];
-    wire [                3:0]  immA         = instr_1st_word [15:12];
-    wire [PMEM_WORD_WIDTH-1:0]  immB         = instr_ff; // only valid in 2nd cycle of multi-cycle instruction
+    wire [   OPCODE_WIDTH-1:0]  opcode           = instr_1st_word [OPCODE_WIDTH-1:0];
+    wire [  REG_IDX_WIDTH-1:0]  res_reg_idx      = instr_1st_word [7:4];
+    wire [  REG_IDX_WIDTH-1:0]  src1_reg_idx     = instr_1st_word [11:8];
+    wire [  REG_IDX_WIDTH-1:0]  src2_reg_idx_pre = instr_1st_word [15:12];
+    wire [  REG_IDX_WIDTH-1:0]  src2_reg_idx;
+    wire [    FUNC1_WIDTH-1:0]  func1            = instr_1st_word [7:4];
+    wire [    FUNC2_WIDTH-1:0]  func2            = instr_1st_word [11:8];
+    wire [    FUNC3_WIDTH-1:0]  func3            = instr_1st_word [15:12];
+    wire [                3:0]  immA             = instr_1st_word [15:12];
+    wire [PMEM_WORD_WIDTH-1:0]  immB             = instr_ff; // only valid in 2nd cycle of multi-cycle instruction
 
     
     // Connecting signals to output ports
@@ -107,11 +108,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
     assign out_pc              = pc_ff;
     assign out_res_reg_idx     = res_reg_idx;
     assign out_src1_reg_idx    = src1_reg_idx;
+    assign out_src2_reg_idx    = src2_reg_idx;
+    assign out_stall           = src1_stall | src2_stall;
     
     // For U-TYPE instructions, the result register is also the 2nd source
-    assign out_src2_reg_idx    = (opcode != `OPCODE_U_TYPE) ? src2_reg_idx : res_reg_idx;
-    
-    assign out_stall           = src1_stall | src2_stall;
+    assign src2_reg_idx        = (opcode != `OPCODE_U_TYPE) ? src2_reg_idx_pre : res_reg_idx;
 
     //==============================================
     // Register: sampled inputs
