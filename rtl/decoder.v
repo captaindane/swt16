@@ -437,7 +437,8 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_write_res_to_reg               = 1;
                         out_res_valid_EX                       = 1;             // result can be bypassed from EX
                         out_res_valid_MEM                      = 1;             // result can be bypassed from MEM
-                        out_src1                               = pc_ff2;        // argument 1
+                        out_src1[IALU_WORD_WIDTH-1:PC_WIDTH]   = 0;
+                        out_src1[PC_WIDTH-1:0]                 = pc_ff2;        // argument 1
                         out_src2                               = immB;          // argument 2
                         out_src3                               = 0;
                     end
@@ -874,7 +875,8 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_res_valid_EX                       = 1;             // result can be bypassed from EX
                         out_res_valid_MEM                      = 1;             // result can be bypassed from MEM
                         out_src1                               = src1_mod;      // argument 1
-                        out_src2                               = pc_ff;         // argument 2
+                        out_src2[IALU_WORD_WIDTH-1:PC_WIDTH]   = 0;
+                        out_src2[PC_WIDTH-1:0]                 = pc_ff;         // argument 2
                         out_src3                               = 0;
                 end
 
