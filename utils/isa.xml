@@ -8,15 +8,15 @@
    <!-- +=======+=======+=======+=======+ -->
    <!-- reserved         opc="0100" -->
    <!-- reserved         opc="0101" -->
-   <instr  name="ADD"    opc="0110"    type="R"  text="integer addition"          />
-   <instr  name="SUB"    opc="0111"    type="R"  text="integer subtraction"       />
-   <instr  name="MUL"    opc="1000"    type="R"  text="integer multiplication"    />
-   <instr  name="SLL"    opc="1001"    type="R"  text="shift left logically"      />
-   <instr  name="SRL"    opc="1010"    type="R"  text="shift right logically"     />
-   <instr  name="SRA"    opc="1011"    type="R"  text="shift right arithmetically"/>
-   <instr  name="AND"    opc="1100"    type="R"  text="logical and"               />
-   <instr  name="OR"     opc="1101"    type="R"  text="logical or"                />
-   <instr  name="XOR"    opc="1110"    type="R"  text="logical xor"               />
+   <instr  name="ADD"    opc="0110"    cycles="1"  text="integer addition"          />
+   <instr  name="SUB"    opc="0111"    cycles="1"  text="integer subtraction"       />
+   <instr  name="MUL"    opc="1000"    cycles="1"  text="integer multiplication"    />
+   <instr  name="SLL"    opc="1001"    cycles="1"  text="shift left logically"      />
+   <instr  name="SRL"    opc="1010"    cycles="1"  text="shift right logically"     />
+   <instr  name="SRA"    opc="1011"    cycles="1"  text="shift right arithmetically"/>
+   <instr  name="AND"    opc="1100"    cycles="1"  text="logical and"               />
+   <instr  name="OR"     opc="1101"    cycles="1"  text="logical or"                />
+   <instr  name="XOR"    opc="1110"    cycles="1"  text="logical xor"               />
    <!-- reserved         opc="1111" -->
 
    
@@ -27,12 +27,12 @@
    <!-- |        immB (optional)        | -->
    <!-- +===============================+ -->
    <root   name="S_TYPE" opc="0011">
-   <instr  name="BEQ "   func1="0000"  type="S"  text="Branch if equal (PC-relative addressing)"           />
-   <instr  name="BNEQ"   func1="0001"  type="S"  text="Branch if not equal (PC-relative addressing)"       />
-   <instr  name="BGE "   func1="0010"  type="S"  text="Branch if greater or equal (PC-relative addressing)"/>
-   <instr  name="BLT "   func1="0011"  type="S"  text="Branch if less than (PC-relative addressing)"       />
-   <instr  name="SH  "   func1="0100"  type="S"  text="Store half (i.e., 16-bit)"                          />
-   <instr  name="SHO "   func1="0101"  type="S"  text="Store half (i.e., 16-bit) with offset"              />
+   <instr  name="BEQ "   func1="0000"  cycles="2"  text="Branch if equal (PC-relative addressing)"           />
+   <instr  name="BNEQ"   func1="0001"  cycles="2"  text="Branch if not equal (PC-relative addressing)"       />
+   <instr  name="BGE "   func1="0010"  cycles="2"  text="Branch if greater or equal (PC-relative addressing)"/>
+   <instr  name="BLT "   func1="0011"  cycles="2"  text="Branch if less than (PC-relative addressing)"       />
+   <instr  name="SH  "   func1="0100"  cycles="1"  text="Store half (i.e., 16-bit)"                          />
+   <instr  name="SHO "   func1="0101"  cycles="2"  text="Store half (i.e., 16-bit) with offset"              />
    </root>
 
 
@@ -43,11 +43,11 @@
    <!-- |        immB (optional)        | -->
    <!-- +===============================+ -->
    <root   name="U_TYPE" opc="0001">
-   <instr  name="INC"    func2="0001"  type="U"  text="Increment result by 16-bit immediate value (immB)"             />
-   <instr  name="INCL"   func2="0010"  type="U"  text="Increment result by sign-extended 4-bit immediate value (immA)"/>
-   <instr  name="LI"     func2="0011"  type="U"  text="Load immediate value (immB)"                                   />
-   <instr  name="LIL"    func2="0100"  type="U"  text="Load LSBs from 4-bit immedate value (immA)"                    />
-   <instr  name="ADDPCI" func2="0101"  type="U"  text="Add PC to 16-bit immediate value (immB)"                       />
+   <instr  name="INC"    func2="0001"  cycles="2"  text="Increment result by 16-bit immediate value (immB)"             />
+   <instr  name="INCL"   func2="0010"  cycles="1"  text="Increment result by sign-extended 4-bit immediate value (immA)"/>
+   <instr  name="LI"     func2="0011"  cycles="2"  text="Load immediate value (immB)"                                   />
+   <instr  name="LIL"    func2="0100"  cycles="1"  text="Load LSBs from 4-bit immedate value (immA)"                    />
+   <instr  name="ADDPCI" func2="0101"  cycles="2"  text="Add PC to 16-bit immediate value (immB)"                       />
    </root>
    
    
@@ -58,11 +58,11 @@
    <!-- |        immB (optional)        | -->
    <!-- +===============================+ -->
    <root   name="J_TYPE" opc="0010">
-   <instr  name="JAL"    func3="0000"  type="J"  text="Jump and link (absolute addressing)"                                />
-   <instr  name="JALR"   func3="0001"  type="J"  text="Jump and link with address from register (absolute addressing)"     />
-   <instr  name="LH"     func3="0010"  type="J"  text="Load half word from address in register"                            />
-   <instr  name="LHO"    func3="0011"  type="J"  text="Load half word from address in register plus offset to dmem address"/>
-   <instr  name="ADDPC"  func3="0100"  type="J"  text="Add PC to register"                                                 />
+   <instr  name="JAL"    func3="0000"  cycles="2"  text="Jump and link (absolute addressing)"                                />
+   <instr  name="JALR"   func3="0001"  cycles="1"  text="Jump and link with address from register (absolute addressing)"     />
+   <instr  name="LH"     func3="0010"  cycles="1"  text="Load half word from address in register"                            />
+   <instr  name="LHO"    func3="0011"  cycles="2"  text="Load half word from address in register plus offset to dmem address"/>
+   <instr  name="ADDPC"  func3="0100"  cycles="1"  text="Add PC to register"                                                 />
    </root>
    
 </instructions>
