@@ -27,12 +27,12 @@
    <!-- |        immB (optional)        | -->
    <!-- +===============================+ -->
    <root   name="S_TYPE" opc="0011">
-   <instr  name="BEQ "   func1="0000"  cycles="2"  category="Branch (PC-relative)"  text="Branch if equal (PC-relative addressing)"           />
+   <instr  name="BEQ"    func1="0000"  cycles="2"  category="Branch (PC-relative)"  text="Branch if equal (PC-relative addressing)"           />
    <instr  name="BNEQ"   func1="0001"  cycles="2"  category="Branch (PC-relative)"  text="Branch if not equal (PC-relative addressing)"       />
-   <instr  name="BGE "   func1="0010"  cycles="2"  category="Branch (PC-relative)"  text="Branch if greater or equal (PC-relative addressing)"/>
-   <instr  name="BLT "   func1="0011"  cycles="2"  category="Branch (PC-relative)"  text="Branch if less than (PC-relative addressing)"       />
-   <instr  name="SH  "   func1="0100"  cycles="1"  category="Load/store"            text="Store half (i.e., 16-bit)"                          />
-   <instr  name="SHO "   func1="0101"  cycles="2"  category="Load/store"            text="Store half (i.e., 16-bit) with offset"              />
+   <instr  name="BGE"    func1="0010"  cycles="2"  category="Branch (PC-relative)"  text="Branch if greater or equal (PC-relative addressing)"/>
+   <instr  name="BLT"    func1="0011"  cycles="2"  category="Branch (PC-relative)"  text="Branch if less than (PC-relative addressing)"       />
+   <instr  name="SH"     func1="0100"  cycles="1"  category="Load/store"            text="Store half (i.e., 16-bit)"                          />
+   <instr  name="SHO"    func1="0101"  cycles="2"  category="Load/store"            text="Store half (i.e., 16-bit) with offset"              />
    </root>
 
 
