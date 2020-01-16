@@ -29,6 +29,38 @@ def parse_isa(root, instr_list, depth, root_opc="0000"):
         elif child.tag == "root":
             parse_isa(child, instr_list, depth+1, child.attrib["opc"])
 
+
+# Strip white spaces and comments from ASM file
+def strip_asm ( filename ):
+    
+    asm_list = [];
+    
+    file_handler = open ( filename, "r")
+    
+    for line in file_handler:
+        
+        # Trim leading and trailing white spaces
+        trimmed = line.strip()
+        
+        # Ignore lines that are comments
+        if (trimmed[0:1] != ";"):
+            
+            # Remove partial comments from lines
+            pos = trimmed.find(";")
+
+            nocomment = trimmed
+            
+            if (pos != -1):
+                nocomment = trimmed[0:pos].strip()
+
+            asm_list.append(nocomment);
+
+    file_handler.close();
+
+    return asm_list;
+
+
+
 # Parse XML file
 tree = ET.parse('isa.xml')
 root = tree.getroot()
@@ -39,4 +71,7 @@ depth = 0
 parse_isa(root, instr_list, depth)
 
 print instr_list
+
+# Strip white spaces and comments from ASM file
+asm_lines = strip_asm ( "../prog/hex_test_arith.asm")
 
