@@ -1,6 +1,6 @@
 import xml.etree.ElementTree as ET
 
-# Parse ISA from XML description
+# Function: Parse ISA from XML description
 def parse_isa(root, instr_list, depth, root_opc="0000"):
     
     for child in root:
@@ -30,7 +30,7 @@ def parse_isa(root, instr_list, depth, root_opc="0000"):
             parse_isa(child, instr_list, depth+1, child.attrib["opc"])
 
 
-# Strip white spaces and comments from ASM file
+# Function: Strip white spaces and comments from ASM file
 def strip_asm ( filename ):
     
     asm_list = [];
@@ -60,6 +60,41 @@ def strip_asm ( filename ):
     return asm_list;
 
 
+# Function: Generate binary
+def gen_binary ( lines, instr_list ):
+
+    for line in lines:
+
+        # Decompose line into individual elements
+        elem_list = line.replace(',', ' ').split()
+
+        if ( len(elem_list) >= 1 ):
+
+            match_list = [i for i in instr_list if i["mnemonic"].lower() == elem_list[0].lower()]
+
+            if ( len(match_list) > 0 ):
+                
+                instr_desc = match_list[0];
+
+                opc    = hex(int(instr_desc["opc"], 2))[2:]
+                field1 = ""
+                field2 = ""
+                field3 = ""
+                immB   = ""
+
+                if (instr_desc["Type"] == "R"):
+
+                    field1 = hex(int(elem_list[1][1:]))[2:]
+                    field2 = hex(int(elem_list[2][1:]))[2:]
+                    field3 = hex(int(elem_list[3][1:]))[2:]
+
+                    print line + " -> " + field3 + field2 + field1 + opc
+
+            else:
+
+                print "ERROR: Cannot interpret line " + line
+
+
 
 # Parse XML file
 tree = ET.parse('isa.xml')
@@ -70,8 +105,9 @@ instr_list = []
 depth = 0
 parse_isa(root, instr_list, depth)
 
-print instr_list
-
 # Strip white spaces and comments from ASM file
 asm_lines = strip_asm ( "../prog/hex_test_arith.asm")
+
+# Generate binary
+gen_binary ( asm_lines, instr_list )
 
