@@ -1,5 +1,53 @@
 import xml.etree.ElementTree as ET
 
+# Function: is input string a direct (displaced) address?
+def is_direct_address ( str_value ):
+    
+    is_addr = False
+    
+    found_open  = str_value.find('(');
+    found_close = str_value.find(')');
+
+    if ( found_open > 0 and found_close > 0 and (found_close > found_open) ):
+        is_addr = True
+
+    return is_addr
+
+
+# Function:
+def decompose_direct_address ( str_value ):
+
+    displacement = 0
+    stripped     = str_value.strip();
+
+    pos_open     = stripped.find('(');
+    pos_close    = stripped.find(')');
+
+    # There is a deplacement value before '('
+    if (pos_open > 0):
+        
+        str_disp = stripped[0:pos_open]
+
+        # Displacement is hex
+        if (str_disp[0:2] == "0x"):
+            displacement = int(str_disp[2:], 16)
+
+
+        # Dispalcement is binary
+        elif (str_disp[0:2] == "0b"):
+            displacement = int(str_disp[2:], 2)
+
+        # Displacement is decimal
+        else:
+            displacement = int (str_disp)
+
+    reg = stripped[pos_open+1:pos_close]
+
+    return [reg, displacement]
+
+
+
+
 # Function: Parse ISA from XML description
 def parse_isa(root, instr_list, depth, root_opc="0000"):
     
