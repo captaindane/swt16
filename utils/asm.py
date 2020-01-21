@@ -4,11 +4,11 @@ import xml.etree.ElementTree as ET
 def is_direct_address ( str_value ):
     
     is_addr = False
-    
+
     found_open  = str_value.find('(');
     found_close = str_value.find(')');
 
-    if ( found_open > 0 and found_close > 0 and (found_close > found_open) ):
+    if ( found_open >= 0 and found_close > 0 and (found_close > found_open) ):
         is_addr = True
 
     return is_addr
@@ -161,7 +161,7 @@ def gen_binary ( lines, instr_list ):
                 field3 = ""
                 immB   = ""
 
-                print "DBG: now interpreting line: " + line
+#               print "DBG: now interpreting line: " + line
                 
                 # R-Type
                 # +=======+=======+=======+=======+
@@ -185,7 +185,15 @@ def gen_binary ( lines, instr_list ):
                     
                     field1 = hex(int(instr_desc["func1"], 2))[2:]
                     field2 = hex(int(elem_list[1][1:]))[2:]
-                    field3 = hex(int(elem_list[2][1:]))[2:]
+                    field3 = ""
+
+                    # Handle direct address (store half instruction)
+                    if (is_direct_address(elem_list[2])):
+                        [reg, displacement] = decompose_direct_address ( elem_list[2] )
+                        field3 = hex(int(reg[1:]))[2:]
+                    # Handle register 
+                    else:
+                        field3 = hex(int(elem_list[2][1:]))[2:]
                     
                     print line + " -> " + field3 + field2 + field1 + opc
 
@@ -219,7 +227,15 @@ def gen_binary ( lines, instr_list ):
                 elif (instr_desc["Type"] == "J"):
                     
                     field1 = hex(int(elem_list[1][1:]))[2:]
-                    field2 = hex(int(elem_list[2][1:]))[2:]
+                    
+                    # Handle direct address (store half instruction)
+                    if (is_direct_address(elem_list[2])):
+                        [reg, displacement] = decompose_direct_address ( elem_list[2] )
+                        field2 = hex(int(reg[1:]))[2:]
+                    # Handle register 
+                    else:
+                        field2 = hex(int(elem_list[2][1:]))[2:]
+                    
                     field3 = hex(int(instr_desc["func3"], 2))[2:]
 
                     print line + " -> " + field3 + field2 + field1 + opc
