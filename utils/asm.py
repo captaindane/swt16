@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as ET
+import getopt, sys
 
 # Function: is input string a direct (displaced) address?
 def is_direct_address ( str_value ):
@@ -140,8 +141,10 @@ def parse_imm ( str_value, imm_type ):
 
 
 # Function: Generate binary
-def gen_binary ( lines, instr_list ):
+def gen_binary ( lines, instr_list, out_filename ):
 
+    fhandle = open ( out_filename, "w")
+    
     for line in lines:
 
         # Decompose line into individual elements
@@ -215,8 +218,8 @@ def gen_binary ( lines, instr_list ):
 
                     elif (instr_desc["cycles"] == "2"):
                         field3 = "0"
-                        field4 = parse_imm(elem_list[2], "B")
-                        print line + " -> " + field3 + field2 + field1 + opc + " , " + field4
+                        immB   = parse_imm(elem_list[2], "B")
+                        print line + " -> " + field3 + field2 + field1 + opc + " , " + immB
 
                 # J-Type
                 # +=======+=======+=======+=======+
@@ -240,11 +243,51 @@ def gen_binary ( lines, instr_list ):
 
                     print line + " -> " + field3 + field2 + field1 + opc
 
+                # Write instruction to output file
+                fhandle.write ( (field3 + field2 + field1 + opc).upper() + "  //" + line + "\n" )
+                
+                if (instr_desc["cycles"] == "2"):
+                    fhandle.write ( immB.upper() + "\n")
+            
             else:
-
                 print "ERROR: Cannot interpret line " + line
 
+    # Close output file
+    fhandle.close()
 
+
+asm_in  = ""
+asm_out = ""
+
+# Parse command line
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "i:o:", ["input", "output"])
+except getopt.GetoptError as err:
+    print str(err)
+    sys.exit(2)
+
+# Evaluate parameters
+for opt, val in opts:
+    if (opt == "-i"):
+        asm_in = val
+    elif (opt == "-o"):
+        asm_out = val
+
+if (asm_in == ""):
+    print "ERROR: no input file specified"
+    sys.exit(2)
+
+elif (asm_out == ""):
+    if (".asm" in asm_in):
+        asm_out = asm_in.replace(".asm", ".pmem")
+    else:
+        asm_out = asm_in + ".hex"
+
+print "========================================="
+print "SWT16 assembler invoked."
+print "input : " + asm_in 
+print "output: " + asm_out
+print "========================================="
 
 # Parse XML file
 tree = ET.parse('isa.xml')
@@ -256,8 +299,8 @@ depth = 0
 parse_isa(root, instr_list, depth)
 
 # Strip white spaces and comments from ASM file
-asm_lines = strip_asm ( "../prog/hex_test_arith.asm")
+asm_lines = strip_asm ( asm_in )
 
 # Generate binary
-gen_binary ( asm_lines, instr_list )
+gen_binary ( asm_lines, instr_list, asm_out )
 
