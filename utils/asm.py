@@ -29,22 +29,9 @@ def decompose_direct_address ( str_value ):
         
         str_disp = stripped[0:pos_open]
 
-        # Displacement is hex
-        if (str_disp[0:2] == "0x"):
-            displacement = int(str_disp[2:], 16)
-
-
-        # Dispalcement is binary
-        elif (str_disp[0:2] == "0b"):
-            displacement = int(str_disp[2:], 2)
-
-        # Displacement is decimal
-        else:
-            displacement = int (str_disp)
-
     reg = stripped[pos_open+1:pos_close]
 
-    return [reg, displacement]
+    return [reg, str_disp]
 
 
 
@@ -194,9 +181,13 @@ def gen_binary ( lines, instr_list, out_filename ):
                     if (is_direct_address(elem_list[2])):
                         [reg, displacement] = decompose_direct_address ( elem_list[2] )
                         field3 = hex(int(reg[1:]))[2:]
+                        immB   = parse_imm(displacement, "B")
                     # Handle register 
                     else:
                         field3 = hex(int(elem_list[2][1:]))[2:]
+                        if (instr_desc["cycles"] == "2"):
+                            print line + " is 2 cycle instr"
+                            immB = parse_imm(elem_list[3], "B")
                     
                     print line + " -> " + field3 + field2 + field1 + opc
 
