@@ -8,7 +8,7 @@
 //=====================================================
 0553      // sho r5(value), r0(offset), 0x0(base) : set dmem 0x0 to one
 0000
-1203      // beq r1, r2, 8
+2103      // beq r1, r2, 8
 0008
 0053      // sho r0(value), r0(offset), 0x0(base) : set dmem 0x0 back to zero if branch not taken
 0000
@@ -17,7 +17,7 @@
 //=====================================================
 0553      // sho r5(value), r0(offset), 0x2(base) : set dmem 0x2 to one
 0002
-2303      // beq r2, r3, 8
+3203      // beq r2, r3, 8
 0008
 0053      // sho r0(value), r0(offset), 0x2(base) : set dmem 0x2 back to zero if branch not taken
 0002
@@ -26,7 +26,7 @@
 //=====================================================
 0553      // sho r5(value), r0(offset), 0x4(base) : set dmem 0x4 to one
 0004
-2313      // bneq r2, r3, 8
+3213      // bneq r2, r3, 8
 0008
 0053      // sho r0(value), r0(offset), 0x4(base) : set dmem 0x4 back to zero if branch not taken
 0004
@@ -35,7 +35,7 @@
 //=====================================================
 0553      // sho r5(value), r0(offset), 0x6(base) : set dmem 0x6 to one
 0006
-1213      // bneq r1, r2, 8
+2113      // bneq r1, r2, 8
 0008
 0053      // sho r0(value), r0(offset), 0x6(base) : set dmem 0x6 back to zero if branch not taken
 0006
