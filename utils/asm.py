@@ -18,7 +18,7 @@ def is_direct_address ( str_value ):
 # Function:
 def decompose_direct_address ( str_value ):
 
-    displacement = 0
+    str_disp     = ""
     stripped     = str_value.strip();
 
     pos_open     = stripped.find('(');
@@ -163,8 +163,6 @@ def gen_binary ( lines, instr_list, out_filename ):
                     field2 = hex(int(elem_list[2][1:]))[2:]
                     field3 = hex(int(elem_list[3][1:]))[2:]
 
-                    print line + " -> " + field3 + field2 + field1 + opc
-
                 # S-Type
                 # +=======+=======+=======+=======+
                 # |  rs2  |  rs1  | func1 |  opc  |
@@ -181,16 +179,13 @@ def gen_binary ( lines, instr_list, out_filename ):
                     if (is_direct_address(elem_list[2])):
                         [reg, displacement] = decompose_direct_address ( elem_list[2] )
                         field3 = hex(int(reg[1:]))[2:]
-                        immB   = parse_imm(displacement, "B")
+                        if (instr_desc["cycles"] == "2"):
+                            immB   = parse_imm(displacement, "B")
                     # Handle register 
                     else:
                         field3 = hex(int(elem_list[2][1:]))[2:]
                         if (instr_desc["cycles"] == "2"):
-                            print line + " is 2 cycle instr"
                             immB = parse_imm(elem_list[3], "B")
-                    
-                    print line + " -> " + field3 + field2 + field1 + opc
-
 
                 # U-Type
                 # +=======+=======+=======+=======+
@@ -205,12 +200,10 @@ def gen_binary ( lines, instr_list, out_filename ):
 
                     if (instr_desc["cycles"] == "1"):
                         field3 = parse_imm(elem_list[2], "A")
-                        print line + " -> " + field3 + field2 + field1 + opc
 
                     elif (instr_desc["cycles"] == "2"):
                         field3 = "0"
                         immB   = parse_imm(elem_list[2], "B")
-                        print line + " -> " + field3 + field2 + field1 + opc + " , " + immB
 
                 # J-Type
                 # +=======+=======+=======+=======+
@@ -226,13 +219,13 @@ def gen_binary ( lines, instr_list, out_filename ):
                     if (is_direct_address(elem_list[2])):
                         [reg, displacement] = decompose_direct_address ( elem_list[2] )
                         field2 = hex(int(reg[1:]))[2:]
+                        if (instr_desc["cycles"] == "2"):
+                            immB   = parse_imm(displacement, "B")
                     # Handle register 
                     else:
                         field2 = hex(int(elem_list[2][1:]))[2:]
                     
                     field3 = hex(int(instr_desc["func3"], 2))[2:]
-
-                    print line + " -> " + field3 + field2 + field1 + opc
 
                 # Write instruction to output file
                 fhandle.write ( (field3 + field2 + field1 + opc).upper() + "  //" + line + "\n" )
