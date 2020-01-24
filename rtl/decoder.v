@@ -281,6 +281,41 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         else if (opcode == `OPCODE_U_TYPE)
         begin
             case (func2)
+                // Jump and link by immediate (absolute addressing)
+                `FUNC2_JAL:
+                begin
+                    if (cycle_in_instr_ff == 1) begin
+                        cycle_in_instr_next                    = 0;
+                        out_act_branch_ialu_res_ff_eq0         = 0;
+                        out_act_branch_ialu_res_ff_gt0         = 0;
+                        out_act_branch_ialu_res_ff_lt0         = 0;
+                        out_act_ex_incr_pc_is_res              = 1;
+                        out_act_ialu_add                       = 0;
+                        out_act_ialu_and                       = 0;
+                        out_act_ialu_mul                       = 0;
+                        out_act_ialu_neg_src2                  = 0;
+                        out_act_ialu_or                        = 0;
+                        out_act_ialu_sll                       = 0; 
+                        out_act_ialu_sra                       = 0; 
+                        out_act_ialu_src2_is_res               = 1;
+                        out_act_ialu_srl                       = 0; 
+                        out_act_ialu_xor                       = 0;
+                        out_act_jump_to_ialu_res               = 1;
+                        out_act_load_dmem                      = 0;
+                        out_act_store_dmem                     = 0;
+                        out_act_write_res_to_reg               = 1;
+                        out_res_valid_EX                       = 0;    // result cannot be bypassed from EX
+                        out_res_valid_MEM                      = 0;    // result cannot be bypassed from MEM
+                        out_src1                               = 0;
+                        out_src2                               = immB;
+                        out_src3                               = 0;
+                    end
+                    else begin
+                        cycle_in_instr_next                    = 1;
+                        zero_outputs();
+                    end
+                end
+                
                 // Increment by 16-bit immediate value
                 `FUNC2_INC:
                 begin
@@ -719,41 +754,6 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         else if (opcode == `OPCODE_J_TYPE)
         begin
             case (func3)
-                
-                // Jump and link by immediate (absolute addressing)
-                `FUNC3_JAL:
-                begin
-                    if (cycle_in_instr_ff == 1) begin
-                        cycle_in_instr_next                    = 0;
-                        out_act_branch_ialu_res_ff_eq0         = 0;
-                        out_act_branch_ialu_res_ff_gt0         = 0;
-                        out_act_branch_ialu_res_ff_lt0         = 0;
-                        out_act_ex_incr_pc_is_res              = 1;
-                        out_act_ialu_add                       = 0;
-                        out_act_ialu_and                       = 0;
-                        out_act_ialu_mul                       = 0;
-                        out_act_ialu_neg_src2                  = 0;
-                        out_act_ialu_or                        = 0;
-                        out_act_ialu_sll                       = 0; 
-                        out_act_ialu_sra                       = 0; 
-                        out_act_ialu_src2_is_res               = 1;
-                        out_act_ialu_srl                       = 0; 
-                        out_act_ialu_xor                       = 0;
-                        out_act_jump_to_ialu_res               = 1;
-                        out_act_load_dmem                      = 0;
-                        out_act_store_dmem                     = 0;
-                        out_act_write_res_to_reg               = 1;
-                        out_res_valid_EX                       = 0;    // result cannot be bypassed from EX
-                        out_res_valid_MEM                      = 0;    // result cannot be bypassed from MEM
-                        out_src1                               = 0;
-                        out_src2                               = immB;
-                        out_src3                               = 0;
-                    end
-                    else begin
-                        cycle_in_instr_next                    = 1;
-                        zero_outputs();
-                    end
-                end
                 
                 // Jump and link by register (absolute addressing)
                 `FUNC3_JALR:

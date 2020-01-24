@@ -43,6 +43,7 @@
 // +-------+-------+-------+-------+
 // |        immB (optional)        |
 // +-------+-------+-------+-------+
+`define FUNC2_JAL      4'b0000  // Jump and link (absolute addressing)
 `define FUNC2_INC      4'b0001  // Increment result by 16-bit immediate value (immB)
 `define FUNC2_INCL     4'b0010  // Increment result by sign-extended 4-bit immediate value (immA)
 `define FUNC2_LI       4'b0011  // Load immediate value (immB)
@@ -55,7 +56,7 @@
 // +-------+-------+-------+-------+
 // |        immB (optional)        |
 // +-------+-------+-------+-------+
-`define FUNC3_JAL      4'b0000  // Jump and link (absolute addressing)
+// reserved            4'b0000
 `define FUNC3_JALR     4'b0001  // Jump and link with address from register (absolute addressing)
 `define FUNC3_LH       4'b0010  // Load half word from address in register
 `define FUNC3_LHO      4'b0011  // Load half word from address in register plus offset to dmem address
