@@ -43,6 +43,7 @@
    <!-- |        immB (optional)        | -->
    <!-- +===============================+ -->
    <root   name="U_TYPE" opc="0001">
+   <instr  name="JAL"    func2="0000"  cycles="2"  category="Jump (absolute)"       text="Jump and link (absolute addressing)"                           />
    <instr  name="INC"    func2="0001"  cycles="2"  category="Arithmetic"            text="Increment result by 16-bit immediate value (immB)"             />
    <instr  name="INCL"   func2="0010"  cycles="1"  category="Arithmetic"            text="Increment result by sign-extended 4-bit immediate value (immA)"/>
    <instr  name="LI"     func2="0011"  cycles="2"  category="Load/store"            text="Load immediate value (immB)"                                   />
@@ -58,7 +59,6 @@
    <!-- |        immB (optional)        | -->
    <!-- +===============================+ -->
    <root   name="J_TYPE" opc="0010">
-   <instr  name="JAL"    func3="0000"  cycles="2"  category="Jump (absolute)"       text="Jump and link (absolute addressing)"                                />
    <instr  name="JALR"   func3="0001"  cycles="1"  category="Jump (absolute)"       text="Jump and link with address from register (absolute addressing)"     />
    <instr  name="LH"     func3="0010"  cycles="1"  category="Load/store"            text="Load half word from address in register"                            />
    <instr  name="LHO"    func3="0011"  cycles="2"  category="Load/store"            text="Load half word from address in register plus offset to dmem address"/>
