@@ -1,56 +1,47 @@
-//=========================================
-// Test setup (prepare inputs)
-//=========================================
-1411    // lil r1, 1          : r1  <- 1
-2421    // lil r2, 2          : r2  <- 2
-0331    // li  r3, 0x8000     : r3  <- 0x8000
-8000    // ...                : 
-03E1    // li  r14, 0x8000    : r14 <- 0x8000
-8000    // ...                : 
-//=========================================
-// Test arithmetic operations
-//=========================================
-2146    // add  r4, r1, r2    : r4  <- r1 + r2           =  3 = 0x0003
-2157    // sub  r5, r1, r2    : r5  <- r1 - r2           = -1 = 0xFFFF
-1267    // sub  r6, r2, r1    : r6  <- r2 - r1           =  1 = 0x0001
-2278    // mul  r7, r2, r2    : r7  <- r2 * r2           =      0x0004
-1289    // sll  r8, r2, r1    : r8  <- r2 <<  r1         =  4 = 0x0004
-139A    // srl  r9, r3, r1    : r9  <- r3 >>  r1         =      0x4000
-13AB    // sra r10, r3, r1    : r10 <- r3 >>> r1         =  4 = 0xC000
-21BC    // and r11, r1, r2    : r11 <- r1 & r2           =      0x0000
-21CD    // or  r12, r1, r2    : r12 <- r1 | r2           =      0x0003
-15DE    // xor r13, r5, r1    : r13 <- r5 ^ r1           =      0xFFFE
-1211    // incl r1, +1        : r1  <- r1 + 1            =      0x0002
-F231    // incl r3, -1        : r3  <- r3 - 1            =      0x7FFF
-01E1    // inc  r14, 0x0888   : r14 <- r14 + 0x0888      =      0x8888
-0888    // ...
-//=========================================
-// Store results in memory
-//=========================================
-04F1    // lil r15, 0         : r15 <- 0
-F443    // sh   r4, [r15]     : dmem[r15 (0x00)]  <-  r4 =     0x0003
-2FF6    // add  r15, r15, r2  : r15+=2
-F543    // sh   r5, [r15]     : dmem[r15 (0x02)]  <-  r5 =     0xFFFF
-2FF6    // add  r15, r15, r2  : r15+=2
-F643    // sh   r6, [r15]     : dmem[r15 (0x04)]  <-  r6 =     0x0001
-2FF6    // add  r15, r15, r2  : r15+=2
-F743    // sh   r7, [r15]     : dmem[r15 (0x06)]  <-  r7 =     0x0004
-2FF6    // add  r15, r15, r2  : r15+=2
-F843    // sh   r8, [r15]     : dmem[r15 (0x08)]  <-  r8 =     0x0004
-2FF6    // add  r15, r15, r2  : r15+=2
-F943    // sh   r9, [r15]     : dmem[r15 (0x0A)]  <-  r9 =     0x4000
-2FF6    // add  r15, r15, r2  : r15+=2
-FA43    // sh   r10, [r15]    : dmem[r15 (0x0C)]  <- r10 =     0xC000
-2FF6    // add  r15, r15, r2  : r15+=2
-FB43    // sh   r11, [r15]    : dmem[r15 (0x0E)]  <- r11 =     0x0000
-2FF6    // add  r15, r15, r2  : r15+=2
-FC43    // sh   r12, [r15]    : dmem[r15 (0x10)]  <- r12 =     0x0003
-2FF6    // add  r15, r15, r2  : r15+=2
-FD43    // sh   r13, [r15]    : dmem[r15 (0x12)]  <- r13 =     0xFFFE
-2FF6    // add  r15, r15, r2  : r15+=2
-F143    // sh   r1 , [r15]    : dmem[r15 (0x14)]  <- r1  =     0x0002
-2FF6    // add  r15, r15, r2  : r15+=2
-F343    // sh   r3 , [r15]    : dmem[r15 (0x16)]  <- r3  =     0x7FFF
-2FF6    // add  r15, r15, r2  : r15+=2
-FE43    // sh   r14, [r15]    : dmem[r15 (0x18)]  <- r14 =     0x8888
-2FF6    // add  r15, r15, r2  : r15+=2
+1411  //lil r1, 1
+2421  //lil r2, 2
+0331  //li  r3, 0x8000
+8000
+03E1  //li  r14, 0x8000
+8000
+2146  //add  r4, r1, r2
+2157  //sub  r5, r1, r2
+1267  //sub  r6, r2, r1
+2278  //mul  r7, r2, r2
+1289  //sll  r8, r2, r1
+139A  //srl  r9, r3, r1
+13AB  //sra r10, r3, r1
+21BC  //and r11, r1, r2
+21CD  //or  r12, r1, r2
+15DE  //xor r13, r5, r1
+1211  //incl r1, +1
+F231  //incl r3, -1
+01E1  //inc  r14, 0x0888
+0888
+04F1  //lil  r15, 0
+F443  //sh   r4, (r15)
+2FF6  //add  r15, r15, r2
+F543  //sh   r5, (r15)
+2FF6  //add  r15, r15, r2
+F643  //sh   r6, (r15)
+2FF6  //add  r15, r15, r2
+F743  //sh   r7, (r15)
+2FF6  //add  r15, r15, r2
+F843  //sh   r8, (r15)
+2FF6  //add  r15, r15, r2
+F943  //sh   r9, (r15)
+2FF6  //add  r15, r15, r2
+FA43  //sh   r10, (r15)
+2FF6  //add  r15, r15, r2
+FB43  //sh   r11, (r15)
+2FF6  //add  r15, r15, r2
+FC43  //sh   r12, (r15)
+2FF6  //add  r15, r15, r2
+FD43  //sh   r13, (r15)
+2FF6  //add  r15, r15, r2
+F143  //sh   r1 , (r15)
+2FF6  //add  r15, r15, r2
+F343  //sh   r3 , (r15)
+2FF6  //add  r15, r15, r2
+FE43  //sh   r14, (r15)
+2FF6  //add  r15, r15, r2

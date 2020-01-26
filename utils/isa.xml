@@ -1,0 +1,69 @@
+<instructions>
+
+   <instr  name="NOP"    opc="0000"    cycles="1"/>
+
+   <!-- R-Type -->
+   <!-- +=======+=======+=======+=======+ -->
+   <!-- |  rs2  |  rs1  |   rd  |  opc  | -->
+   <!-- +=======+=======+=======+=======+ -->
+   <!-- reserved         opc="0100" -->
+   <!-- reserved         opc="0101" -->
+   <instr  name="ADD"    opc="0110"    cycles="1"  category="Arithmetic"            text="integer addition"          />
+   <instr  name="SUB"    opc="0111"    cycles="1"  category="Arithmetic"            text="integer subtraction"       />
+   <instr  name="MUL"    opc="1000"    cycles="1"  category="Arithmetic"            text="integer multiplication"    />
+   <instr  name="SLL"    opc="1001"    cycles="1"  category="Arithmetic"            text="shift left logically"      />
+   <instr  name="SRL"    opc="1010"    cycles="1"  category="Arithmetic"            text="shift right logically"     />
+   <instr  name="SRA"    opc="1011"    cycles="1"  category="Arithmetic"            text="shift right arithmetically"/>
+   <instr  name="AND"    opc="1100"    cycles="1"  category="Arithmetic"            text="logical and"               />
+   <instr  name="OR"     opc="1101"    cycles="1"  category="Arithmetic"            text="logical or"                />
+   <instr  name="XOR"    opc="1110"    cycles="1"  category="Arithmetic"            text="logical xor"               />
+   <!-- reserved         opc="1111" -->
+
+   
+   <!-- S-Type -->
+   <!-- +=======+=======+=======+=======+ -->
+   <!-- |  rs2  |  rs1  | func1 |  opc  | -->
+   <!-- +=======+=======+=======+=======+ -->
+   <!-- |        immB (optional)        | -->
+   <!-- +===============================+ -->
+   <root   name="S_TYPE" opc="0011">
+   <instr  name="BEQ"    func1="0000"  cycles="2"  category="Branch (PC-relative)"  text="Branch if equal (PC-relative addressing)"           />
+   <instr  name="BNEQ"   func1="0001"  cycles="2"  category="Branch (PC-relative)"  text="Branch if not equal (PC-relative addressing)"       />
+   <instr  name="BGE"    func1="0010"  cycles="2"  category="Branch (PC-relative)"  text="Branch if greater or equal (PC-relative addressing)"/>
+   <instr  name="BLT"    func1="0011"  cycles="2"  category="Branch (PC-relative)"  text="Branch if less than (PC-relative addressing)"       />
+   <instr  name="SH"     func1="0100"  cycles="1"  category="Load/store"            text="Store half (i.e., 16-bit)"                          />
+   <instr  name="SHO"    func1="0101"  cycles="2"  category="Load/store"            text="Store half (i.e., 16-bit) with offset"              />
+   </root>
+
+
+   <!-- U-Type -->
+   <!-- +=======+=======+=======+=======+ -->
+   <!-- |  immA | func2 |   rd  |  opc  | -->
+   <!-- +=======+=======+=======+=======+ -->
+   <!-- |        immB (optional)        | -->
+   <!-- +===============================+ -->
+   <root   name="U_TYPE" opc="0001">
+   <instr  name="JAL"    func2="0000"  cycles="2"  category="Jump (absolute)"       text="Jump and link (absolute addressing)"                           />
+   <instr  name="INC"    func2="0001"  cycles="2"  category="Arithmetic"            text="Increment result by 16-bit immediate value (immB)"             />
+   <instr  name="INCL"   func2="0010"  cycles="1"  category="Arithmetic"            text="Increment result by sign-extended 4-bit immediate value (immA)"/>
+   <instr  name="LI"     func2="0011"  cycles="2"  category="Load/store"            text="Load immediate value (immB)"                                   />
+   <instr  name="LIL"    func2="0100"  cycles="1"  category="Load/store"            text="Load LSBs from 4-bit immedate value (immA)"                    />
+   <instr  name="ADDPCI" func2="0101"  cycles="2"  category="Arithmetic"            text="Add PC to 16-bit immediate value (immB)"                       />
+   </root>
+   
+   
+   <!-- J-Type -->
+   <!-- +=======+=======+=======+=======+ -->
+   <!-- | func3 |  rs1  |   rd  |  opc  | -->
+   <!-- +=======+=======+=======+=======+ -->
+   <!-- |        immB (optional)        | -->
+   <!-- +===============================+ -->
+   <root   name="J_TYPE" opc="0010">
+   <instr  name="JALR"   func3="0001"  cycles="1"  category="Jump (absolute)"       text="Jump and link with address from register (absolute addressing)"     />
+   <instr  name="LH"     func3="0010"  cycles="1"  category="Load/store"            text="Load half word from address in register"                            />
+   <instr  name="LHO"    func3="0011"  cycles="2"  category="Load/store"            text="Load half word from address in register plus offset to dmem address"/>
+   <instr  name="ADDPC"  func3="0100"  cycles="1"  category="Arithmetic"            text="Add PC to register"                                                 />
+   </root>
+   
+</instructions>
+

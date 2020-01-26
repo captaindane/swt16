@@ -1,77 +1,53 @@
-7411      // lil r1, 7
-8421      // lil r2, 8
-8431      // lil r3, 8
-9441      // lil r4, 9
-1451      // lil r5, 1
-//=====================================================
-// Test #1: BEQ should not take branch  => dmem[ 0] = 0
-//=====================================================
-0553      // sho r5(value), r0(offset), 0x0(base) : set dmem 0x0 to one
+7411  //lil r1, 7
+8421  //lil r2, 8
+8431  //lil r3, 8
+9441  //lil r4, 9
+1451  //lil r5, 1
+0553  //sho r5, 0x0(r0)
 0000
-1203      // beq r1, r2, 8
+2103  //beq r1, r2, 8
 0008
-0053      // sho r0(value), r0(offset), 0x0(base) : set dmem 0x0 back to zero if branch not taken
+0053  //sho r0, 0x0(r0)
 0000
-//=====================================================
-// Test #2: BEQ should take branch      => dmem[ 2] = 1
-//=====================================================
-0553      // sho r5(value), r0(offset), 0x2(base) : set dmem 0x2 to one
+0553  //sho r5, 0x2(r0)
 0002
-2303      // beq r2, r3, 8
+3203  //beq r2, r3, 8
 0008
-0053      // sho r0(value), r0(offset), 0x2(base) : set dmem 0x2 back to zero if branch not taken
+0053  //sho r0, 0x2(r0)
 0002
-//=====================================================
-// Test #3: BNEQ should not take branch => dmem[ 4] = 0
-//=====================================================
-0553      // sho r5(value), r0(offset), 0x4(base) : set dmem 0x4 to one
+0553  //sho  r5, 0x4(r0)
 0004
-2313      // bneq r2, r3, 8
+3213  //bneq r2, r3, 8
 0008
-0053      // sho r0(value), r0(offset), 0x4(base) : set dmem 0x4 back to zero if branch not taken
+0053  //sho  r0, 0x4(r0)
 0004
-//=====================================================
-// Test #4: BNEQ should take branch     => dmem[ 6] = 1
-//=====================================================
-0553      // sho r5(value), r0(offset), 0x6(base) : set dmem 0x6 to one
+0553  //sho  r5, 0x6(r0)
 0006
-1213      // bneq r1, r2, 8
+2113  //bneq r1, r2, 8
 0008
-0053      // sho r0(value), r0(offset), 0x6(base) : set dmem 0x6 back to zero if branch not taken
+0053  //sho  r0, 0x6(r0)
 0006
-//=====================================================
-// Test #5: BGE should not take branch  => dmem[ 8] = 0
-//=====================================================
-0553      // sho r5(value), r0(offset), 0x8(base) : set dmem 0x8 to one
+0553  //sho r5, 0x8(r0)
 0008
-2123      // bge r1, r2, 8 (r1 >= r2)
+2123  //bge r1, r2, 8
 0008
-0053      // sho r0(value), r0(offset), 0x8(base) : set dmem 0x8 back to zero if branch not taken
+0053  //sho r0, 0x8(r0)
 0008
-//=====================================================
-// Test #6: BGE should take branch      => dmem[10] = 1
-//=====================================================
-0553      // sho r5(value), r0(offset), 0xA(base) : set dmem 0xA to one
+0553  //sho r5, 0xA(r0)
 000A
-1323      // bge r3, r1, 8 (r3 >= r1) 
+1323  //bge r3, r1, 8
 0008
-0053      // sho r0(value), r0(offset), 0xA(base) : set dmem 0xA back to zero if branch not taken
+0053  //sho r0, 0xA(r0)
 000A
-//=====================================================
-// Test #7: BLT should not take branch  => dmem[12] = 0
-//=====================================================
-0553      // sho r5(value), r0(offset), 0xC(base) : set dmem 0xC to one
+0553  //sho r5, 0xC(r0)
 000C
-3433      // blt r4, r3, 8 (r4 < r3)
+3433  //blt r4, r3, 8
 0008
-0053      // sho r0(value), r0(offset), 0xC(base) : set dmem 0xC back to zero if branch not taken
+0053  //sho r0, 0xC(r0)
 000C
-//=====================================================
-// Test #8: BLT should take branch      => dmem[14] = 1
-//=====================================================
-0553      // sho r5(value), r0(offset), 0xE(base) : set dmem 0xE to one
+0553  //sho r5, 0xE(r0)
 000E
-4333      // blt r3, r4, 8 (r3 < r4) 
+4333  //blt r3, r4, 8
 0008
-0053      // sho r0(value), r0(offset), 0xE(base) : set dmem 0xE back to zero if branch not taken
+0053  //sho r0, 0xE(r0)
 000E
