@@ -13,7 +13,7 @@
 1233    // blt  r2, r1, _end                               : while loop condition check and potential exit
 0018    // ... offset (+24)
 0003    // beq r0, r0, _loop_start                         : while loop jump back (unconditioned)
-fff6    // ... offset (-10)
+FFF6    // ... offset (-10)
 //=========================================
 // _factorial:
 //=========================================
