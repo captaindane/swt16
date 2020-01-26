@@ -1,0 +1,47 @@
+1411  //lil r1, 1
+2421  //lil r2, 2
+0331  //li  r3, 0x8000
+8000
+03E1  //li  r14, 0x8000
+8000
+2146  //add  r4, r1, r2
+2157  //sub  r5, r1, r2
+1267  //sub  r6, r2, r1
+2278  //mul  r7, r2, r2
+1289  //sll  r8, r2, r1
+139A  //srl  r9, r3, r1
+13AB  //sra r10, r3, r1
+21BC  //and r11, r1, r2
+21CD  //or  r12, r1, r2
+15DE  //xor r13, r5, r1
+1211  //incl r1, +1
+F231  //incl r3, -1
+01E1  //inc  r14, 0x0888
+0888
+04F1  //lil  r15, 0
+F443  //sh   r4, (r15)
+2FF6  //add  r15, r15, r2
+F543  //sh   r5, (r15)
+2FF6  //add  r15, r15, r2
+F643  //sh   r6, (r15)
+2FF6  //add  r15, r15, r2
+F743  //sh   r7, (r15)
+2FF6  //add  r15, r15, r2
+F843  //sh   r8, (r15)
+2FF6  //add  r15, r15, r2
+F943  //sh   r9, (r15)
+2FF6  //add  r15, r15, r2
+FA43  //sh   r10, (r15)
+2FF6  //add  r15, r15, r2
+FB43  //sh   r11, (r15)
+2FF6  //add  r15, r15, r2
+FC43  //sh   r12, (r15)
+2FF6  //add  r15, r15, r2
+FD43  //sh   r13, (r15)
+2FF6  //add  r15, r15, r2
+F143  //sh   r1 , (r15)
+2FF6  //add  r15, r15, r2
+F343  //sh   r3 , (r15)
+2FF6  //add  r15, r15, r2
+FE43  //sh   r14, (r15)
+2FF6  //add  r15, r15, r2

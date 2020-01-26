@@ -1,0 +1,22 @@
+2411  //lil r1 , 2
+8421  //lil r2 , 8
+1431  //lil r3 , 1
+05E1  //addpci r14, 0x14
+0014
+04F1  //lil r15, 0
+1E42  //jalr r4 , r14
+1211  //incl r1 , 1
+22F1  //incl r15, 2
+1233  //blt  r2, r1, 0x18
+0018
+0003  //beq r0, r0, 0xfff6
+FFF6
+0156  //add  r5, r1, r0
+3167  //sub  r6, r1, r3
+6558  //mul  r5, r5, r6
+F261  //incl r6, -1
+0613  //bneq r6, r0, 0xFFFC
+FFFC
+F543  //sh r5, (r15)
+1402  //jalr r0, r4
+0000  //nop r0, r0, r0
