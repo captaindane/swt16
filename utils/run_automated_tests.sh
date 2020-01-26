@@ -10,6 +10,9 @@ function run_test ()
     DMEM_IN="../prog/${PROG_NAME}.dmem"
     DMEM_OUT="../prog/${PROG_NAME}.dmem.postsim"
     DMEM_GOLD="../prog/${PROG_NAME}.dmem.golden"
+
+    # Remove old postsim DMEM file
+    rm -f $DMEM_OUT
     
     # Generate simulator command
     SIM="../bench/swt16/Vswt16_top"
