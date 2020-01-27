@@ -14,6 +14,7 @@ When a read-after-write (RAW) data hazard cannot be resolved by bypassing/forwar
 This project also contains a simulator for the RTL design.
 The RTL simulator is built using [Verilator](https://www.veripool.org/).
 Verilator is open source. It can be downloaded from Github or obtained from the Ubuntu packet manager.
+In addition, this project contains an assembler written in [Python](https://www.python.org/) to generate machine code from programs written in the swt16 assembly language.
 
 ## Directory structure
 ```
@@ -27,9 +28,10 @@ Verilator is open source. It can be downloaded from Github or obtained from the 
 ## Prerequisites
 Make sure Verilator is installed before attempting to run or build the simulator.
 If you want to visualize the processor state during the simulation, you will also need [GTKWAVE](http://gtkwave.sourceforge.net/).
-To install Verilator and GTKWAVE, execute the following command (on Ubuntu Linux):
+The assembler for the swt16 ISA is written in Python, so have to install Python before you can use the assembler.
+To install Verilator, GTKWAVE, and Python, execute the following command (on Ubuntu Linux):
 
-`sudo apt-get install verilator gtkwave`
+`sudo apt-get install verilator gtkwave python`
 
 ## Building the simulator
 Build the simulator by calling make from [bench]. After that, the simulator will be located in [bench/swt16/Vswt16_top].
@@ -65,11 +67,18 @@ Example state inspection with GTKWAVE:
 `gtkwave ./swt16/Vswt16_top.vcd -a gtkwave_views/swt16.view.gtkw &`
 
 ## Writing a program
-Currently, this project contains no tooling to generate machine code for the processor (not even an assembler/disassembler).
-This means, the programmer has to write the machine code themselves.
-For a limited-size ISA like the one used for this project, this is actually still feasible (and sometimes even fun!).
-Examples progams can be found in the [prog] directory. They contain extensive comments that help to understand the machine code.
-Refer to [doc/ISA.odt] for an overview of the current state of the ISA.
+This project contains an assembler written in Python.
+The assembler generates machine code for the processor from programs written in the swt16 assembly language.
+To invoke the assembler, execute the following:
+
+`cd utils && python asm.py -i <asm_file> -o <machine_code_file>`
+
+You can try out the assember by regenerating the machine code test programs located in [prog].
+For example, to regenerate the machine code for the factorial test program, execute the following:
+
+`cd utils && python asm.py -i ../prog/hex_test_factorial.asm`
+
+Refer to [doc/ISA.odt] for an overview of the current state of the assembly language and the ISA.
 
 ## Note
 This project is developed and tested using Ubuntu Linux.
