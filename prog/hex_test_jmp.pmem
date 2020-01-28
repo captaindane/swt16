@@ -6,7 +6,7 @@ F411  //lil    r1, 0xF
 4342  //addpc  r4, r3
 0153  //sho    r1, 0x0(r0)
 0000
-0051  //jal    r5, 0x18
+0051  //jal    r5, _label
 0018
 0053  //sho r0, 0x0(r0)
 0000
