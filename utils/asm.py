@@ -1,21 +1,7 @@
 import xml.etree.ElementTree as ET
 import getopt, sys
 
-# Function: is input string a direct (displaced) address?
-def is_direct_address ( str_value ):
-    
-    is_addr = False
-
-    found_open  = str_value.find('(');
-    found_close = str_value.find(')');
-
-    if ( found_open >= 0 and found_close > 0 and (found_close > found_open) ):
-        is_addr = True
-
-    return is_addr
-
-
-# Function:
+# Function: decompose a direct, displaced address into register and displacement
 def decompose_direct_address ( str_value ):
 
     str_disp     = ""
@@ -34,6 +20,169 @@ def decompose_direct_address ( str_value ):
     return [reg, str_disp]
 
 
+# Function: Generate binary
+def gen_binary ( lines, instr_list, label_list, out_filename ):
+
+    fhandle = open ( out_filename, "w")
+    
+    for line in lines:
+
+        # Decompose line into individual elements
+        elem_list = line.replace(',', ' ').split()
+
+        # Get first match comapring mnemonic of current line against instruction list
+        instr_desc = next((i for i in instr_list if i["mnemonic"].lower() == elem_list[0].lower()), ({ "mnemonic": "invalid", "cycles": "0", "Type": "invalid"}))
+                
+        opc    = hex(int(instr_desc["opc"], 2))[2:]
+        field1 = ""
+        field2 = ""
+        field3 = ""
+        immB   = ""
+
+#       print "DBG: now interpreting line: " + line
+        
+        # R-Type
+        # +=======+=======+=======+=======+
+        # |  rs2  |  rs1  |   rd  |  opc  |
+        # +=======+=======+=======+=======+
+        if (instr_desc["Type"] == "R"):
+
+            field1 = hex(int(elem_list[1][1:]))[2:]
+            field2 = hex(int(elem_list[2][1:]))[2:]
+            field3 = hex(int(elem_list[3][1:]))[2:]
+
+        # S-Type
+        # +=======+=======+=======+=======+
+        # |  rs2  |  rs1  | func1 |  opc  |
+        # +=======+=======+=======+=======+
+        # |        immB (optional)        |
+        # +===============================+
+        elif (instr_desc["Type"] == "S"):
+            
+            field1 = hex(int(instr_desc["func1"], 2))[2:]
+            field2 = hex(int(elem_list[1][1:]))[2:]
+            field3 = ""
+
+            # Handle direct address (store half instruction)
+            if (is_direct_address(elem_list[2])):
+                [reg, displacement] = decompose_direct_address ( elem_list[2] )
+                field3 = hex(int(reg[1:]))[2:]
+                if (instr_desc["cycles"] == "2"):
+                    immB   = parse_imm(displacement, "B", label_list)
+            # Handle register 
+            else:
+                field3 = hex(int(elem_list[2][1:]))[2:]
+                if (instr_desc["cycles"] == "2"):
+                    immB = parse_imm(elem_list[3], "B", label_list)
+
+        # U-Type
+        # +=======+=======+=======+=======+
+        # |  immA | func2 |   rd  |  opc  |
+        # +=======+=======+=======+=======+
+        # |        immB (optional)        |
+        # +===============================+
+        elif (instr_desc["Type"] == "U"):
+            
+            field1 = hex(int(elem_list[1][1:]))[2:]
+            field2 = hex(int(instr_desc["func2"], 2))[2:]
+
+            if (instr_desc["cycles"] == "1"):
+                field3 = parse_imm(elem_list[2], "A", label_list)
+
+            elif (instr_desc["cycles"] == "2"):
+                field3 = "0"
+                immB   = parse_imm(elem_list[2], "B", label_list)
+
+        # J-Type
+        # +=======+=======+=======+=======+
+        # | func3 |  rs1  |   rd  |  opc  |
+        # +=======+=======+=======+=======+
+        # |        immB (optional)        |
+        # +===============================+
+        elif (instr_desc["Type"] == "J"):
+            
+            field1 = hex(int(elem_list[1][1:]))[2:]
+            
+            # Handle direct address (store half instruction)
+            if (is_direct_address(elem_list[2])):
+                [reg, displacement] = decompose_direct_address ( elem_list[2] )
+                field2 = hex(int(reg[1:]))[2:]
+                if (instr_desc["cycles"] == "2"):
+                    immB   = parse_imm(displacement, "B", label_list)
+            # Handle register 
+            else:
+                field2 = hex(int(elem_list[2][1:]))[2:]
+            
+            field3 = hex(int(instr_desc["func3"], 2))[2:]
+
+        else:
+            print "ERROR: Cannot interpret line " + line
+        
+        # Write instruction to output file
+        fhandle.write ( (field3 + field2 + field1 + opc).upper() + "  //" + line + "\n" )
+        
+        if (instr_desc["cycles"] == "2"):
+            fhandle.write ( immB.upper() + "\n")
+
+    # End: for (line in lines):
+
+    # Close output file
+    fhandle.close()
+
+
+# Function: is input string a direct (displaced) address?
+def is_direct_address ( str_value ):
+    
+    is_addr = False
+
+    found_open  = str_value.find('(');
+    found_close = str_value.find(')');
+
+    if ( found_open >= 0 and found_close > 0 and (found_close > found_open) ):
+        is_addr = True
+
+    return is_addr
+
+
+# Function: Parse immediate value. Input format is hex, binary, or decimal. Output format is hex.
+def parse_imm ( str_value, imm_type, label_list ):
+
+    num_hex_digits = 0;
+    parsed = "z"
+    
+    # Size of immediate field in instruction in units of hex digits (i.e., 4 bits)
+    if (imm_type == "A"):
+        num_hex_digits = 1
+    elif (imm_type == "B"):
+        num_hex_digits = 4
+
+    num_bits = num_hex_digits*4
+
+    # If immediate value is a label, get the label entry from the label list
+    my_label = next((label for label in label_list if label["name"] == str_value), ({"name": "invalid", "pc": 0}))
+
+    # Immediate is not a label:
+    if (my_label["name"] == "invalid"):
+
+        # Input is hex
+        if ( str_value[0:2] == "0x"):
+            parsed = str_value[2:].zfill(num_hex_digits)
+            
+        
+        # Input is binary
+        elif ( str_value[0:2] == "0b"):
+            parsed = hex(int(str_value[2:], 2))[2:].zfill(num_hex_digits)
+    
+        # Input is decimal
+        else:
+            int_val = int(str_value, 10)
+            parsed  = hex((int_val + (1<<num_bits)) % (1 << num_bits))[2:].zfill(num_hex_digits)
+
+    # Immediate is a label
+    else:
+        parsed = hex(my_label["pc"])[2:].zfill(num_hex_digits)
+
+    return parsed
 
 
 # Function: Parse ISA from XML description
@@ -45,26 +194,66 @@ def parse_isa(root, instr_list, depth, root_opc="0000"):
             
             # Root instruction
             if depth == 0:
-                instr_list.append ( { "mnemonic": child.attrib["name"], "opc": child.attrib["opc"], "cycles": child.attrib["cycles"], "Type": "R" } )
+                instr_list.append ( { "mnemonic": child.attrib["name"], "opc": child.attrib["opc"], "cycles": child.attrib["cycles"], "addr_mode": child.attrib["addr_mode"], "Type": "R" } )
             
             # Hierarchical instruction
             else:
                 # S-Type, which has func1 attribute
                 if "func1" in child.attrib:
-                    instr_list.append ( { "mnemonic": child.attrib["name"], "opc": root_opc, "cycles": child.attrib["cycles"], "func1": child.attrib["func1"], "Type": "S" } )
+                    instr_list.append ( { "mnemonic": child.attrib["name"], "opc": root_opc, "cycles": child.attrib["cycles"], "addr_mode": child.attrib["addr_mode"], "func1": child.attrib["func1"], "Type": "S" } )
 
                 # U-Type, which has func2 attribute
                 elif "func2" in child.attrib:
-                    instr_list.append ( { "mnemonic": child.attrib["name"], "opc": root_opc, "cycles": child.attrib["cycles"], "func2": child.attrib["func2"], "Type": "U" } )
+                    instr_list.append ( { "mnemonic": child.attrib["name"], "opc": root_opc, "cycles": child.attrib["cycles"], "addr_mode": child.attrib["addr_mode"], "func2": child.attrib["func2"], "Type": "U" } )
 
                 # J-Type, which has func3 attribute
                 elif "func3" in child.attrib:
-                    instr_list.append ( { "mnemonic": child.attrib["name"], "opc": root_opc, "cycles": child.attrib["cycles"], "func3": child.attrib["func3"], "Type": "J" } )
+                    instr_list.append ( { "mnemonic": child.attrib["name"], "opc": root_opc, "cycles": child.attrib["cycles"], "addr_mode": child.attrib["addr_mode"], "func3": child.attrib["func3"], "Type": "J" } )
 
         # Recursive call if we are in root of hierarchical instruction
         elif child.tag == "root":
             parse_isa(child, instr_list, depth+1, child.attrib["opc"])
 
+
+# Function: Preporcess assembly program. Return a list of all labels.
+def preproc ( asm_lines, instr_list ):
+
+    pc            = 0
+    label_list    = []
+    asm_lines_out = []
+
+    for line in asm_lines:
+
+        # Decompose line into individual elements
+        elem_list = line.replace(',', ' ').split()
+    
+        # Get first match comapring mnemonic of current line against instruction list
+        instr_desc = next((i for i in instr_list if i["mnemonic"].lower() == elem_list[0].lower()), ({ "cycles": "0"}))
+    
+        # Current line is a label
+        if (":" in line) and (line.find(":") > 0):
+            
+            label_list.append( { "pc": pc, "name": line[0:line.find(":")] } )
+
+        # Current line is 1-cycle instruction
+        elif (instr_desc["cycles"] == "1"):
+            
+            pc = pc + 2;
+            asm_lines_out.append(line)
+
+        # Current line is 2-cycle instruction
+        elif (instr_desc["cycles"] == "2"):
+
+            pc = pc + 4;
+            asm_lines_out.append(line)
+
+        # Line cannot be interpreted
+        else:
+
+            print "ERROR: Preprocessor cannot interpret line: " + line
+            sys.exit(1)
+
+    return label_list, asm_lines_out
 
 # Function: Strip white spaces and comments from ASM file
 def strip_asm ( filename ):
@@ -95,149 +284,6 @@ def strip_asm ( filename ):
 
     return asm_list;
 
-
-# Function: Parse immediate value. Input format is hex, binary, or decimal. Output format is hex.
-def parse_imm ( str_value, imm_type ):
-
-    num_hex_digits = 0;
-    parsed = "z"
-    
-    # Size of immediate field in instruction in units of hex digits (i.e., 4 bits)
-    if (imm_type == "A"):
-        num_hex_digits = 1
-    elif (imm_type == "B"):
-        num_hex_digits = 4
-
-    num_bits = num_hex_digits*4
-
-    # Input is hex
-    if ( str_value[0:2] == "0x"):
-        parsed = str_value[2:].zfill(num_hex_digits)
-        
-    
-    # Input is binary
-    elif ( str_value[0:2] == "0b"):
-        parsed = hex(int(str_value[2:], 2))[2:].zfill(num_hex_digits)
-
-    # Input is decimal
-    else:
-        int_val = int(str_value, 10)
-        parsed  = hex((int_val + (1<<num_bits)) % (1 << num_bits))[2:].zfill(num_hex_digits)
-
-    return parsed
-
-
-# Function: Generate binary
-def gen_binary ( lines, instr_list, out_filename ):
-
-    fhandle = open ( out_filename, "w")
-    
-    for line in lines:
-
-        # Decompose line into individual elements
-        elem_list = line.replace(',', ' ').split()
-
-        if ( len(elem_list) >= 1 ):
-
-            match_list = [i for i in instr_list if i["mnemonic"].lower() == elem_list[0].lower()]
-
-            if ( len(match_list) > 0 ):
-                
-                instr_desc = match_list[0];
-
-                opc    = hex(int(instr_desc["opc"], 2))[2:]
-                field1 = ""
-                field2 = ""
-                field3 = ""
-                immB   = ""
-
-#               print "DBG: now interpreting line: " + line
-                
-                # R-Type
-                # +=======+=======+=======+=======+
-                # |  rs2  |  rs1  |   rd  |  opc  |
-                # +=======+=======+=======+=======+
-                if (instr_desc["Type"] == "R"):
-
-                    field1 = hex(int(elem_list[1][1:]))[2:]
-                    field2 = hex(int(elem_list[2][1:]))[2:]
-                    field3 = hex(int(elem_list[3][1:]))[2:]
-
-                # S-Type
-                # +=======+=======+=======+=======+
-                # |  rs2  |  rs1  | func1 |  opc  |
-                # +=======+=======+=======+=======+
-                # |        immB (optional)        |
-                # +===============================+
-                elif (instr_desc["Type"] == "S"):
-                    
-                    field1 = hex(int(instr_desc["func1"], 2))[2:]
-                    field2 = hex(int(elem_list[1][1:]))[2:]
-                    field3 = ""
-
-                    # Handle direct address (store half instruction)
-                    if (is_direct_address(elem_list[2])):
-                        [reg, displacement] = decompose_direct_address ( elem_list[2] )
-                        field3 = hex(int(reg[1:]))[2:]
-                        if (instr_desc["cycles"] == "2"):
-                            immB   = parse_imm(displacement, "B")
-                    # Handle register 
-                    else:
-                        field3 = hex(int(elem_list[2][1:]))[2:]
-                        if (instr_desc["cycles"] == "2"):
-                            immB = parse_imm(elem_list[3], "B")
-
-                # U-Type
-                # +=======+=======+=======+=======+
-                # |  immA | func2 |   rd  |  opc  |
-                # +=======+=======+=======+=======+
-                # |        immB (optional)        |
-                # +===============================+
-                elif (instr_desc["Type"] == "U"):
-                    
-                    field1 = hex(int(elem_list[1][1:]))[2:]
-                    field2 = hex(int(instr_desc["func2"], 2))[2:]
-
-                    if (instr_desc["cycles"] == "1"):
-                        field3 = parse_imm(elem_list[2], "A")
-
-                    elif (instr_desc["cycles"] == "2"):
-                        field3 = "0"
-                        immB   = parse_imm(elem_list[2], "B")
-
-                # J-Type
-                # +=======+=======+=======+=======+
-                # | func3 |  rs1  |   rd  |  opc  |
-                # +=======+=======+=======+=======+
-                # |        immB (optional)        |
-                # +===============================+
-                elif (instr_desc["Type"] == "J"):
-                    
-                    field1 = hex(int(elem_list[1][1:]))[2:]
-                    
-                    # Handle direct address (store half instruction)
-                    if (is_direct_address(elem_list[2])):
-                        [reg, displacement] = decompose_direct_address ( elem_list[2] )
-                        field2 = hex(int(reg[1:]))[2:]
-                        if (instr_desc["cycles"] == "2"):
-                            immB   = parse_imm(displacement, "B")
-                    # Handle register 
-                    else:
-                        field2 = hex(int(elem_list[2][1:]))[2:]
-                    
-                    field3 = hex(int(instr_desc["func3"], 2))[2:]
-
-                # Write instruction to output file
-                fhandle.write ( (field3 + field2 + field1 + opc).upper() + "  //" + line + "\n" )
-                
-                if (instr_desc["cycles"] == "2"):
-                    fhandle.write ( immB.upper() + "\n")
-            
-            else:
-                print "ERROR: Cannot interpret line " + line
-
-    # Close output file
-    fhandle.close()
 
 
 asm_in  = ""
@@ -285,6 +331,11 @@ parse_isa(root, instr_list, depth)
 # Strip white spaces and comments from ASM file
 asm_lines = strip_asm ( asm_in )
 
+# Preprocessing
+label_list, asm_lines_pp = preproc ( asm_lines, instr_list )
+
+print label_list
+
 # Generate binary
-gen_binary ( asm_lines, instr_list, asm_out )
+gen_binary ( asm_lines_pp, instr_list, label_list, asm_out )
 
