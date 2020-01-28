@@ -1,5 +1,5 @@
 # swt16
-A sweet 16-bit RISC processor.
+A 16-bit, 5-stage RISC processor. RTL description in Verilog. Includes assembler, simulator, and example programs.
 
 ## Overview
 This project contains a register transfer level (RTL) description of a 16-bit processor with a classic five stage RISC pipeline.
