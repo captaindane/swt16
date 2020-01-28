@@ -21,7 +21,7 @@ def decompose_direct_address ( str_value ):
 
 
 # Function: Generate binary
-def gen_binary ( lines, instr_list, out_filename ):
+def gen_binary ( lines, instr_list, label_list, out_filename ):
 
     fhandle = open ( out_filename, "w")
     
@@ -68,12 +68,12 @@ def gen_binary ( lines, instr_list, out_filename ):
                 [reg, displacement] = decompose_direct_address ( elem_list[2] )
                 field3 = hex(int(reg[1:]))[2:]
                 if (instr_desc["cycles"] == "2"):
-                    immB   = parse_imm(displacement, "B")
+                    immB   = parse_imm(displacement, "B", label_list)
             # Handle register 
             else:
                 field3 = hex(int(elem_list[2][1:]))[2:]
                 if (instr_desc["cycles"] == "2"):
-                    immB = parse_imm(elem_list[3], "B")
+                    immB = parse_imm(elem_list[3], "B", label_list)
 
         # U-Type
         # +=======+=======+=======+=======+
@@ -87,11 +87,11 @@ def gen_binary ( lines, instr_list, out_filename ):
             field2 = hex(int(instr_desc["func2"], 2))[2:]
 
             if (instr_desc["cycles"] == "1"):
-                field3 = parse_imm(elem_list[2], "A")
+                field3 = parse_imm(elem_list[2], "A", label_list)
 
             elif (instr_desc["cycles"] == "2"):
                 field3 = "0"
-                immB   = parse_imm(elem_list[2], "B")
+                immB   = parse_imm(elem_list[2], "B", label_list)
 
         # J-Type
         # +=======+=======+=======+=======+
@@ -108,7 +108,7 @@ def gen_binary ( lines, instr_list, out_filename ):
                 [reg, displacement] = decompose_direct_address ( elem_list[2] )
                 field2 = hex(int(reg[1:]))[2:]
                 if (instr_desc["cycles"] == "2"):
-                    immB   = parse_imm(displacement, "B")
+                    immB   = parse_imm(displacement, "B", label_list)
             # Handle register 
             else:
                 field2 = hex(int(elem_list[2][1:]))[2:]
@@ -145,7 +145,7 @@ def is_direct_address ( str_value ):
 
 
 # Function: Parse immediate value. Input format is hex, binary, or decimal. Output format is hex.
-def parse_imm ( str_value, imm_type ):
+def parse_imm ( str_value, imm_type, label_list ):
 
     num_hex_digits = 0;
     parsed = "z"
@@ -158,19 +158,29 @@ def parse_imm ( str_value, imm_type ):
 
     num_bits = num_hex_digits*4
 
-    # Input is hex
-    if ( str_value[0:2] == "0x"):
-        parsed = str_value[2:].zfill(num_hex_digits)
-        
-    
-    # Input is binary
-    elif ( str_value[0:2] == "0b"):
-        parsed = hex(int(str_value[2:], 2))[2:].zfill(num_hex_digits)
+    # If immediate value is a label, get the label entry from the label list
+    my_label = next((label for label in label_list if label["name"] == str_value), ({"name": "invalid", "pc": 0}))
 
-    # Input is decimal
+    # Immediate is not a label:
+    if (my_label["name"] == "invalid"):
+
+        # Input is hex
+        if ( str_value[0:2] == "0x"):
+            parsed = str_value[2:].zfill(num_hex_digits)
+            
+        
+        # Input is binary
+        elif ( str_value[0:2] == "0b"):
+            parsed = hex(int(str_value[2:], 2))[2:].zfill(num_hex_digits)
+    
+        # Input is decimal
+        else:
+            int_val = int(str_value, 10)
+            parsed  = hex((int_val + (1<<num_bits)) % (1 << num_bits))[2:].zfill(num_hex_digits)
+
+    # Immediate is a label
     else:
-        int_val = int(str_value, 10)
-        parsed  = hex((int_val + (1<<num_bits)) % (1 << num_bits))[2:].zfill(num_hex_digits)
+        parsed = hex(my_label["pc"])[2:].zfill(num_hex_digits)
 
     return parsed
 
@@ -184,21 +194,21 @@ def parse_isa(root, instr_list, depth, root_opc="0000"):
             
             # Root instruction
             if depth == 0:
-                instr_list.append ( { "mnemonic": child.attrib["name"], "opc": child.attrib["opc"], "cycles": child.attrib["cycles"], "Type": "R" } )
+                instr_list.append ( { "mnemonic": child.attrib["name"], "opc": child.attrib["opc"], "cycles": child.attrib["cycles"], "addr_mode": child.attrib["addr_mode"], "Type": "R" } )
             
             # Hierarchical instruction
             else:
                 # S-Type, which has func1 attribute
                 if "func1" in child.attrib:
-                    instr_list.append ( { "mnemonic": child.attrib["name"], "opc": root_opc, "cycles": child.attrib["cycles"], "func1": child.attrib["func1"], "Type": "S" } )
+                    instr_list.append ( { "mnemonic": child.attrib["name"], "opc": root_opc, "cycles": child.attrib["cycles"], "addr_mode": child.attrib["addr_mode"], "func1": child.attrib["func1"], "Type": "S" } )
 
                 # U-Type, which has func2 attribute
                 elif "func2" in child.attrib:
-                    instr_list.append ( { "mnemonic": child.attrib["name"], "opc": root_opc, "cycles": child.attrib["cycles"], "func2": child.attrib["func2"], "Type": "U" } )
+                    instr_list.append ( { "mnemonic": child.attrib["name"], "opc": root_opc, "cycles": child.attrib["cycles"], "addr_mode": child.attrib["addr_mode"], "func2": child.attrib["func2"], "Type": "U" } )
 
                 # J-Type, which has func3 attribute
                 elif "func3" in child.attrib:
-                    instr_list.append ( { "mnemonic": child.attrib["name"], "opc": root_opc, "cycles": child.attrib["cycles"], "func3": child.attrib["func3"], "Type": "J" } )
+                    instr_list.append ( { "mnemonic": child.attrib["name"], "opc": root_opc, "cycles": child.attrib["cycles"], "addr_mode": child.attrib["addr_mode"], "func3": child.attrib["func3"], "Type": "J" } )
 
         # Recursive call if we are in root of hierarchical instruction
         elif child.tag == "root":
@@ -228,13 +238,13 @@ def preproc ( asm_lines, instr_list ):
         # Current line is 1-cycle instruction
         elif (instr_desc["cycles"] == "1"):
             
-            pc = pc + 1;
+            pc = pc + 2;
             asm_lines_out.append(line)
 
         # Current line is 2-cycle instruction
         elif (instr_desc["cycles"] == "2"):
 
-            pc = pc + 2;
+            pc = pc + 4;
             asm_lines_out.append(line)
 
         # Line cannot be interpreted
@@ -327,5 +337,5 @@ label_list, asm_lines_pp = preproc ( asm_lines, instr_list )
 print label_list
 
 # Generate binary
-gen_binary ( asm_lines_pp, instr_list, asm_out )
+gen_binary ( asm_lines_pp, instr_list, label_list, asm_out )
 
