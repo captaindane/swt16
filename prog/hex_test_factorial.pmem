@@ -7,15 +7,15 @@
 1E42  //jalr r4 , r14
 1211  //incl r1 , 1
 22F1  //incl r15, 2
-1233  //blt  r2, r1, 0x18
+1233  //blt  r2, r1, _end
 0018
-0003  //beq r0, r0, 0xfff6
+0003  //beq r0, r0, _outer_loop
 FFF6
 0156  //add  r5, r1, r0
 3167  //sub  r6, r1, r3
 6558  //mul  r5, r5, r6
 F261  //incl r6, -1
-0613  //bneq r6, r0, 0xFFFC
+0613  //bneq r6, r0, _inner_loop
 FFFC
 F543  //sh r5, (r15)
 1402  //jalr r0, r4

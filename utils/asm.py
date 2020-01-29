@@ -24,6 +24,7 @@ def decompose_direct_address ( str_value ):
 def gen_binary ( lines, instr_list, label_list, out_filename ):
 
     fhandle = open ( out_filename, "w")
+    pc      = 0
     
     for line in lines:
 
@@ -68,12 +69,12 @@ def gen_binary ( lines, instr_list, label_list, out_filename ):
                 [reg, displacement] = decompose_direct_address ( elem_list[2] )
                 field3 = hex(int(reg[1:]))[2:]
                 if (instr_desc["cycles"] == "2"):
-                    immB   = parse_imm(displacement, "B", label_list)
+                    immB   = parse_imm(displacement, "B", label_list, instr_desc, pc)
             # Handle register 
             else:
                 field3 = hex(int(elem_list[2][1:]))[2:]
                 if (instr_desc["cycles"] == "2"):
-                    immB = parse_imm(elem_list[3], "B", label_list)
+                    immB = parse_imm(elem_list[3], "B", label_list, instr_desc, pc)
 
         # U-Type
         # +=======+=======+=======+=======+
@@ -87,11 +88,11 @@ def gen_binary ( lines, instr_list, label_list, out_filename ):
             field2 = hex(int(instr_desc["func2"], 2))[2:]
 
             if (instr_desc["cycles"] == "1"):
-                field3 = parse_imm(elem_list[2], "A", label_list)
+                field3 = parse_imm(elem_list[2], "A", label_list, instr_desc, pc)
 
             elif (instr_desc["cycles"] == "2"):
                 field3 = "0"
-                immB   = parse_imm(elem_list[2], "B", label_list)
+                immB   = parse_imm(elem_list[2], "B", label_list, instr_desc, pc)
 
         # J-Type
         # +=======+=======+=======+=======+
@@ -108,7 +109,7 @@ def gen_binary ( lines, instr_list, label_list, out_filename ):
                 [reg, displacement] = decompose_direct_address ( elem_list[2] )
                 field2 = hex(int(reg[1:]))[2:]
                 if (instr_desc["cycles"] == "2"):
-                    immB   = parse_imm(displacement, "B", label_list)
+                    immB   = parse_imm(displacement, "B", label_list, instr_desc, pc)
             # Handle register 
             else:
                 field2 = hex(int(elem_list[2][1:]))[2:]
@@ -117,6 +118,12 @@ def gen_binary ( lines, instr_list, label_list, out_filename ):
 
         else:
             print "ERROR: Cannot interpret line " + line
+        
+        # Increment program counter
+        if   (instr_desc["cycles"] == "1"):
+            pc = pc + 2;
+        elif (instr_desc["cycles"] == "2"):
+            pc = pc + 4;
         
         # Write instruction to output file
         fhandle.write ( (field3 + field2 + field1 + opc).upper() + "  //" + line + "\n" )
@@ -144,8 +151,16 @@ def is_direct_address ( str_value ):
     return is_addr
 
 
-# Function: Parse immediate value. Input format is hex, binary, or decimal. Output format is hex.
-def parse_imm ( str_value, imm_type, label_list ):
+## Function: parse_imm
+#  Parse immediate value. Input format is hex, binary, or decimal. Output format is hex.
+# 
+#  param  str_value : value to be interpreded as immediate
+#  param  imm_type  : type of immedate value ("A", "B")
+#  param  label_list: list of all valid labels
+#  param  instr_desc: descriptor if instruction whose immedate value is given by "str_value"
+#  param  pc        : program counter (for conversion of labels to pc-relative addresses)
+#
+def parse_imm ( str_value, imm_type, label_list, instr_desc, pc ):
 
     num_hex_digits = 0;
     parsed = "z"
@@ -178,9 +193,17 @@ def parse_imm ( str_value, imm_type, label_list ):
             int_val = int(str_value, 10)
             parsed  = hex((int_val + (1<<num_bits)) % (1 << num_bits))[2:].zfill(num_hex_digits)
 
-    # Immediate is a label
+    # Immediate is a label. Treat label depending on whether instruction uses PC-relative or absolute, direct addressing
     else:
-        parsed = hex(my_label["pc"])[2:].zfill(num_hex_digits)
+        if (instr_desc["addr_mode"] == "abs"):
+            parsed = hex(my_label["pc"])[2:].zfill(num_hex_digits)
+        elif (instr_desc["addr_mode"] == "pc_rel"):
+            int_val = my_label["pc"] - pc
+            parsed  = hex((int_val + (1<<num_bits)) % (1 << num_bits))[2:].zfill(num_hex_digits)
+        else:
+            print "ERROR: instruction " + instr_desc["name"] + " not suited for label translation."
+            sys.exit(2)
+            
 
     return parsed
 
@@ -333,8 +356,6 @@ asm_lines = strip_asm ( asm_in )
 
 # Preprocessing
 label_list, asm_lines_pp = preproc ( asm_lines, instr_list )
-
-print label_list
 
 # Generate binary
 gen_binary ( asm_lines_pp, instr_list, label_list, asm_out )
