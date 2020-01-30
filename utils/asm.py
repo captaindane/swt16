@@ -309,12 +309,14 @@ def strip_asm ( filename ):
 
 
 
-asm_in  = ""
-asm_out = ""
+asm_in   = ""
+asm_out  = ""
+isa_desc = "isa.xml"
+silent   = False
 
 # Parse command line
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "i:o:", ["input", "output"])
+    opts, args = getopt.getopt(sys.argv[1:], "i:o:d:s", ["input", "output", "isa desc", "silent"])
 except getopt.GetoptError as err:
     print str(err)
     sys.exit(2)
@@ -325,6 +327,10 @@ for opt, val in opts:
         asm_in = val
     elif (opt == "-o"):
         asm_out = val
+    elif (opt == "-d"):
+        isa_desc = val
+    elif (opt == "-s"):
+        silent = True
 
 if (asm_in == ""):
     print "ERROR: no input file specified"
@@ -336,14 +342,16 @@ elif (asm_out == ""):
     else:
         asm_out = asm_in + ".hex"
 
-print "========================================="
-print "SWT16 assembler invoked."
-print "input : " + asm_in 
-print "output: " + asm_out
-print "========================================="
+if (not silent):
+    print "========================================="
+    print "SWT16 assembler invoked."
+    print "input : " + asm_in 
+    print "output: " + asm_out
+    print "isa   : " + isa_desc
+    print "========================================="
 
 # Parse XML file
-tree = ET.parse('isa.xml')
+tree = ET.parse(isa_desc)
 root = tree.getroot()
 
 # Parse ISA from XML
