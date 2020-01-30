@@ -6,6 +6,7 @@ function run_test ()
 {
     # Generate names of memory files
     PROG_NAME=$1
+    ASM="../prog/${PROG_NAME}.asm"
     PMEM="../prog/${PROG_NAME}.pmem"
     DMEM_IN="../prog/${PROG_NAME}.dmem"
     DMEM_OUT="../prog/${PROG_NAME}.dmem.postsim"
@@ -15,12 +16,15 @@ function run_test ()
     rm -f $DMEM_OUT
     
     # Generate simulator command
+    ASM_CMD="python ../utils/asm.py -i ${ASM} -o ${PMEM} -d ../utils/isa.xml -s"
     SIM="../bench/swt16/Vswt16_top"
     SIM_CMD="${SIM} --exitOnNop --pmemFile ${PMEM} --dmemFile ${DMEM_IN} --dmemDump"
     
     # Run simulation
     echo "======================================="
     echo "Test program: ${PROG_NAME}"
+    echo ${ASM_CMD}
+    eval ${ASM_CMD}
     echo ${SIM_CMD}
     eval ${SIM_CMD}
 
