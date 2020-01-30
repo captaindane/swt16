@@ -3,4 +3,4 @@ rtl/*.swp
 prog/*.postsim
 prog/_dmem_to_use.txt
 prog/_pmem_to_use.txt
-
+prog/*.pmem
