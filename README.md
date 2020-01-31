@@ -43,7 +43,7 @@ Call the simulator with parameter "--help" to see all available options to run i
 
 Example simulation run:
 
-`./swt16/Vswt16_top --simTime 200 --pmemFile ../prog/hex_test_load_store.pmem --dmemFile ../prog/hex_test_load_store.dmem --dmemDump`
+`./swt16/Vswt16_top --simTime 200 --pmemFile ../prog/test_load_store.pmem --dmemFile ../prog/test_load_store.dmem --dmemDump`
 
 In this example, `--simTime <timeUnits>` specifies the number of time units for which the simulation is run.
 The option `--pmemFile <filename>` specifies the program file that is loaded into the program memory.
@@ -76,7 +76,7 @@ To invoke the assembler, execute the following:
 You can try out the assember by regenerating the machine code test programs located in [prog].
 For example, to regenerate the machine code for the factorial test program, execute the following:
 
-`cd utils && python asm.py -i ../prog/hex_test_factorial.asm`
+`cd utils && python asm.py -i ../prog/test_factorial.asm`
 
 Refer to [doc/ISA.odt] for an overview of the current state of the assembly language and the ISA.
 
