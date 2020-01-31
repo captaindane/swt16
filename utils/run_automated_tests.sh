@@ -53,12 +53,12 @@ fi
 
 # Runt tests
 NUM_FAILED=0
-run_test "hex_test_bypass_stall";  NUM_FAILED=$(($NUM_FAILED + $?))
-run_test "hex_test_arith";         NUM_FAILED=$(($NUM_FAILED + $?))
-run_test "hex_test_branch";        NUM_FAILED=$(($NUM_FAILED + $?))
-run_test "hex_test_jmp";           NUM_FAILED=$(($NUM_FAILED + $?))
-run_test "hex_test_load_store";    NUM_FAILED=$(($NUM_FAILED + $?))
-run_test "hex_test_factorial";     NUM_FAILED=$(($NUM_FAILED + $?))
+run_test "test_bypass_stall";  NUM_FAILED=$(($NUM_FAILED + $?))
+run_test "test_arith";         NUM_FAILED=$(($NUM_FAILED + $?))
+run_test "test_branch";        NUM_FAILED=$(($NUM_FAILED + $?))
+run_test "test_jmp";           NUM_FAILED=$(($NUM_FAILED + $?))
+run_test "test_load_store";    NUM_FAILED=$(($NUM_FAILED + $?))
+run_test "test_factorial";     NUM_FAILED=$(($NUM_FAILED + $?))
 
 echo "======================================="
 
