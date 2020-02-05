@@ -25,8 +25,11 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
              input                         in_act_ialu_srl,
              input                         in_act_ialu_xor,
              input                         in_act_jump_to_ialu_res,
-             input                         in_act_load_dmem,
-             input                         in_act_store_dmem,
+             input                         in_act_load_dmem_byte_signed,
+             input                         in_act_load_dmem_byte_unsigned,
+             input                         in_act_load_dmem_word,
+             input                         in_act_store_dmem_byte,
+             input                         in_act_store_dmem_word,
              input                         in_act_write_res_to_reg,
              input                  [2:0]  in_cycle_in_instr,
              input                         in_flush,
@@ -39,8 +42,11 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
              input  [IALU_WORD_WIDTH-1:0]  in_src1,
              input  [IALU_WORD_WIDTH-1:0]  in_src2,
              input  [IALU_WORD_WIDTH-1:0]  in_src3,
-             output                        out_act_load_dmem,
-             output                        out_act_store_dmem,
+             output                        out_act_load_dmem_byte_signed,
+             output                        out_act_load_dmem_byte_unsigned,
+             output                        out_act_load_dmem_word,
+             output                        out_act_store_dmem_byte,
+             output                        out_act_store_dmem_word,
              output                        out_act_write_res_to_reg,
              output [PMEM_ADDR_WIDTH-1:0]  out_branch_pc,
              output                 [2:0]  out_cycle_in_instr,
@@ -75,8 +81,11 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     reg                                act_ialu_src2_is_res_ff;
     reg                                act_ialu_xor_ff;
     reg                                act_jump_to_ialu_res_ff;
-    reg                                act_load_dmem_ff;
-    reg                                act_store_dmem_ff;
+    reg                                act_load_dmem_byte_signed_ff;
+    reg                                act_load_dmem_byte_unsigned_ff;
+    reg                                act_load_dmem_word_ff;
+    reg                                act_store_dmem_byte_ff;
+    reg                                act_store_dmem_word_ff;
     reg                                act_write_res_to_reg_ff;
     reg                         [2:0]  cycle_in_instr_ff;
     reg                                flush_ff;
@@ -116,66 +125,72 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     always @(posedge clock or posedge reset)
     begin
         if (!reset) begin
-            act_branch_ialu_res_ff_eq0_ff <= in_act_branch_ialu_res_ff_eq0;
-            act_branch_ialu_res_ff_gt0_ff <= in_act_branch_ialu_res_ff_gt0;
-            act_branch_ialu_res_ff_lt0_ff <= in_act_branch_ialu_res_ff_lt0;
-            act_ex_incr_pc_is_res_ff      <= in_act_ex_incr_pc_is_res;
-            act_ialu_add_ff               <= in_act_ialu_add;
-            act_ialu_and_ff               <= in_act_ialu_and;
-            act_ialu_mul_ff               <= in_act_ialu_mul;
-            act_ialu_neg_src2_ff          <= in_act_ialu_neg_src2;
-            act_ialu_or_ff                <= in_act_ialu_or;
-            act_ialu_sll_ff               <= in_act_ialu_sll;
-            act_ialu_sra_ff               <= in_act_ialu_sra;
-            act_ialu_src2_is_res_ff       <= in_act_ialu_src2_is_res;
-            act_ialu_srl_ff               <= in_act_ialu_srl;
-            act_ialu_xor_ff               <= in_act_ialu_xor;
-            act_jump_to_ialu_res_ff       <= in_act_jump_to_ialu_res;
-            act_load_dmem_ff              <= in_act_load_dmem;
-            act_store_dmem_ff             <= in_act_store_dmem;
-            act_write_res_to_reg_ff       <= in_act_write_res_to_reg;
-            cycle_in_instr_ff             <= in_cycle_in_instr;
-            flush_ff                      <= in_flush;
-            instr_ff                      <= in_instr;
-            instr_is_bubble_ff            <= in_instr_is_bubble;
-            pc_ff                         <= in_pc;
-            res_reg_idx_ff                <= in_res_reg_idx;
-            res_valid_EX_ff               <= in_res_valid_EX;
-            res_valid_MEM_ff              <= in_res_valid_MEM;
-            src1_ff                       <= in_src1;
-            src2_ff                       <= in_src2;
-            src3_ff                       <= in_src3;
+            act_branch_ialu_res_ff_eq0_ff  <= in_act_branch_ialu_res_ff_eq0;
+            act_branch_ialu_res_ff_gt0_ff  <= in_act_branch_ialu_res_ff_gt0;
+            act_branch_ialu_res_ff_lt0_ff  <= in_act_branch_ialu_res_ff_lt0;
+            act_ex_incr_pc_is_res_ff       <= in_act_ex_incr_pc_is_res;
+            act_ialu_add_ff                <= in_act_ialu_add;
+            act_ialu_and_ff                <= in_act_ialu_and;
+            act_ialu_mul_ff                <= in_act_ialu_mul;
+            act_ialu_neg_src2_ff           <= in_act_ialu_neg_src2;
+            act_ialu_or_ff                 <= in_act_ialu_or;
+            act_ialu_sll_ff                <= in_act_ialu_sll;
+            act_ialu_sra_ff                <= in_act_ialu_sra;
+            act_ialu_src2_is_res_ff        <= in_act_ialu_src2_is_res;
+            act_ialu_srl_ff                <= in_act_ialu_srl;
+            act_ialu_xor_ff                <= in_act_ialu_xor;
+            act_jump_to_ialu_res_ff        <= in_act_jump_to_ialu_res;
+            act_load_dmem_byte_signed_ff   <= in_act_load_dmem_byte_signed;
+            act_load_dmem_byte_unsigned_ff <= in_act_load_dmem_byte_unsigned;
+            act_load_dmem_word_ff          <= in_act_load_dmem_word;
+            act_store_dmem_byte_ff         <= in_act_store_dmem_byte;
+            act_store_dmem_word_ff         <= in_act_store_dmem_word;
+            act_write_res_to_reg_ff        <= in_act_write_res_to_reg;
+            cycle_in_instr_ff              <= in_cycle_in_instr;
+            flush_ff                       <= in_flush;
+            instr_ff                       <= in_instr;
+            instr_is_bubble_ff             <= in_instr_is_bubble;
+            pc_ff                          <= in_pc;
+            res_reg_idx_ff                 <= in_res_reg_idx;
+            res_valid_EX_ff                <= in_res_valid_EX;
+            res_valid_MEM_ff               <= in_res_valid_MEM;
+            src1_ff                        <= in_src1;
+            src2_ff                        <= in_src2;
+            src3_ff                        <= in_src3;
         end
         else begin
-            act_branch_ialu_res_ff_eq0_ff <= 0;
-            act_branch_ialu_res_ff_gt0_ff <= 0;
-            act_branch_ialu_res_ff_lt0_ff <= 0;
-            act_ex_incr_pc_is_res_ff      <= 0;
-            act_ialu_add_ff               <= 0;
-            act_ialu_and_ff               <= 0;
-            act_ialu_mul_ff               <= 0;
-            act_ialu_neg_src2_ff          <= 0;
-            act_ialu_or_ff                <= 0;
-            act_ialu_sll_ff               <= 0;
-            act_ialu_sra_ff               <= 0;
-            act_ialu_src2_is_res_ff       <= 0;
-            act_ialu_srl_ff               <= 0;
-            act_ialu_xor_ff               <= 0;
-            act_jump_to_ialu_res_ff       <= 0;
-            act_load_dmem_ff              <= 0;
-            act_store_dmem_ff             <= 0;
-            act_write_res_to_reg_ff       <= 0;
-            cycle_in_instr_ff             <= 0;
-            flush_ff                      <= 0;
-            instr_ff                      <= 0;
-            instr_is_bubble_ff            <= 0;
-            pc_ff                         <= 0;
-            res_reg_idx_ff                <= 0;
-            res_valid_EX_ff               <= 0;
-            res_valid_MEM_ff              <= 0;
-            src1_ff                       <= 0;
-            src2_ff                       <= 0;
-            src3_ff                       <= 0;
+            act_branch_ialu_res_ff_eq0_ff  <= 0;
+            act_branch_ialu_res_ff_gt0_ff  <= 0;
+            act_branch_ialu_res_ff_lt0_ff  <= 0;
+            act_ex_incr_pc_is_res_ff       <= 0;
+            act_ialu_add_ff                <= 0;
+            act_ialu_and_ff                <= 0;
+            act_ialu_mul_ff                <= 0;
+            act_ialu_neg_src2_ff           <= 0;
+            act_ialu_or_ff                 <= 0;
+            act_ialu_sll_ff                <= 0;
+            act_ialu_sra_ff                <= 0;
+            act_ialu_src2_is_res_ff        <= 0;
+            act_ialu_srl_ff                <= 0;
+            act_ialu_xor_ff                <= 0;
+            act_jump_to_ialu_res_ff        <= 0;
+            act_load_dmem_byte_signed_ff   <= 0;
+            act_load_dmem_byte_unsigned_ff <= 0;
+            act_load_dmem_word_ff          <= 0;
+            act_store_dmem_byte_ff         <= 0;
+            act_store_dmem_word_ff         <= 0;
+            act_write_res_to_reg_ff        <= 0;
+            cycle_in_instr_ff              <= 0;
+            flush_ff                       <= 0;
+            instr_ff                       <= 0;
+            instr_is_bubble_ff             <= 0;
+            pc_ff                          <= 0;
+            res_reg_idx_ff                 <= 0;
+            res_valid_EX_ff                <= 0;
+            res_valid_MEM_ff               <= 0;
+            src1_ff                        <= 0;
+            src2_ff                        <= 0;
+            src3_ff                        <= 0;
         end
     end
 
@@ -187,20 +202,26 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
     always @(*)
     begin
         if (flush_ff == 0) begin
-            out_act_load_dmem        = act_load_dmem_ff;
-            out_act_store_dmem       = act_store_dmem_ff;
-            out_act_write_res_to_reg = act_write_res_to_reg_ff;
-            out_instr                = instr_ff;
-            out_pc                   = pc_ff;
-            out_res_reg_idx          = res_reg_idx_ff;
+            out_act_load_dmem_byte_signed   = act_load_dmem_byte_signed_ff;
+            out_act_load_dmem_byte_unsigned = act_load_dmem_byte_unsigned_ff;
+            out_act_load_dmem_word          = act_load_dmem_word_ff;
+            out_act_store_dmem_byte         = act_store_dmem_byte_ff;
+            out_act_store_dmem_word         = act_store_dmem_word_ff;
+            out_act_write_res_to_reg        = act_write_res_to_reg_ff;
+            out_instr                       = instr_ff;
+            out_pc                          = pc_ff;
+            out_res_reg_idx                 = res_reg_idx_ff;
         end
         else begin
-            out_act_load_dmem        = 0;
-            out_act_store_dmem       = 0;
-            out_act_write_res_to_reg = 0;
-            out_instr                = 0;
-            out_pc                   = 0;
-            out_res_reg_idx          = 0;
+            out_act_load_dmem_byte_signed   = 0;
+            out_act_load_dmem_byte_unsigned = 0;
+            out_act_load_dmem_word          = 0;
+            out_act_store_dmem_byte         = 0;
+            out_act_store_dmem_word         = 0;
+            out_act_write_res_to_reg        = 0;
+            out_instr                       = 0;
+            out_pc                          = 0;
+            out_res_reg_idx                 = 0;
 
         end
     end
@@ -359,7 +380,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             out_dmem_rd_addr = 0;
         end
         
-        else if (act_load_dmem_ff) begin
+        else if (act_load_dmem_word_ff | act_load_dmem_byte_signed_ff | act_load_dmem_byte_unsigned_ff) begin
             out_dmem_rd_addr = ialu_res[DMEM_ADDR_WIDTH-1:0];
         end
         
@@ -373,7 +394,7 @@ module exec #(parameter DMEM_ADDR_WIDTH = 12,
             out_dmem_wr_word = 0;
         end
         
-        if (act_store_dmem_ff) begin
+        if (act_store_dmem_word_ff | act_store_dmem_byte_ff) begin
             out_dmem_wr_addr = ialu_res[DMEM_ADDR_WIDTH-1:0];
             out_dmem_wr_word = src3_ff;
         end

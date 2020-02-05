@@ -33,6 +33,8 @@
    <instr  name="BLT"    func1="0011"  cycles="2"  addr_mode="pc_rel"  category="Branch (PC-relative)"  text="Branch if less than (PC-relative addressing)"       />
    <instr  name="SH"     func1="0100"  cycles="1"  addr_mode="none"    category="Load/store"            text="Store half (i.e., 16-bit)"                          />
    <instr  name="SHO"    func1="0101"  cycles="2"  addr_mode="none"    category="Load/store"            text="Store half (i.e., 16-bit) with offset"              />
+   <instr  name="SB"     func1="0110"  cycles="1"  addr_mode="none"    category="Load/store"            text="Store byte in address from register"                />
+   <instr  name="SBO"    func1="0111"  cycles="2"  addr_mode="none"    category="Load/store"            text="Store byte in address from register plus offset"    />
    </root>
 
 
@@ -59,10 +61,15 @@
    <!-- |        immB (optional)        | -->
    <!-- +===============================+ -->
    <root   name="J_TYPE" opc="0010">
+   <!-- reserved         func3="0000" -->
    <instr  name="JALR"   func3="0001"  cycles="1"  addr_mode="none"    category="Jump (absolute)"       text="Jump and link with address from register (absolute addressing)"     />
    <instr  name="LH"     func3="0010"  cycles="1"  addr_mode="none"    category="Load/store"            text="Load half word from address in register"                            />
    <instr  name="LHO"    func3="0011"  cycles="2"  addr_mode="none"    category="Load/store"            text="Load half word from address in register plus offset to dmem address"/>
    <instr  name="ADDPC"  func3="0100"  cycles="1"  addr_mode="none"    category="Arithmetic"            text="Add PC to register"                                                 />
+   <instr  name="LB"     func3="0101"  cycles="1"  addr_mode="none"    category="Load/store"            text="Load byte from address in register (w/ sign extension)"                             />
+   <instr  name="LBO"    func3="0110"  cycles="2"  addr_mode="none"    category="Load/store"            text="Load byte from address in register plus offset to dmem address (w/ sign extension)" />
+   <instr  name="LBU"    func3="0111"  cycles="1"  addr_mode="none"    category="Load/store"            text="Load byte from address in register (w/o sign extension)"                            />
+   <instr  name="LBUO"   func3="1000"  cycles="2"  addr_mode="none"    category="Load/store"            text="Load byte from address in register plus offset to dmem address (w/o sign extension)"/>
    </root>
    
 </instructions>

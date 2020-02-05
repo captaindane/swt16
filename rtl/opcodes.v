@@ -36,6 +36,8 @@
 `define FUNC1_BLT      4'b0011  // Branch if less than (PC-relative addressing)
 `define FUNC1_SH       4'b0100  // Store half (i.e., 16-bit)
 `define FUNC1_SHO      4'b0101  // Store half (i.e., 16-bit) with offset
+`define FUNC1_SB       4'b0110  // Store byte in address from register
+`define FUNC1_SBO      4'b0111  // Store byte in address from register plus offset
 
 // U-TYPE
 // +-------+-------+-------+-------+
@@ -61,6 +63,10 @@
 `define FUNC3_LH       4'b0010  // Load half word from address in register
 `define FUNC3_LHO      4'b0011  // Load half word from address in register plus offset to dmem address
 `define FUNC3_ADDPC    4'b0100  // Add PC to register
+`define FUNC3_LB       4'b0101  // Load byte from address in register (w/ sign extension)
+`define FUNC3_LBO      4'b0110  // Load byte from address in register plus offset to dmem address (w/ sign extension)
+`define FUNC3_LBU      4'b0111  // Load byte from address in register (w/o sign extension)
+`define FUNC3_LBUO     4'b1000  // Load byte from address in register plus offset to dmem address (w/o sign extension)
 
 // Special instructions
 `define INSTR_NOP      {{12{1'b0}}, `OPCODE_NOP}

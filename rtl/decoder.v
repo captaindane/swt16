@@ -36,8 +36,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
        output                        out_act_ialu_srl,                  // shift right logically
        output                        out_act_ialu_xor,                  // logic xor
        output                        out_act_jump_to_ialu_res,          // jump to the result of the IALU 
-       output                        out_act_load_dmem,                 // load data from dmem into register
-       output                        out_act_store_dmem,                // store date from register in dmem
+       output                        out_act_load_dmem_byte_signed,     // load byte from dmem into register (w/ sign extension)
+       output                        out_act_load_dmem_byte_unsigned,   // load byte from dmem into register (w/o sign extension)
+       output                        out_act_load_dmem_word,            // load word (16 bit) from dmem into register
+       output                        out_act_store_dmem_byte,           // store byte from register in dmem
+       output                        out_act_store_dmem_word,           // store word (16 bit) from register in dmem
        output                        out_act_write_res_to_reg,          // activate writeback to regfile in WB stage
        output                 [2:0]  out_cycle_in_instr,                // for multi-cycle instructions: which cycle are we in?
        output [PMEM_WORD_WIDTH-1:0]  out_instr,                         // forward instruction to EX stage
@@ -221,8 +224,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
         out_act_ialu_srl                = 0; 
         out_act_ialu_xor                = 0;
         out_act_jump_to_ialu_res        = 0;
-        out_act_load_dmem               = 0;
-        out_act_store_dmem              = 0;
+        out_act_load_dmem_byte_signed   = 0;
+        out_act_load_dmem_byte_unsigned = 0;
+        out_act_load_dmem_word          = 0;
+        out_act_store_dmem_byte         = 0;
+        out_act_store_dmem_word         = 0;
         out_act_write_res_to_reg        = 0;
         out_res_valid_EX                = 0;
         out_res_valid_MEM               = 0;
@@ -301,8 +307,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_srl                       = 0; 
                         out_act_ialu_xor                       = 0;
                         out_act_jump_to_ialu_res               = 1;
-                        out_act_load_dmem                      = 0;
-                        out_act_store_dmem                     = 0;
+                        out_act_load_dmem_byte_signed          = 0;
+                        out_act_load_dmem_byte_unsigned        = 0;
+                        out_act_load_dmem_word                 = 0;
+                        out_act_store_dmem_byte                = 0;
+                        out_act_store_dmem_word                = 0;
                         out_act_write_res_to_reg               = 1;
                         out_res_valid_EX                       = 0;    // result cannot be bypassed from EX
                         out_res_valid_MEM                      = 0;    // result cannot be bypassed from MEM
@@ -336,8 +345,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_srl                       = 0; 
                         out_act_ialu_xor                       = 0;
                         out_act_jump_to_ialu_res               = 0;
-                        out_act_load_dmem                      = 0;
-                        out_act_store_dmem                     = 0;
+                        out_act_load_dmem_byte_signed          = 0;
+                        out_act_load_dmem_byte_unsigned        = 0;
+                        out_act_load_dmem_word                 = 0;
+                        out_act_store_dmem_byte                = 0;
+                        out_act_store_dmem_word                = 0;
                         out_act_write_res_to_reg               = 1;
                         out_res_valid_EX                       = 1;         // result can be bypassed from EX
                         out_res_valid_MEM                      = 1;         // result can be bypassed from MEM
@@ -371,8 +383,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_srl                       = 0; 
                         out_act_ialu_xor                       = 0;
                         out_act_jump_to_ialu_res               = 0;
-                        out_act_load_dmem                      = 0;
-                        out_act_store_dmem                     = 0;
+                        out_act_load_dmem_byte_signed          = 0;
+                        out_act_load_dmem_byte_unsigned        = 0;
+                        out_act_load_dmem_word                 = 0;
+                        out_act_store_dmem_byte                = 0;
+                        out_act_store_dmem_word                = 0;
                         out_act_write_res_to_reg               = 1;
                         out_res_valid_EX                       = 1;                      // result can be bypassed from EX
                         out_res_valid_MEM                      = 1;                      // result can be bypassed from MEM
@@ -402,8 +417,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_srl                       = 0; 
                         out_act_ialu_xor                       = 0;
                         out_act_jump_to_ialu_res               = 0;
-                        out_act_load_dmem                      = 0;
-                        out_act_store_dmem                     = 0;
+                        out_act_load_dmem_byte_signed          = 0;
+                        out_act_load_dmem_byte_unsigned        = 0;
+                        out_act_load_dmem_word                 = 0;
+                        out_act_store_dmem_byte                = 0;
+                        out_act_store_dmem_word                = 0;
                         out_act_write_res_to_reg               = 1;
                         out_res_valid_EX                       = 1;    // result can be bypassed from EX
                         out_res_valid_MEM                      = 1;
@@ -436,8 +454,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_srl                       = 0; 
                         out_act_ialu_xor                       = 0;
                         out_act_jump_to_ialu_res               = 0;
-                        out_act_load_dmem                      = 0;
-                        out_act_store_dmem                     = 0;
+                        out_act_load_dmem_byte_signed          = 0;
+                        out_act_load_dmem_byte_unsigned        = 0;
+                        out_act_load_dmem_word                 = 0;
+                        out_act_store_dmem_byte                = 0;
+                        out_act_store_dmem_word                = 0;
                         out_act_write_res_to_reg               = 1;
                         out_res_valid_EX                       = 1;    // result can be bypassed from EX
                         out_res_valid_MEM                      = 1;
@@ -467,8 +488,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_srl                       = 0; 
                         out_act_ialu_xor                       = 0;
                         out_act_jump_to_ialu_res               = 0;
-                        out_act_load_dmem                      = 0;
-                        out_act_store_dmem                     = 0;
+                        out_act_load_dmem_byte_signed          = 0;
+                        out_act_load_dmem_byte_unsigned        = 0;
+                        out_act_load_dmem_word                 = 0;
+                        out_act_store_dmem_byte                = 0;
+                        out_act_store_dmem_word                = 0;
                         out_act_write_res_to_reg               = 1;
                         out_res_valid_EX                       = 1;             // result can be bypassed from EX
                         out_res_valid_MEM                      = 1;             // result can be bypassed from MEM
@@ -517,8 +541,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_srl                       = 0; 
                         out_act_ialu_xor                       = 0;
                         out_act_jump_to_ialu_res               = 0;
-                        out_act_load_dmem                      = 0;
-                        out_act_store_dmem                     = 0;
+                        out_act_load_dmem_byte_signed          = 0;
+                        out_act_load_dmem_byte_unsigned        = 0;
+                        out_act_load_dmem_word                 = 0;
+                        out_act_store_dmem_byte                = 0;
+                        out_act_store_dmem_word                = 0;
                         out_act_write_res_to_reg               = 0;
                         out_res_valid_EX                       = 0;    // result cannot be bypassed from EX
                         out_res_valid_MEM                      = 0;
@@ -561,8 +588,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_srl                       = 0; 
                         out_act_ialu_xor                       = 0;
                         out_act_jump_to_ialu_res               = 0;
-                        out_act_load_dmem                      = 0;
-                        out_act_store_dmem                     = 0;
+                        out_act_load_dmem_byte_signed          = 0;
+                        out_act_load_dmem_byte_unsigned        = 0;
+                        out_act_load_dmem_word                 = 0;
+                        out_act_store_dmem_byte                = 0;
+                        out_act_store_dmem_word                = 0;
                         out_act_write_res_to_reg               = 0;
                         out_res_valid_EX                       = 0;    // result cannot be bypassed from EX
                         out_res_valid_MEM                      = 0;
@@ -605,8 +635,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_srl                       = 0; 
                         out_act_ialu_xor                       = 0;
                         out_act_jump_to_ialu_res               = 0;
-                        out_act_load_dmem                      = 0;
-                        out_act_store_dmem                     = 0;
+                        out_act_load_dmem_byte_signed          = 0;
+                        out_act_load_dmem_byte_unsigned        = 0;
+                        out_act_load_dmem_word                 = 0;
+                        out_act_store_dmem_byte                = 0;
+                        out_act_store_dmem_word                = 0;
                         out_act_write_res_to_reg               = 0;
                         out_res_valid_EX                       = 0;    // result cannot be bypassed from EX
                         out_res_valid_MEM                      = 0;
@@ -649,8 +682,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_srl                       = 0; 
                         out_act_ialu_xor                       = 0;
                         out_act_jump_to_ialu_res               = 0;
-                        out_act_load_dmem                      = 0;
-                        out_act_store_dmem                     = 0;
+                        out_act_load_dmem_byte_signed          = 0;
+                        out_act_load_dmem_byte_unsigned        = 0;
+                        out_act_load_dmem_word                 = 0;
+                        out_act_store_dmem_byte                = 0;
+                        out_act_store_dmem_word                = 0;
                         out_act_write_res_to_reg               = 0;
                         out_res_valid_EX                       = 0;    // result cannot be bypassed from EX
                         out_res_valid_MEM                      = 0;
@@ -694,8 +730,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_srl                       = 0; 
                         out_act_ialu_xor                       = 0;
                         out_act_jump_to_ialu_res               = 0;
-                        out_act_load_dmem                      = 0;
-                        out_act_store_dmem                     = 1;
+                        out_act_load_dmem_byte_signed          = 0;
+                        out_act_load_dmem_byte_unsigned        = 0;
+                        out_act_load_dmem_word                 = 0;
+                        out_act_store_dmem_byte                = 0;
+                        out_act_store_dmem_word                = 1;
                         out_act_write_res_to_reg               = 0;
                         out_res_valid_EX                       = 0;         // result cannot be bypassed from EX
                         out_res_valid_MEM                      = 0;
@@ -724,8 +763,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_srl                       = 0; 
                         out_act_ialu_xor                       = 0;
                         out_act_jump_to_ialu_res               = 0;
-                        out_act_load_dmem                      = 0;
-                        out_act_store_dmem                     = 1;
+                        out_act_load_dmem_byte_signed          = 0;
+                        out_act_load_dmem_byte_unsigned        = 0;
+                        out_act_load_dmem_word                 = 0;
+                        out_act_store_dmem_byte                = 0;
+                        out_act_store_dmem_word                = 1;
                         out_act_write_res_to_reg               = 0;
                         out_res_valid_EX                       = 0;         // result cannot be bypassed from EX
                         out_res_valid_MEM                      = 0;
@@ -737,6 +779,78 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         cycle_in_instr_next                    = 1;
                         zero_outputs();
                     end
+                end
+
+                // Store byte in address from register
+                `FUNC1_SB:
+                begin
+                        cycle_in_instr_next                    = 0;
+                        out_act_branch_ialu_res_ff_eq0         = 0;
+                        out_act_branch_ialu_res_ff_gt0         = 0;
+                        out_act_branch_ialu_res_ff_lt0         = 0;
+                        out_act_ex_incr_pc_is_res              = 0;
+                        out_act_ialu_add                       = 0;
+                        out_act_ialu_and                       = 0;
+                        out_act_ialu_mul                       = 0;
+                        out_act_ialu_neg_src2                  = 0;
+                        out_act_ialu_or                        = 0;
+                        out_act_ialu_sll                       = 0; 
+                        out_act_ialu_sra                       = 0; 
+                        out_act_ialu_src2_is_res               = 1;
+                        out_act_ialu_srl                       = 0; 
+                        out_act_ialu_xor                       = 0;
+                        out_act_jump_to_ialu_res               = 0;
+                        out_act_load_dmem_byte_signed          = 0;
+                        out_act_load_dmem_byte_unsigned        = 0;
+                        out_act_load_dmem_word                 = 0;
+                        out_act_store_dmem_byte                = 1;
+                        out_act_store_dmem_word                = 0;
+                        out_act_write_res_to_reg               = 0;
+                        out_res_valid_EX                       = 0;         // result cannot be bypassed from EX
+                        out_res_valid_MEM                      = 0;
+                        out_src1                               = 0;         // base addr
+                        out_src2                               = src2_mod;  // offset
+                        out_src3                               = src1_mod;  // value;
+
+                end
+
+                // Store byte in address from register plus offset
+                `FUNC1_SBO:
+                begin
+                    if (cycle_in_instr_ff == 1) begin
+                        cycle_in_instr_next                    = 0;
+                        out_act_branch_ialu_res_ff_eq0         = 0;
+                        out_act_branch_ialu_res_ff_gt0         = 0;
+                        out_act_branch_ialu_res_ff_lt0         = 0;
+                        out_act_ex_incr_pc_is_res              = 0;
+                        out_act_ialu_add                       = 1;
+                        out_act_ialu_and                       = 0;
+                        out_act_ialu_mul                       = 0;
+                        out_act_ialu_neg_src2                  = 0;
+                        out_act_ialu_or                        = 0;
+                        out_act_ialu_sll                       = 0; 
+                        out_act_ialu_sra                       = 0; 
+                        out_act_ialu_src2_is_res               = 0;
+                        out_act_ialu_srl                       = 0; 
+                        out_act_ialu_xor                       = 0;
+                        out_act_jump_to_ialu_res               = 0;
+                        out_act_load_dmem_byte_signed          = 0;
+                        out_act_load_dmem_byte_unsigned        = 0;
+                        out_act_load_dmem_word                 = 0;
+                        out_act_store_dmem_byte                = 1;
+                        out_act_store_dmem_word                = 0;
+                        out_act_write_res_to_reg               = 0;
+                        out_res_valid_EX                       = 0;         // result cannot be bypassed from EX
+                        out_res_valid_MEM                      = 0;
+                        out_src1                               = immB;      // base addr
+                        out_src2                               = src2_mod;  // offset
+                        out_src3                               = src1_mod;  // value
+                    end
+                    else begin
+                        cycle_in_instr_next                    = 1;
+                        zero_outputs();
+                    end
+
                 end
 
                 default:
@@ -774,8 +888,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_srl                       = 0; 
                         out_act_ialu_xor                       = 0;
                         out_act_jump_to_ialu_res               = 1;
-                        out_act_load_dmem                      = 0;
-                        out_act_store_dmem                     = 0;
+                        out_act_load_dmem_byte_signed          = 0;
+                        out_act_load_dmem_byte_unsigned        = 0;
+                        out_act_load_dmem_word                 = 0;
+                        out_act_store_dmem_byte                = 0;
+                        out_act_store_dmem_word                = 0;
                         out_act_write_res_to_reg               = 1;
                         out_res_valid_EX                       = 0;    // result cannot be bypassed from EX
                         out_res_valid_MEM                      = 0;    // result cannot be bypassed from MEM
@@ -803,8 +920,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_srl                       = 0; 
                         out_act_ialu_xor                       = 0;
                         out_act_jump_to_ialu_res               = 0;
-                        out_act_load_dmem                      = 1;
-                        out_act_store_dmem                     = 0;
+                        out_act_load_dmem_byte_signed          = 0;
+                        out_act_load_dmem_byte_unsigned        = 0;
+                        out_act_load_dmem_word                 = 1;
+                        out_act_store_dmem_byte                = 0;
+                        out_act_store_dmem_word                = 0;
                         out_act_write_res_to_reg               = 1;
                         out_res_valid_EX                       = 0;             // result cannot be bypassed from EX
                         out_res_valid_MEM                      = 1;             // result can be bypassed from MEM
@@ -834,8 +954,155 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_srl                       = 0; 
                         out_act_ialu_xor                       = 0;
                         out_act_jump_to_ialu_res               = 0;
-                        out_act_load_dmem                      = 1;
-                        out_act_store_dmem                     = 0;
+                        out_act_load_dmem_byte_signed          = 0;
+                        out_act_load_dmem_byte_unsigned        = 0;
+                        out_act_load_dmem_word                 = 1;
+                        out_act_store_dmem_byte                = 0;
+                        out_act_store_dmem_word                = 0;
+                        out_act_write_res_to_reg               = 1;
+                        out_res_valid_EX                       = 0;             // result cannot be bypassed from EX
+                        out_res_valid_MEM                      = 1;             // result can be bypassed from MEM
+                        out_src1                               = src1_mod;
+                        out_src2                               = immB;
+                        out_src3                               = 0;
+                    end
+                    else begin
+                        cycle_in_instr_next                    = 1;
+                        zero_outputs();
+                    end
+
+                end
+
+                // Load byte from address in register (w/ sign extension)
+                `FUNC3_LB:
+                begin
+                        cycle_in_instr_next                    = 0;
+                        out_act_branch_ialu_res_ff_eq0         = 0;
+                        out_act_branch_ialu_res_ff_gt0         = 0;
+                        out_act_branch_ialu_res_ff_lt0         = 0;
+                        out_act_ex_incr_pc_is_res              = 0;
+                        out_act_ialu_add                       = 0;
+                        out_act_ialu_and                       = 0;
+                        out_act_ialu_mul                       = 0;
+                        out_act_ialu_neg_src2                  = 0;
+                        out_act_ialu_or                        = 0;
+                        out_act_ialu_sll                       = 0; 
+                        out_act_ialu_sra                       = 0; 
+                        out_act_ialu_src2_is_res               = 1;
+                        out_act_ialu_srl                       = 0; 
+                        out_act_ialu_xor                       = 0;
+                        out_act_jump_to_ialu_res               = 0;
+                        out_act_load_dmem_byte_signed          = 1;
+                        out_act_load_dmem_byte_unsigned        = 0;
+                        out_act_load_dmem_word                 = 0;
+                        out_act_store_dmem_byte                = 0;
+                        out_act_store_dmem_word                = 0;
+                        out_act_write_res_to_reg               = 1;
+                        out_res_valid_EX                       = 0;             // result cannot be bypassed from EX
+                        out_res_valid_MEM                      = 1;             // result can be bypassed from MEM
+                        out_src1                               = 0;
+                        out_src2                               = src1_mod;      // address (yes, strange to write src1 to src2, but srcX_to_res only exists for src2)
+                        out_src3                               = 0;
+                end
+                
+                // Load byte from address in register plus offset to dmem address (w/ sign extension)
+                `FUNC3_LBO:
+                begin
+                    
+                    if (cycle_in_instr_ff == 1) begin
+                        cycle_in_instr_next                    = 0;
+                        out_act_branch_ialu_res_ff_eq0         = 0;
+                        out_act_branch_ialu_res_ff_gt0         = 0;
+                        out_act_branch_ialu_res_ff_lt0         = 0;
+                        out_act_ex_incr_pc_is_res              = 0;
+                        out_act_ialu_add                       = 1;
+                        out_act_ialu_and                       = 0;
+                        out_act_ialu_mul                       = 0;
+                        out_act_ialu_neg_src2                  = 0;
+                        out_act_ialu_or                        = 0;
+                        out_act_ialu_sll                       = 0; 
+                        out_act_ialu_sra                       = 0; 
+                        out_act_ialu_src2_is_res               = 0;
+                        out_act_ialu_srl                       = 0; 
+                        out_act_ialu_xor                       = 0;
+                        out_act_jump_to_ialu_res               = 0;
+                        out_act_load_dmem_byte_signed          = 1;
+                        out_act_load_dmem_byte_unsigned        = 0;
+                        out_act_load_dmem_word                 = 0;
+                        out_act_store_dmem_byte                = 0;
+                        out_act_store_dmem_word                = 0;
+                        out_act_write_res_to_reg               = 1;
+                        out_res_valid_EX                       = 0;             // result cannot be bypassed from EX
+                        out_res_valid_MEM                      = 1;             // result can be bypassed from MEM
+                        out_src1                               = src1_mod;
+                        out_src2                               = immB;
+                        out_src3                               = 0;
+                    end
+                    else begin
+                        cycle_in_instr_next                    = 1;
+                        zero_outputs();
+                    end
+
+                end
+
+                // Load byte from address in register (w/o sign extension)
+                `FUNC3_LBU:
+                begin
+                        cycle_in_instr_next                    = 0;
+                        out_act_branch_ialu_res_ff_eq0         = 0;
+                        out_act_branch_ialu_res_ff_gt0         = 0;
+                        out_act_branch_ialu_res_ff_lt0         = 0;
+                        out_act_ex_incr_pc_is_res              = 0;
+                        out_act_ialu_add                       = 0;
+                        out_act_ialu_and                       = 0;
+                        out_act_ialu_mul                       = 0;
+                        out_act_ialu_neg_src2                  = 0;
+                        out_act_ialu_or                        = 0;
+                        out_act_ialu_sll                       = 0; 
+                        out_act_ialu_sra                       = 0; 
+                        out_act_ialu_src2_is_res               = 1;
+                        out_act_ialu_srl                       = 0; 
+                        out_act_ialu_xor                       = 0;
+                        out_act_jump_to_ialu_res               = 0;
+                        out_act_load_dmem_byte_signed          = 0;
+                        out_act_load_dmem_byte_unsigned        = 1;
+                        out_act_load_dmem_word                 = 0;
+                        out_act_store_dmem_byte                = 0;
+                        out_act_store_dmem_word                = 0;
+                        out_act_write_res_to_reg               = 1;
+                        out_res_valid_EX                       = 0;             // result cannot be bypassed from EX
+                        out_res_valid_MEM                      = 1;             // result can be bypassed from MEM
+                        out_src1                               = 0;
+                        out_src2                               = src1_mod;      // address (yes, strange to write src1 to src2, but srcX_to_res only exists for src2)
+                        out_src3                               = 0;
+                end
+                
+                // Load byte from address in register plus offset to dmem address (w/o sign extension)
+                `FUNC3_LBUO:
+                begin
+                    
+                    if (cycle_in_instr_ff == 1) begin
+                        cycle_in_instr_next                    = 0;
+                        out_act_branch_ialu_res_ff_eq0         = 0;
+                        out_act_branch_ialu_res_ff_gt0         = 0;
+                        out_act_branch_ialu_res_ff_lt0         = 0;
+                        out_act_ex_incr_pc_is_res              = 0;
+                        out_act_ialu_add                       = 1;
+                        out_act_ialu_and                       = 0;
+                        out_act_ialu_mul                       = 0;
+                        out_act_ialu_neg_src2                  = 0;
+                        out_act_ialu_or                        = 0;
+                        out_act_ialu_sll                       = 0; 
+                        out_act_ialu_sra                       = 0; 
+                        out_act_ialu_src2_is_res               = 0;
+                        out_act_ialu_srl                       = 0; 
+                        out_act_ialu_xor                       = 0;
+                        out_act_jump_to_ialu_res               = 0;
+                        out_act_load_dmem_byte_signed          = 0;
+                        out_act_load_dmem_byte_unsigned        = 1;
+                        out_act_load_dmem_word                 = 0;
+                        out_act_store_dmem_byte                = 0;
+                        out_act_store_dmem_word                = 0;
                         out_act_write_res_to_reg               = 1;
                         out_res_valid_EX                       = 0;             // result cannot be bypassed from EX
                         out_res_valid_MEM                      = 1;             // result can be bypassed from MEM
@@ -869,8 +1136,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                         out_act_ialu_srl                       = 0; 
                         out_act_ialu_xor                       = 0;
                         out_act_jump_to_ialu_res               = 0;
-                        out_act_load_dmem                      = 0;
-                        out_act_store_dmem                     = 0;
+                        out_act_load_dmem_byte_signed          = 0;
+                        out_act_load_dmem_byte_unsigned        = 0;
+                        out_act_load_dmem_word                 = 0;
+                        out_act_store_dmem_byte                = 0;
+                        out_act_store_dmem_word                = 0;
                         out_act_write_res_to_reg               = 1;
                         out_res_valid_EX                       = 1;             // result can be bypassed from EX
                         out_res_valid_MEM                      = 1;             // result can be bypassed from MEM
@@ -909,8 +1179,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_ialu_srl                       = 0; 
                 out_act_ialu_xor                       = 0;
                 out_act_jump_to_ialu_res               = 0;
-                out_act_load_dmem                      = 0;
-                out_act_store_dmem                     = 0;
+                out_act_load_dmem_byte_signed          = 0;
+                out_act_load_dmem_byte_unsigned        = 0;
+                out_act_load_dmem_word                 = 0;
+                out_act_store_dmem_byte                = 0;
+                out_act_store_dmem_word                = 0;
                 out_act_write_res_to_reg               = 1;
                 out_res_valid_EX                       = 1;             // result can be bypassed from EX
                 out_res_valid_MEM                      = 1;             // result can be bypassed from MEM
@@ -937,8 +1210,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_ialu_srl                       = 0; 
                 out_act_ialu_xor                       = 0;
                 out_act_jump_to_ialu_res               = 0;
-                out_act_load_dmem                      = 0;
-                out_act_store_dmem                     = 0;
+                out_act_load_dmem_byte_signed          = 0;
+                out_act_load_dmem_byte_unsigned        = 0;
+                out_act_load_dmem_word                 = 0;
+                out_act_store_dmem_byte                = 0;
+                out_act_store_dmem_word                = 0;
                 out_act_write_res_to_reg               = 1;
                 out_res_valid_EX                       = 1;             // result can be bypassed from EX
                 out_res_valid_MEM                      = 1;             // result can be bypassed from MEM
@@ -965,8 +1241,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_ialu_srl                       = 0; 
                 out_act_ialu_xor                       = 0;
                 out_act_jump_to_ialu_res               = 0;
-                out_act_load_dmem                      = 0;
-                out_act_store_dmem                     = 0;
+                out_act_load_dmem_byte_signed          = 0;
+                out_act_load_dmem_byte_unsigned        = 0;
+                out_act_load_dmem_word                 = 0;
+                out_act_store_dmem_byte                = 0;
+                out_act_store_dmem_word                = 0;
                 out_act_write_res_to_reg               = 1;
                 out_res_valid_EX                       = 1;             // result can be bypassed from EX
                 out_res_valid_MEM                      = 1;             // result can be bypassed from MEM
@@ -993,8 +1272,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_ialu_srl                       = 0; 
                 out_act_ialu_xor                       = 0;
                 out_act_jump_to_ialu_res               = 0;
-                out_act_load_dmem                      = 0;
-                out_act_store_dmem                     = 0;
+                out_act_load_dmem_byte_signed          = 0;
+                out_act_load_dmem_byte_unsigned        = 0;
+                out_act_load_dmem_word                 = 0;
+                out_act_store_dmem_byte                = 0;
+                out_act_store_dmem_word                = 0;
                 out_act_write_res_to_reg               = 1;
                 out_res_valid_EX                       = 1;             // result can be bypassed from EX
                 out_res_valid_MEM                      = 1;             // result can be bypassed from MEM
@@ -1021,8 +1303,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_ialu_srl                       = 1; 
                 out_act_ialu_xor                       = 0;
                 out_act_jump_to_ialu_res               = 0;
-                out_act_load_dmem                      = 0;
-                out_act_store_dmem                     = 0;
+                out_act_load_dmem_byte_signed          = 0;
+                out_act_load_dmem_byte_unsigned        = 0;
+                out_act_load_dmem_word                 = 0;
+                out_act_store_dmem_byte                = 0;
+                out_act_store_dmem_word                = 0;
                 out_act_write_res_to_reg               = 1;
                 out_res_valid_EX                       = 1;             // result can be bypassed from EX
                 out_res_valid_MEM                      = 1;             // result can be bypassed from MEM
@@ -1049,8 +1334,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_ialu_srl                       = 0; 
                 out_act_ialu_xor                       = 0;
                 out_act_jump_to_ialu_res               = 0;
-                out_act_load_dmem                      = 0;
-                out_act_store_dmem                     = 0;
+                out_act_load_dmem_byte_signed          = 0;
+                out_act_load_dmem_byte_unsigned        = 0;
+                out_act_load_dmem_word                 = 0;
+                out_act_store_dmem_byte                = 0;
+                out_act_store_dmem_word                = 0;
                 out_act_write_res_to_reg               = 1;
                 out_res_valid_EX                       = 1;             // result can be bypassed from EX
                 out_res_valid_MEM                      = 1;             // result can be bypassed from MEM
@@ -1077,8 +1365,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_ialu_srl                       = 0; 
                 out_act_ialu_xor                       = 0;
                 out_act_jump_to_ialu_res               = 0;
-                out_act_load_dmem                      = 0;
-                out_act_store_dmem                     = 0;
+                out_act_load_dmem_byte_signed          = 0;
+                out_act_load_dmem_byte_unsigned        = 0;
+                out_act_load_dmem_word                 = 0;
+                out_act_store_dmem_byte                = 0;
+                out_act_store_dmem_word                = 0;
                 out_act_write_res_to_reg               = 1;
                 out_res_valid_EX                       = 1;             // result can be bypassed from EX
                 out_res_valid_MEM                      = 1;             // result can be bypassed from MEM
@@ -1105,8 +1396,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_ialu_srl                       = 0; 
                 out_act_ialu_xor                       = 0;
                 out_act_jump_to_ialu_res               = 0;
-                out_act_load_dmem                      = 0;
-                out_act_store_dmem                     = 0;
+                out_act_load_dmem_byte_signed          = 0;
+                out_act_load_dmem_byte_unsigned        = 0;
+                out_act_load_dmem_word                 = 0;
+                out_act_store_dmem_byte                = 0;
+                out_act_store_dmem_word                = 0;
                 out_act_write_res_to_reg               = 1;
                 out_res_valid_EX                       = 1;             // result can be bypassed from EX
                 out_res_valid_MEM                      = 1;             // result can be bypassed from MEM
@@ -1133,8 +1427,11 @@ module decoder #(parameter OPCODE_WIDTH    =  4,
                 out_act_ialu_srl                       = 0; 
                 out_act_ialu_xor                       = 1;
                 out_act_jump_to_ialu_res               = 0;
-                out_act_load_dmem                      = 0;
-                out_act_store_dmem                     = 0;
+                out_act_load_dmem_byte_signed          = 0;
+                out_act_load_dmem_byte_unsigned        = 0;
+                out_act_load_dmem_word                 = 0;
+                out_act_store_dmem_byte                = 0;
+                out_act_store_dmem_word                = 0;
                 out_act_write_res_to_reg               = 1;
                 out_res_valid_EX                       = 1;             // result can be bypassed from EX
                 out_res_valid_MEM                      = 1;             // result can be bypassed from MEM
