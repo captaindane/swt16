@@ -9,8 +9,11 @@ module mem #(parameter DMEM_ADDR_WIDTH = 12,
            (
            input                             clock,
            input                             reset,
-           input                             in_act_load_dmem,
-           input                             in_act_store_dmem,
+           input                             in_act_load_dmem_byte_signed,
+           input                             in_act_load_dmem_byte_unsigned,
+           input                             in_act_load_dmem_word,
+           input                             in_act_store_dmem_byte,
+           input                             in_act_store_dmem_word,
            input                             in_act_write_res_to_reg,
            input      [                2:0]  in_cycle_in_instr,
            input      [PMEM_WORD_WIDTH-1:0]  in_instr,
@@ -38,8 +41,8 @@ module mem #(parameter DMEM_ADDR_WIDTH = 12,
            );
 
     // Sampled CTRL inputs
-    reg                         act_load_dmem_ff;
-    reg                         act_store_dmem_ff;
+    reg                         act_load_dmem_word_ff;
+    reg                         act_store_dmem_word_ff;
     reg  [       PC_WIDTH-1:0]  pc_ff;
 
     // Sampled data inputs
@@ -50,7 +53,7 @@ module mem #(parameter DMEM_ADDR_WIDTH = 12,
     assign out_mem_rd_addr  = in_mem_rd_addr;
     assign out_mem_wr_addr  = in_mem_wr_addr;
     assign out_mem_wr_word  = in_mem_wr_word;
-    assign out_mem_write_en = in_act_store_dmem;
+    assign out_mem_write_en = in_act_store_dmem_word;
 
     // Wiring: forwarding sampled instruction, pc
     assign out_instr        = instr_ff;
@@ -84,12 +87,12 @@ module mem #(parameter DMEM_ADDR_WIDTH = 12,
     // Register: sample control inputs
     always @(posedge clock or posedge reset) begin
         if (!reset) begin
-            act_load_dmem_ff         <= in_act_load_dmem;
-            act_store_dmem_ff        <= in_act_store_dmem;
+            act_load_dmem_word_ff    <= in_act_load_dmem_word;
+            act_store_dmem_word_ff   <= in_act_store_dmem_word;
         end
         else begin
-            act_load_dmem_ff         <= 0;
-            act_store_dmem_ff        <= 0;
+            act_load_dmem_word_ff    <= 0;
+            act_store_dmem_word_ff   <= 0;
         end
     end
 
@@ -98,7 +101,7 @@ module mem #(parameter DMEM_ADDR_WIDTH = 12,
     // Otherwise, output the result value passed by the execute stage.
     always @(*)
     begin
-        if (act_load_dmem_ff == 1) begin
+        if (act_load_dmem_word_ff == 1) begin
             out_res = in_mem_rd_word;
         end
         else begin
